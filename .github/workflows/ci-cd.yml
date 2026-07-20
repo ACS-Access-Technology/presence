@@ -101,16 +101,10 @@ jobs:
             /opt/alt/php83/usr/bin/php artisan view:cache
             /opt/alt/php83/usr/bin/php artisan migrate --force
             chmod -R 775 storage bootstrap/cache
-
-            # Cron du worker de file d'attente (emails). Idempotent : dédoublonne
-            # avant de réinstaller, donc sûr à rejouer à chaque déploiement.
-            # --stop-when-empty évite un process qui tourne en continu (interdit
-            # sur la plupart des hébergements mutualisés) : la minute suivante
-            # relance simplement un nouveau passage.
-            (crontab -l 2>/dev/null | grep -v 'artisan queue:work'; \
-             echo "* * * * * cd ${{ secrets.DEPLOY_PATH }} && /opt/alt/php83/usr/bin/php artisan queue:work --stop-when-empty --max-time=50 >> /dev/null 2>&1") \
-             | crontab -
-            echo "--- crontab installé ---"
-            crontab -l
-
             echo "✓ Deploy terminé"
+
+            # NOTE : le cron du worker de file d'attente (emails) NE PEUT PAS
+            # être scriptée ici — `crontab` est absent du PATH SSH sur cet
+            # hébergement Hostinger (mutualisé). Le cron doit être créé une
+            # fois, à la main, via hPanel → Avancé → Cron Jobs. Voir
+            # docs/gestion-projet/deploiement-hostinger.md.
