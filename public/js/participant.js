@@ -118,7 +118,7 @@
             }
             field.classList.remove('invalid'); input.removeAttribute('aria-invalid');
 
-            api(CFG.urls.recognize, { email: email }).then(function (res) {
+            api(CFG.urls.recognize, { email: email, ticket: CFG.ticket }).then(function (res) {
                 if (!res.ok) { field.classList.add('invalid'); return; }
                 var data = res.data;
                 if (data.overlap) { Overlap.show(data.overlap); return; }
@@ -220,7 +220,7 @@
             State.departConfirmed = true;
             var email = $('#email').value.trim();
             // On poursuit le flux : reconnaissance déjà connue (l'email a un profil).
-            api(CFG.urls.recognize, { email: email }).then(function (res) {
+            api(CFG.urls.recognize, { email: email, ticket: CFG.ticket }).then(function (res) {
                 var data = res.ok ? res.data : { known: true, person: null };
                 Flow.proceed(email, data, true);
             });

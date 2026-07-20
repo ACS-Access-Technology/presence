@@ -5,6 +5,35 @@
 
 ---
 
+## 2026-07-20 — Faille sécurité corrigée : fuite PII + écrasement d'identité (agent senior-fullstack)
+
+Revue sécurité automatique post-commit sur `PublicAttendanceController` : 2
+trouvailles vérifiées réelles avant correction (jamais de correctif sécu sans
+vérification préalable des faits).
+
+- **HIGH — énumération d'emails / fuite PII** : `recognize()` était accessible
+  sans preuve de scan (pas de ticket), sans limitation de débit, et renvoyait
+  téléphone/direction/service/poste pour tout email deviné → annuaire complet
+  du personnel exposé sans jamais approcher un QR. Corrigé : ticket de scan
+  obligatoire (`QrTokenService::verifyScanTicket`, déjà émis par `show()`) +
+  limitation 15 requêtes/min par IP+événement (`RateLimiter`, même pattern que
+  `LoginRequest`).
+- **MEDIUM — écrasement d'identité** : `upsertPerson()` écrasait nom/téléphone/
+  entreprise/poste d'une `Person` **existante** à chaque soumission publique,
+  sans vérifier l'identité du soumissionnaire → présent physiquement + email
+  deviné = corrompre la fiche d'un collègue. Corrigé : une fiche existante
+  n'est plus jamais modifiée par la soumission publique ; seule la création
+  d'une fiche nouvelle renseigne les champs (l'`Attendance` garde de toute
+  façon son propre instantané des données soumises, indépendant du
+  référentiel `Person`).
+- 3 tests ajoutés (ticket requis, rate-limit, non-écrasement) ; suite complète
+  80/80 verte. Pré-existant à la fonctionnalité T04/T05 de cette session (code
+  du flux public livré en session précédente), traité immédiatement vu la
+  gravité plutôt que reporté à T15 — l'audit sécurité complet (T14/T15) reste
+  à faire avant tout déploiement.
+
+---
+
 ## 2026-07-20 — T04/T05 création d'événement livrée (agent senior-fullstack)
 
 - Route/contrôleur/vue manquants pour créer un événement (seuls index/show

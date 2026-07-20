@@ -152,25 +152,31 @@ final class AttendanceService
      * Crée ou met à jour la fiche Personne à partir des valeurs déclarées.
      * Ne dégrade jamais is_staff ; ne fixe la source qu'à la création.
      */
+    /**
+     * Retrouve ou crée la fiche Personne (référentiel). Un email connu N'EST
+     * PAS écrasé par la soumission publique (non authentifiée) : seule la
+     * création d'une nouvelle fiche renseigne les champs, pour empêcher
+     * quiconque connaissant/devinant un email de corrompre une fiche existante.
+     * L'Attendance elle-même conserve son propre instantané des champs soumis.
+     */
     private function upsertPerson(AttendanceInput $input): Person
     {
-        $person = Person::firstOrNew(['email' => Person::normalizeEmail($input->email)]);
-
-        $person->last_name = $input->lastName;
-        $person->first_name = $input->firstName;
-        $person->phone = $input->phone;
-        $person->company = $input->company;
-        $person->direction = $input->direction;
-        $person->service = $input->service;
-        $person->position = $input->position;
-
-        if (! $person->exists) {
-            $person->source = $input->isManual ? PersonSource::Manuel : PersonSource::Emargement;
+        $person = Person::query()->where('email', Person::normalizeEmail($input->email))->first();
+        if ($person !== null) {
+            return $person;
         }
 
-        $person->save();
-
-        return $person;
+        return Person::create([
+            'email' => Person::normalizeEmail($input->email),
+            'last_name' => $input->lastName,
+            'first_name' => $input->firstName,
+            'phone' => $input->phone,
+            'company' => $input->company,
+            'direction' => $input->direction,
+            'service' => $input->service,
+            'position' => $input->position,
+            'source' => $input->isManual ? PersonSource::Manuel : PersonSource::Emargement,
+        ]);
     }
 
     /** Référence courte et unique (ex. PRS-4F2A9). */

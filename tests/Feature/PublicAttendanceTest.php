@@ -111,7 +111,7 @@ class PublicAttendanceTest extends TestCase
         $event = $this->makeEvent();
         Person::create(['email' => 'awa@acs.ci', 'last_name' => 'Koné', 'first_name' => 'Awa', 'company' => 'ACS Consulting']);
 
-        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'awa@acs.ci'])
+        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'awa@acs.ci', 'ticket' => $this->ticket($event)])
             ->assertOk()
             ->assertJsonPath('known', true)
             ->assertJsonPath('person.first_name', 'Awa');
@@ -121,7 +121,7 @@ class PublicAttendanceTest extends TestCase
     {
         $event = $this->makeEvent();
 
-        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'inconnu@x.ci'])
+        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'inconnu@x.ci', 'ticket' => $this->ticket($event)])
             ->assertOk()
             ->assertJsonPath('known', false);
     }
@@ -136,9 +136,35 @@ class PublicAttendanceTest extends TestCase
             phone: '0', company: 'ACS', direction: 'SI', position: 'Admin',
         ));
 
-        $this->postJson('/e/'.$current->public_slug.'/recognize', ['email' => 'k.ndri@acs.ci'])
+        $this->postJson('/e/'.$current->public_slug.'/recognize', ['email' => 'k.ndri@acs.ci', 'ticket' => $this->ticket($current)])
             ->assertOk()
             ->assertJsonPath('overlap.event_title', $other->title);
+    }
+
+    public function test_recognize_refuse_sans_ticket_valide(): void
+    {
+        $event = $this->makeEvent();
+        Person::create(['email' => 'awa@acs.ci', 'last_name' => 'Koné', 'first_name' => 'Awa']);
+
+        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'awa@acs.ci'])
+            ->assertStatus(422);
+
+        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'awa@acs.ci', 'ticket' => 'bidon'])
+            ->assertStatus(419);
+    }
+
+    public function test_recognize_limite_le_debit(): void
+    {
+        $event = $this->makeEvent();
+        $ticket = $this->ticket($event);
+
+        for ($i = 0; $i < 15; $i++) {
+            $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'x'.$i.'@acs.ci', 'ticket' => $ticket])
+                ->assertOk();
+        }
+
+        $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'trop@acs.ci', 'ticket' => $ticket])
+            ->assertStatus(429);
     }
 
     public function test_store_enregistre_une_presence_et_la_signature(): void

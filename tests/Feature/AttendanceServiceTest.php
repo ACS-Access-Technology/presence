@@ -141,6 +141,25 @@ class AttendanceServiceTest extends TestCase
         $this->assertSame(PersonSource::Import, $staff->source);
     }
 
+    public function test_soumission_publique_n_ecrase_pas_la_fiche_existante(): void
+    {
+        $person = Person::create([
+            'email' => 'awa.kone@acsgroupe.ci', 'last_name' => 'Koné', 'first_name' => 'Awa',
+            'phone' => '+225 01 00 00 00 00', 'company' => 'ACS Groupe',
+        ]);
+
+        $event = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+        $this->service->register($event, new AttendanceInput(
+            email: 'awa.kone@acsgroupe.ci', lastName: 'Autre', firstName: 'Nom',
+            phone: '+225 09 99 99 99 99', company: 'Société bidon', direction: 'Falsifié', position: 'Faux',
+        ));
+
+        $person->refresh();
+        $this->assertSame('Koné', $person->last_name);
+        $this->assertSame('+225 01 00 00 00 00', $person->phone);
+        $this->assertSame('ACS Groupe', $person->company);
+    }
+
     public function test_marquer_et_annuler_un_depart(): void
     {
         $event = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());

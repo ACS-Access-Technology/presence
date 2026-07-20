@@ -14,6 +14,7 @@ use App\Services\QrTokenService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -60,16 +61,36 @@ class PublicAttendanceController extends Controller
         ]);
     }
 
-    /** Reconnaissance d'un visiteur par email + détection de chevauchement. */
+    /**
+     * Reconnaissance d'un visiteur par email + détection de chevauchement.
+     *
+     * Protégé par le ticket de scan (émis uniquement par show(), donc requiert
+     * d'avoir réellement chargé une page d'émargement ouverte) + limitation de
+     * débit, pour empêcher l'énumération d'adresses email et la fuite de PII
+     * (téléphone, direction, service, poste) du personnel.
+     */
     public function recognize(Request $request, Event $event): JsonResponse
     {
         $validated = $request->validate([
             'email' => ['required', 'string', 'email'],
+            'ticket' => ['required', 'string'],
         ]);
 
         if (! $event->isOpenForCheckIn()) {
             return response()->json(['message' => "L'émargement n'est pas ouvert."], 422);
         }
+
+        if (! $this->tokens->verifyScanTicket($event, $validated['ticket'])) {
+            return response()->json([
+                'message' => 'Votre session de scan a expiré. Rescannez le QR pour continuer.',
+            ], 419);
+        }
+
+        $throttleKey = 'attendance-recognize:'.$event->id.'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 15)) {
+            return response()->json(['message' => 'Trop de tentatives. Réessayez dans une minute.'], 429);
+        }
+        RateLimiter::hit($throttleKey, 60);
 
         $person = $this->attendances->findPersonByEmail($validated['email']);
         $overlap = $person !== null ? $this->attendances->activeOverlap($person, $event) : null;
