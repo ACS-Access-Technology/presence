@@ -61,10 +61,14 @@
             </p>
         </div>
         <div style="margin-left:auto;display:flex;gap:9px;flex-wrap:wrap">
-            <a class="btn btn--ghost" href="{{ route('admin.events.attendances.export', $event) }}">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
-                Exporter CSV
-            </a>
+            <div class="export-group" role="group" aria-label="Exporter la liste de présence">
+                <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('csv')" title="Export filtré selon la liste affichée">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                    CSV
+                </button>
+                <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('xlsx')" title="Export filtré selon la liste affichée">Excel</button>
+                <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('pdf')" title="Export filtré selon la liste affichée">PDF</button>
+            </div>
             @if($event->qr_mode === QrMode::Tournant)
                 <a class="btn btn--primary" href="{{ route('admin.events.projection', $event) }}" target="_blank" rel="noopener">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
@@ -244,6 +248,9 @@
         urls: {
             feed: @json(route('admin.events.attendances.feed', $event)),
             manual: @json(route('admin.events.attendances.manual', $event)),
+            exportCsv: @json(route('admin.events.attendances.export', $event)),
+            exportXlsx: @json(route('admin.events.attendances.export.xlsx', $event)),
+            exportPdf: @json(route('admin.events.attendances.export.pdf', $event)),
         },
         rows: @json($rows),
         report: {

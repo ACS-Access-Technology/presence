@@ -91,6 +91,8 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): v
         ->scopeBindings()->group(function (): void {
             Route::get('/feed', [AttendanceController::class, 'feed'])->name('feed');
             Route::get('/export', [AttendanceController::class, 'export'])->name('export');
+            Route::get('/export.xlsx', [AttendanceController::class, 'exportXlsx'])->name('export.xlsx');
+            Route::get('/export.pdf', [AttendanceController::class, 'exportPdf'])->name('export.pdf');
             Route::post('/manual', [AttendanceController::class, 'storeManual'])->name('manual');
             Route::post('/{attendance}/departure', [AttendanceController::class, 'departure'])->name('departure');
             Route::post('/{attendance}/undo-departure', [AttendanceController::class, 'undoDeparture'])->name('undo-departure');

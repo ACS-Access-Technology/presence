@@ -103,6 +103,49 @@ class EventDashboardTest extends TestCase
         $this->assertStringContainsString('Koné;Awa;awa@acs.ci', $content);
     }
 
+    public function test_export_csv_respecte_le_filtre_de_statut(): void
+    {
+        $event = $this->liveEvent();
+        $this->attend($event, 'awa@acs.ci', 'Awa', 'Koné');
+        $recurrent = $this->attend($event, 'ancien@acs.ci', 'Awa', 'Ancienne');
+        // Rend "Ancienne" récurrente : présence antérieure sur un autre événement.
+        $past = Event::create([
+            'title' => 'Passé', 'event_type_id' => $this->type->id,
+            'starts_at' => Carbon::now()->subDays(2), 'ends_at' => Carbon::now()->subDays(2)->addHour(),
+            'qr_mode' => QrMode::Statique->value, 'qr_secret' => Str::random(32), 'public_slug' => 'passe',
+        ]);
+        $this->attend($past, 'ancien@acs.ci', 'Awa', 'Ancienne');
+
+        $content = $this->actingAs($this->user)
+            ->get(route('admin.events.attendances.export', $event).'?chip=new')
+            ->streamedContent();
+
+        $this->assertStringContainsString('Koné;Awa;awa@acs.ci', $content);
+        $this->assertStringNotContainsString('Ancienne', $content);
+    }
+
+    public function test_export_xlsx(): void
+    {
+        $event = $this->liveEvent();
+        $this->attend($event, 'awa@acs.ci', 'Awa', 'Koné');
+
+        $response = $this->actingAs($this->user)->get(route('admin.events.attendances.export.xlsx', $event));
+
+        $response->assertOk();
+        $this->assertStringContainsString('spreadsheetml', $response->headers->get('Content-Type'));
+    }
+
+    public function test_export_pdf(): void
+    {
+        $event = $this->liveEvent();
+        $this->attend($event, 'awa@acs.ci', 'Awa', 'Koné');
+
+        $response = $this->actingAs($this->user)->get(route('admin.events.attendances.export.pdf', $event));
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
+    }
+
     public function test_marquer_et_annuler_un_depart(): void
     {
         $event = $this->liveEvent();

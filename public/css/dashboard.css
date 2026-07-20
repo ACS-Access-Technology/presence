@@ -464,6 +464,11 @@ body{min-height:100vh}
 @media (max-width:940px){.layout{grid-template-columns:1fr}.aside-preview{position:static;order:-1}}
 @media (max-width:560px){.modes{grid-template-columns:1fr}.grid2,.grid3{grid-template-columns:1fr}}
 
+/* ===== Groupe de boutons export ===== */
+.export-group{display:inline-flex;gap:0;border-radius:var(--r-control);overflow:hidden;border:1px solid var(--border-strong)}
+.export-group .btn{border-radius:0;border:none;border-right:1px solid var(--border-strong)}
+.export-group .btn:last-child{border-right:none}
+
 /* ===== Modal infos participant ===== */
 .info-pair{padding:10px 0;border-bottom:1px solid var(--border)}
 .info-pair:last-child{border-bottom:none}

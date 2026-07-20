@@ -204,6 +204,12 @@
         },
         cmdkRun: function (i) { var fn = this._cmdkItems[i]; if (fn) fn(); },
 
+        exportAs: function (format) {
+            var base = { csv: CFG.urls.exportCsv, xlsx: CFG.urls.exportXlsx, pdf: CFG.urls.exportPdf }[format];
+            var params = new URLSearchParams({ chip: this.activeChip, q: this.term });
+            window.location.href = base + '?' + params.toString();
+        },
+
         info: function (id) {
             var r = this.rows.find(function (x) { return x.id === id; });
             if (!r) return;

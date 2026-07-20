@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Exports\AttendanceExport;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreManualAttendanceRequest;
 use App\Models\Attendance;
@@ -11,10 +12,15 @@ use App\Models\Event;
 use App\Services\Attendance\AttendanceInput;
 use App\Services\AttendanceService;
 use App\Services\EventPresenceService;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Maatwebsite\Excel\Facades\Excel;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
@@ -38,10 +44,10 @@ class AttendanceController extends Controller
     }
 
     /** Export CSV (UTF-8 avec BOM, séparateur « ; » pour Excel FR). */
-    public function export(Event $event): StreamedResponse
+    public function export(Request $request, Event $event): StreamedResponse
     {
-        $rows = $this->presence->rows($event);
-        $filename = 'presence-'.$event->public_slug.'-'.Carbon::now()->format('Ymd-Hi').'.csv';
+        $rows = $this->filteredRows($request, $event);
+        $filename = $this->exportFilename($event, 'csv');
 
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'wb');
@@ -63,6 +69,59 @@ class AttendanceController extends Controller
             }
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /** Export XLSX — mêmes lignes/filtres que l'export CSV. */
+    public function exportXlsx(Request $request, Event $event): BinaryFileResponse
+    {
+        $rows = $this->filteredRows($request, $event);
+
+        return Excel::download(new AttendanceExport($rows), $this->exportFilename($event, 'xlsx'));
+    }
+
+    /** Export PDF — mêmes lignes/filtres que l'export CSV. */
+    public function exportPdf(Request $request, Event $event): Response
+    {
+        $rows = $this->filteredRows($request, $event);
+
+        return Pdf::loadView('admin.events.pdf.attendances', ['event' => $event, 'rows' => $rows])
+            ->setPaper('a4', 'landscape')
+            ->download($this->exportFilename($event, 'pdf'));
+    }
+
+    /**
+     * Applique les mêmes filtres que la liste à l'écran (chip statut + recherche
+     * texte) avant export, pour que le fichier téléchargé corresponde à ce que
+     * l'organisateur voit à l'instant.
+     *
+     * @return list<array<string, mixed>>
+     */
+    private function filteredRows(Request $request, Event $event): array
+    {
+        $rows = $this->presence->rows($event);
+
+        $chip = $request->string('chip', 'all')->toString();
+        if ($chip === 'new') {
+            $rows = array_values(array_filter($rows, fn (array $r): bool => ! $r['recurrent']));
+        } elseif ($chip === 'rec') {
+            $rows = array_values(array_filter($rows, fn (array $r): bool => $r['recurrent']));
+        }
+
+        $q = mb_strtolower(trim((string) $request->string('q', '')));
+        if ($q !== '') {
+            $rows = array_values(array_filter($rows, function (array $r) use ($q): bool {
+                $haystack = mb_strtolower($r['name'].' '.($r['company'] ?? '').' '.($r['direction'] ?? '').' '.($r['email'] ?? ''));
+
+                return str_contains($haystack, $q);
+            }));
+        }
+
+        return $rows;
+    }
+
+    private function exportFilename(Event $event, string $extension): string
+    {
+        return 'presence-'.$event->public_slug.'-'.Carbon::now()->format('Ymd-Hi').'.'.$extension;
     }
 
     /** Marque un départ (définitif, informatif — n'affecte aucun KPI). */
