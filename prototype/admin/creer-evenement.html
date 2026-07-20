@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nouvel événement · Presence · ACS Groupe</title>
+<style>
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --surface-2:#f7f8fa; --surface-3:#eef0f4;
+  --border:#e3e6ec; --border-strong:#d2d7e0;
+  --text:#12141a; --muted:#565d6b; --faint:#8a91a0; --on-accent:#fff;
+  --accent:#1e2a78; --accent-hover:#162058; --accent-bright:#33429c; --accent-soft:#e9ecfa;
+  --brand-orange:#f07a13; --brand-orange-soft:#fdeddb;
+  --error:#e42313; --error-soft:#fbe4e1; --success:#0e9e86; --success-soft:#d8f3ec;
+  --warning:#b8770f; --warning-soft:#fbefd6;
+  --info:#2563eb; --info-soft:#e5edfd; --violet:#7c3aed; --violet-soft:#efe9fd;
+  --type-atelier:#7c3aed; --type-atelier-bg:#efe9fd;
+  --type-reunion:#2563eb; --type-reunion-bg:#e5edfd;
+  --type-rencontre:#d6336c; --type-rencontre-bg:#fce3ec;
+  --type-formation:#0e9e86; --type-formation-bg:#d8f3ec;
+  --type-conference:#e0620d; --type-conference-bg:#fdeddb;
+  --radius:16px; --r-control:10px; --r-pill:999px;
+  --sh-1:0 1px 2px rgba(18,20,26,.05),0 1px 3px rgba(18,20,26,.05);
+  --sh-2:0 2px 4px rgba(18,20,26,.04),0 14px 30px -14px rgba(18,20,26,.18);
+  --sh-3:0 8px 16px -8px rgba(18,20,26,.12),0 30px 60px -28px rgba(18,20,26,.30);
+  --focus:0 0 0 3px rgba(30,42,120,.32);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b; --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --info:#7aa2f7; --info-soft:#17244d; --violet:#c4b5fd; --violet-soft:#2c2150;
+  --type-atelier:#c4b5fd; --type-atelier-bg:#2c2150;
+  --type-reunion:#93b4fb; --type-reunion-bg:#17244d;
+  --type-rencontre:#f7a8c8; --type-rencontre-bg:#3d1526;
+  --type-formation:#37d6b8; --type-formation-bg:#0f3a33;
+  --type-conference:#f79a45; --type-conference-bg:#3a2711;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}}
+[data-theme="dark"]{
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b; --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --info:#7aa2f7; --info-soft:#17244d; --violet:#c4b5fd; --violet-soft:#2c2150;
+  --type-atelier:#c4b5fd; --type-atelier-bg:#2c2150;
+  --type-reunion:#93b4fb; --type-reunion-bg:#17244d;
+  --type-rencontre:#f7a8c8; --type-rencontre-bg:#3d1526;
+  --type-formation:#37d6b8; --type-formation-bg:#0f3a33;
+  --type-conference:#f79a45; --type-conference-bg:#3a2711;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* Shell */
+.app{display:flex;min-height:100vh}
+.side{width:248px;flex:0 0 248px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px;gap:4px}
+.side__logo{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+.side__logo img{height:64px;width:auto}
+.side__logo .pn{font-weight:800;letter-spacing:-.02em;font-size:1.02rem}
+.side__logo .pn span{color:var(--brand-orange)}
+.navlbl{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r-control);color:var(--muted);font-weight:600;font-size:.9rem;text-decoration:none;transition:background .12s,color .12s}
+.nav a svg{width:19px;height:19px;flex:0 0 auto}
+.nav a:hover{background:var(--surface-2);color:var(--text)}
+.nav a.active{background:var(--accent-soft);color:var(--accent)}
+.side__foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.user{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.user .av{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.82rem;flex:0 0 auto}
+.user__n{font-size:.84rem;font-weight:650;line-height:1.15}
+.user__r{font-size:.72rem;color:var(--faint)}
+.iconbtn{background:none;border:1px solid var(--border);border-radius:var(--r-control);color:var(--muted);cursor:pointer;padding:8px;display:inline-grid;place-items:center;min-width:38px;min-height:38px;transition:.12s}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn svg{width:18px;height:18px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px 22px;background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--border)}
+.crumbs{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted)}
+.crumbs a{text-decoration:none;color:var(--muted);font-weight:600}
+.crumbs a:hover{color:var(--accent)}
+.crumbs .sep{color:var(--faint)}
+.crumbs .cur{color:var(--text);font-weight:700}
+.topbar .sp{flex:1}
+.iconbtn.menutgl{display:none}
+.content{padding:22px;max-width:1080px;width:100%;margin:0 auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:650;font-size:.9rem;cursor:pointer;border-radius:var(--r-control);padding:11px 16px;min-height:46px;border:1px solid transparent;transition:background .15s,transform .08s,box-shadow .15s,border-color .15s;white-space:nowrap;text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:17px;height:17px}
+.btn--primary{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 18px -10px rgba(30,42,120,.7)}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn--ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn:focus-visible{outline:none;box-shadow:var(--focus)}
+
+.pagehead h1{font-size:1.55rem;font-weight:820;letter-spacing:-.02em;margin:0 0 4px}
+.pagehead p{color:var(--muted);font-size:.9rem;margin:0 0 22px}
+
+/* Layout formulaire + aperçu */
+.layout{display:grid;grid-template-columns:1fr 320px;gap:20px;align-items:start}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);padding:22px;margin-bottom:18px}
+.section > h2{font-size:1.02rem;font-weight:750;margin:0 0 3px;display:flex;align-items:center;gap:9px}
+.section > h2 .n{width:24px;height:24px;border-radius:7px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-size:.8rem;font-weight:800;flex:0 0 auto}
+.section > .desc{color:var(--muted);font-size:.85rem;margin:0 0 18px;padding-left:33px}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:.83rem;font-weight:650;margin-bottom:7px}
+.field .opt{color:var(--faint);font-weight:400}
+.req{color:var(--error);font-weight:700}
+.control{width:100%;font:inherit;font-size:.94rem;color:var(--text);background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--border-strong);border-radius:var(--r-control);padding:11px 13px;min-height:46px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 1px rgba(18,20,26,.03);transition:border-color .15s,box-shadow .15s}
+.control::placeholder{color:var(--faint)}
+.control:focus{outline:none;border-color:var(--accent);box-shadow:var(--focus)}
+.control[aria-invalid="true"]{border-color:var(--error);box-shadow:0 0 0 3px var(--error-soft)}
+textarea.control{min-height:80px;resize:vertical}
+.err-msg{display:none;color:var(--error);font-size:.78rem;margin-top:6px}
+.field.invalid .err-msg{display:block}
+.help{font-size:.78rem;color:var(--muted);margin-top:6px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+
+/* Cartes-radio mode QR */
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:4px}
+.mode{position:relative;cursor:pointer;display:block}
+.mode input{position:absolute;opacity:0;pointer-events:none}
+.mode__card{border:1.5px solid var(--border-strong);border-radius:var(--radius);padding:18px;height:100%;transition:border-color .15s,box-shadow .15s,background .15s;background:var(--surface)}
+.mode:hover .mode__card{border-color:var(--accent-bright)}
+.mode input:focus-visible + .mode__card{box-shadow:var(--focus)}
+.mode input:checked + .mode__card{border-color:var(--accent);background:var(--accent-soft);box-shadow:0 0 0 1px var(--accent)}
+.mode__hd{display:flex;align-items:center;gap:11px;margin-bottom:12px}
+.mode__ic{width:42px;height:42px;border-radius:11px;background:var(--surface-2);color:var(--accent);display:grid;place-items:center;flex:0 0 auto;transition:.15s}
+.mode input:checked + .mode__card .mode__ic{background:var(--surface);color:var(--accent)}
+.mode__ic svg{width:23px;height:23px}
+.mode__t{font-weight:750;font-size:1rem}
+.mode__badge{font-size:.68rem;font-weight:700;color:var(--muted);background:var(--surface-3);padding:2px 8px;border-radius:var(--r-pill);margin-top:2px;display:inline-block}
+.mode__check{margin-left:auto;width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border-strong);display:grid;place-items:center;flex:0 0 auto;transition:.15s}
+.mode__check svg{width:14px;height:14px;color:#fff;opacity:0;transition:.15s}
+.mode input:checked + .mode__card .mode__check{background:var(--accent);border-color:var(--accent)}
+.mode input:checked + .mode__card .mode__check svg{opacity:1}
+.mode__list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:8px}
+.mode__list li{display:flex;gap:9px;align-items:flex-start;font-size:.83rem;color:var(--muted);line-height:1.4}
+.mode__list li svg{width:16px;height:16px;flex:0 0 auto;margin-top:2px;color:var(--accent)}
+.mode__note{margin-top:13px;padding:9px 11px;border-radius:9px;background:var(--surface-2);font-size:.78rem;color:var(--muted);display:flex;gap:8px;align-items:flex-start}
+.mode__note svg{width:15px;height:15px;flex:0 0 auto;margin-top:1px;color:var(--warning)}
+.mode input:checked + .mode__card .mode__note{background:var(--surface)}
+
+/* Inviter des personnes (combobox) */
+.combo{position:relative}
+.combo__in{display:flex;align-items:center;gap:9px;width:100%;background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--border-strong);border-radius:var(--r-control);padding:0 13px;min-height:46px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 1px rgba(18,20,26,.03);transition:border-color .15s,box-shadow .15s}
+.combo__in:focus-within{border-color:var(--accent);box-shadow:var(--focus)}
+.combo__in svg{width:17px;height:17px;color:var(--faint);flex:0 0 auto}
+.combo__in input{border:none;background:none;outline:none;font:inherit;font-size:.94rem;color:var(--text);width:100%;padding:11px 0}
+.combo__pop{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--sh-3);padding:6px;max-height:280px;overflow-y:auto}
+.combo__pop[hidden]{display:none}
+.combo__opt{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;border:none;background:none;width:100%;text-align:left;font:inherit}
+.combo__opt:hover,.combo__opt[aria-selected="true"]{background:var(--surface-2)}
+.combo__opt .av{width:34px;height:34px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:700;font-size:.78rem;flex:0 0 auto}
+.combo__opt__t{font-weight:650;font-size:.9rem}
+.combo__opt__d{font-size:.77rem;color:var(--faint)}
+.combo__opt .add{margin-left:auto;color:var(--faint)}
+.combo__opt .add svg{width:17px;height:17px}
+.combo__empty{padding:16px 12px;text-align:center;color:var(--muted);font-size:.86rem}
+.combo__empty b{color:var(--text)}
+.invitees{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}
+.invitees:empty{display:none}
+.chip-p{display:inline-flex;align-items:center;gap:9px;padding:6px 8px 6px 6px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-pill)}
+.chip-p .av{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.7rem;flex:0 0 auto}
+.chip-p__t{font-size:.84rem;font-weight:650;line-height:1.1}
+.chip-p__d{font-size:.72rem;color:var(--faint)}
+.chip-p__x{background:none;border:none;color:var(--faint);cursor:pointer;padding:4px;border-radius:6px;display:grid;place-items:center}
+.chip-p__x:hover{background:var(--error-soft);color:var(--error)}
+.chip-p__x svg{width:15px;height:15px}
+.invcount{font-size:.8rem;color:var(--muted);margin-top:12px}
+.invcount b{color:var(--text);font-weight:750}
+.infonote{display:flex;gap:11px;align-items:flex-start;padding:12px 13px;border-radius:11px;background:var(--accent-soft);color:var(--accent);font-size:.83rem;margin-top:14px;line-height:1.45}
+.infonote svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+.infonote strong{font-weight:750}
+
+/* Aperçu latéral */
+.aside-preview{position:sticky;top:78px}
+.preview{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);overflow:hidden}
+.preview__hd{padding:14px 16px;border-bottom:1px solid var(--border);font-size:.72rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint)}
+.preview__body{padding:18px 16px}
+.pv-title{font-size:1.15rem;font-weight:800;letter-spacing:-.02em;line-height:1.2;margin:0 0 8px;word-break:break-word}
+.pv-title.empty{color:var(--faint);font-weight:600;font-style:italic}
+.pv-meta{display:flex;flex-direction:column;gap:8px;font-size:.85rem;color:var(--muted)}
+.pv-meta span{display:flex;align-items:center;gap:8px}
+.pv-meta span[hidden]{display:none}
+.pv-meta svg{width:15px;height:15px;color:var(--faint);flex:0 0 auto}
+.pv-tags{display:flex;gap:7px;flex-wrap:wrap;margin-top:14px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:var(--r-pill)}
+.tag--soon{color:var(--accent);background:var(--accent-soft)}
+.tag--mode{color:var(--muted);background:var(--surface-2);border:1px solid var(--border)}
+.tag--mode svg{width:12px;height:12px}
+.tag--type svg{width:12px;height:12px}
+.type-atelier{color:var(--type-atelier);background:var(--type-atelier-bg)}
+.type-reunion{color:var(--type-reunion);background:var(--type-reunion-bg)}
+.type-rencontre{color:var(--type-rencontre);background:var(--type-rencontre-bg)}
+.type-formation{color:var(--type-formation);background:var(--type-formation-bg)}
+.type-conference{color:var(--type-conference);background:var(--type-conference-bg)}
+/* sélecteur de type d'événement */
+.typepick{display:flex;flex-wrap:wrap;gap:9px}
+.typeopt{position:relative;cursor:pointer}
+.typeopt input{position:absolute;opacity:0;pointer-events:none}
+.typeopt__c{display:inline-flex;align-items:center;gap:7px;font-size:.86rem;font-weight:650;padding:9px 13px;min-height:42px;border-radius:var(--r-control);border:1.5px solid var(--border-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));color:var(--muted);box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 1px rgba(18,20,26,.03);transition:.15s}
+.typeopt__c svg{width:16px;height:16px}
+.typeopt:hover .typeopt__c{border-color:var(--tc);color:var(--tc)}
+.typeopt input:focus-visible + .typeopt__c{outline:none;box-shadow:var(--focus)}
+.typeopt input:checked + .typeopt__c{color:var(--tc);background:var(--tbg);border-color:var(--tc)}
+.pv-hint{padding:13px 16px;border-top:1px solid var(--border);font-size:.78rem;color:var(--muted);display:flex;gap:9px;align-items:flex-start;background:var(--surface-2)}
+.pv-hint svg{width:16px;height:16px;flex:0 0 auto;margin-top:1px;color:var(--faint)}
+
+/* Barre d'action */
+.actionbar{display:flex;align-items:center;gap:12px;padding:16px 0 8px;flex-wrap:wrap}
+.actionbar .sp{flex:1}
+.actionbar .cancel{color:var(--muted);text-decoration:none;font-weight:600;font-size:.9rem;padding:11px 6px}
+.actionbar .cancel:hover{color:var(--text)}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--surface);padding:12px 18px;border-radius:12px;font-size:.88rem;font-weight:600;box-shadow:var(--sh-3);z-index:80;opacity:0;transition:.25s;display:flex;align-items:center;gap:9px}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast svg{width:17px;height:17px;color:var(--success)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+@media (max-width:940px){.layout{grid-template-columns:1fr}.aside-preview{position:static;order:-1}}
+@media (max-width:820px){
+  .side{position:fixed;left:0;top:0;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--sh-3)}
+  .side.open{transform:none}
+  .iconbtn.menutgl{display:inline-grid}
+}
+@media (max-width:560px){.modes{grid-template-columns:1fr}.grid2,.grid3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="side" id="side" aria-label="Navigation principale">
+    <div class="side__logo">
+      <img src="../assets/logo-acs-groupe.png" alt="ACS Groupe">
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="evenements.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Événements
+      </a>
+      <a href="creer-evenement.html" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+        Nouvel événement
+      </a>
+      <a href="participants.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Participants
+      </a>
+      <a href="portfolio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+        Portfolio
+      </a>
+      <div class="navlbl">Compte</div>
+      <a href="#" onclick="return false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Utilisateurs ACS
+      </a>
+      <a href="parametres.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Paramètres
+      </a>
+      <a href="connexion.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Se déconnecter
+      </a>
+    </nav>
+    <div class="side__foot">
+      <div class="user">
+        <div class="av">NK</div>
+        <div>
+          <div class="user__n">N'Guessan Koffi</div>
+          <div class="user__r">Organisateur · ACS</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn menutgl" onclick="toggleSide()" aria-label="Ouvrir le menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <nav class="crumbs" aria-label="Fil d'Ariane">
+        <a href="evenements.html">Événements</a><span class="sep">/</span><span class="cur">Nouvel événement</span>
+      </nav>
+      <span class="sp"></span>
+      <button class="iconbtn" onclick="toggleTheme()" aria-label="Basculer le thème">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      </button>
+    </header>
+
+    <main class="content">
+      <div class="pagehead">
+        <h1>Nouvel événement</h1>
+        <p>Renseignez les informations, choisissez le mode de QR, puis créez l'événement.</p>
+      </div>
+
+      <form id="form" novalidate onsubmit="return createEvent(event)">
+        <div class="layout">
+          <div>
+            <!-- 1. Infos -->
+            <section class="section">
+              <h2><span class="n">1</span> Informations</h2>
+              <p class="desc">Le titre et les horaires apparaîtront sur l'écran de projection et la page d'émargement.</p>
+
+              <div class="field" id="f-title">
+                <label for="title">Titre de l'événement <span class="req">*</span></label>
+                <input class="control" id="title" placeholder="Ex. Atelier Cybersécurité" oninput="sync()">
+                <div class="err-msg">Le titre est requis.</div>
+              </div>
+
+              <div class="field">
+                <label>Type d'événement <span class="req">*</span></label>
+                <div class="typepick" role="radiogroup" aria-label="Type d'événement">
+                  <label class="typeopt" style="--tc:var(--type-atelier);--tbg:var(--type-atelier-bg)">
+                    <input type="radio" name="type" value="Atelier" checked onchange="sync()">
+                    <span class="typeopt__c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14.7 6.3a4 4 0 0 1 .3 5.2L20 16l-2 2-4.5-5a4 4 0 0 1-5.2-.3 4 4 0 0 1 0-5.6l2.8 2.8 1.4-1.4L9.7 5.9a4 4 0 0 1 5 .4Z"/></svg>Atelier</span>
+                  </label>
+                  <label class="typeopt" style="--tc:var(--type-reunion);--tbg:var(--type-reunion-bg)">
+                    <input type="radio" name="type" value="Réunion" onchange="sync()">
+                    <span class="typeopt__c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Réunion</span>
+                  </label>
+                  <label class="typeopt" style="--tc:var(--type-rencontre);--tbg:var(--type-rencontre-bg)">
+                    <input type="radio" name="type" value="Rencontre" onchange="sync()">
+                    <span class="typeopt__c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z"/></svg>Rencontre</span>
+                  </label>
+                  <label class="typeopt" style="--tc:var(--type-formation);--tbg:var(--type-formation-bg)">
+                    <input type="radio" name="type" value="Formation" onchange="sync()">
+                    <span class="typeopt__c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 10 12 5 2 10l10 5 10-5ZM6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5"/></svg>Formation</span>
+                  </label>
+                  <label class="typeopt" style="--tc:var(--type-conference);--tbg:var(--type-conference-bg)">
+                    <input type="radio" name="type" value="Conférence" onchange="sync()">
+                    <span class="typeopt__c"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 11h3l4-4v10l-4-4H3zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14"/></svg>Conférence</span>
+                  </label>
+                </div>
+                <div class="help">Catégorie affichée en badge coloré sur la fiche et la liste des événements.</div>
+              </div>
+
+              <div class="grid3">
+                <div class="field" id="f-date">
+                  <label for="date">Date <span class="req">*</span></label>
+                  <input class="control" id="date" type="date" value="2026-07-19" oninput="sync()">
+                  <div class="err-msg">La date est requise.</div>
+                </div>
+                <div class="field" id="f-start">
+                  <label for="start">Heure de début <span class="req">*</span></label>
+                  <input class="control" id="start" type="time" value="14:00" oninput="sync()">
+                  <div class="err-msg">Requis.</div>
+                </div>
+                <div class="field" id="f-end">
+                  <label for="end">Heure de fin <span class="req">*</span></label>
+                  <input class="control" id="end" type="time" value="16:00" oninput="sync()">
+                  <div class="err-msg">Requis.</div>
+                </div>
+              </div>
+              <p class="help">L'émargement n'est possible qu'entre ces horaires. En fin d'événement, un récapitulatif est envoyé par email aux participants.</p>
+
+              <div class="field" style="margin-top:6px">
+                <label for="lieu">Lieu <span class="opt">(facultatif)</span></label>
+                <input class="control" id="lieu" placeholder="Ex. Salle Ébène, Cocody" oninput="sync()">
+                <div class="help">Indicatif pour les participants. La présence sur place est confirmée par la géolocalisation.</div>
+              </div>
+            </section>
+
+            <!-- 2. Mode QR -->
+            <section class="section">
+              <h2><span class="n">2</span> Mode du QR code</h2>
+              <p class="desc">Deux façons de diffuser le QR d'émargement. Ce choix est fixé à la création.</p>
+
+              <div class="modes" role="radiogroup" aria-label="Mode du QR code">
+                <!-- Statique -->
+                <label class="mode">
+                  <input type="radio" name="mode" value="statique" onchange="sync()">
+                  <div class="mode__card">
+                    <div class="mode__hd">
+                      <div class="mode__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M17 21h.01M21 21v-4M14 21v.01"/></svg></div>
+                      <div><div class="mode__t">Statique</div><span class="mode__badge">Imprimable · sans écran</span></div>
+                      <div class="mode__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+                    </div>
+                    <ul class="mode__list">
+                      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Un seul QR fixe, à imprimer et poser sur une table.</li>
+                      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Aucun écran ni vidéoprojecteur nécessaire.</li>
+                      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Idéal pour accueil, stand, petite salle.</li>
+                    </ul>
+                    <div class="mode__note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Photographiable : la fraude est limitée par la géolocalisation obligatoire et la fenêtre horaire.</div>
+                  </div>
+                </label>
+
+                <!-- Tournant -->
+                <label class="mode">
+                  <input type="radio" name="mode" value="tournant" checked onchange="sync()">
+                  <div class="mode__card">
+                    <div class="mode__hd">
+                      <div class="mode__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 2v6M12 22a10 10 0 1 1 6.9-17.2"/><path d="M12 2l3 3-3 3"/></svg></div>
+                      <div><div class="mode__t">Tournant</div><span class="mode__badge">Projeté · renouvelé 15 s</span></div>
+                      <div class="mode__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></div>
+                    </div>
+                    <ul class="mode__list">
+                      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Le QR change toutes les 15 secondes à l'écran.</li>
+                      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Une photo devient inutilisable après 15 s.</li>
+                      <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Idéal pour conférence, séminaire, salle équipée.</li>
+                    </ul>
+                    <div class="mode__note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Nécessite un écran ou vidéoprojecteur affichant la page en continu.</div>
+                  </div>
+                </label>
+              </div>
+            </section>
+
+            <!-- 3. Inviter des personnes -->
+            <section class="section">
+              <h2><span class="n">3</span> Inviter des personnes <span class="opt" style="font-weight:400;font-size:.85rem">(facultatif)</span></h2>
+              <p class="desc">Cherchez des membres du référentiel « Personnel ACS Groupe » pour constituer la liste des attendus et les prévenir.</p>
+
+              <div class="field" style="margin-bottom:0">
+                <label for="inv-search">Rechercher une personne</label>
+                <div class="combo">
+                  <div class="combo__in">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                    <input id="inv-search" type="text" autocomplete="off" placeholder="Nom, e-mail, direction ou service…" oninput="Invites.filter(this.value)" onfocus="Invites.filter(this.value)" aria-expanded="false" aria-controls="inv-results" role="combobox" aria-label="Rechercher une personne à inviter">
+                  </div>
+                  <div class="combo__pop" id="inv-results" role="listbox" hidden></div>
+                </div>
+                <div class="help">Le référentiel se gère dans Paramètres › Personnel ACS Groupe.</div>
+              </div>
+
+              <div class="infonote">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                <span>Inviter <strong>n'enregistre pas</strong> la présence. Le jour J, chaque invité doit quand même scanner le QR et émarger. Cette liste sert uniquement d'attendus et de notification.</span>
+              </div>
+
+              <div class="invcount" id="inv-count" hidden><b>0</b> personne invitée</div>
+              <div class="invitees" id="inv-selected"></div>
+            </section>
+          </div>
+
+          <!-- Aperçu -->
+          <aside class="aside-preview">
+            <div class="preview">
+              <div class="preview__hd">Aperçu</div>
+              <div class="preview__body">
+                <h3 class="pv-title empty" id="pv-title">Titre de l'événement</h3>
+                <div class="pv-meta">
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="pv-date">—</span></span>
+                  <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg><span id="pv-time">—</span></span>
+                  <span id="pv-lieu-wrap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg><span id="pv-lieu"></span></span>
+                  <span id="pv-inv-wrap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg><span id="pv-inv"></span></span>
+                </div>
+                <div class="pv-tags">
+                  <span class="tag tag--type type-atelier" id="pv-type"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14.7 6.3a4 4 0 0 1 .3 5.2L20 16l-2 2-4.5-5a4 4 0 0 1-5.2-.3 4 4 0 0 1 0-5.6l2.8 2.8 1.4-1.4L9.7 5.9a4 4 0 0 1 5 .4Z"/></svg>Atelier</span>
+                  <span class="tag tag--soon">À venir</span>
+                  <span class="tag tag--mode" id="pv-mode"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v6M12 22a10 10 0 1 1 6.9-17.2"/></svg>QR tournant</span>
+                </div>
+              </div>
+              <div class="pv-hint">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                Après création, vous pourrez projeter ou imprimer le QR depuis le détail de l'événement.
+              </div>
+            </div>
+          </aside>
+        </div>
+
+        <div class="actionbar">
+          <a class="cancel" href="evenements.html">Annuler</a>
+          <span class="sp"></span>
+          <button type="button" class="btn btn--ghost" onclick="Toast.show('Brouillon enregistré')">Enregistrer en brouillon</button>
+          <button type="submit" class="btn btn--primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 6 9 17l-5-5"/></svg>
+            Créer l'événement
+          </button>
+        </div>
+      </form>
+    </main>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const MONTHS=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+function fmtDate(v){if(!v)return null;const [y,m,d]=v.split('-').map(Number);return `${d} ${MONTHS[m-1]} ${y}`;}
+function sync(){
+  const title=document.getElementById('title').value.trim();
+  const pvt=document.getElementById('pv-title');
+  if(title){pvt.textContent=title;pvt.classList.remove('empty');}else{pvt.textContent='Titre de l\'événement';pvt.classList.add('empty');}
+  const date=fmtDate(document.getElementById('date').value);
+  document.getElementById('pv-date').textContent=date||'—';
+  const s=document.getElementById('start').value,e=document.getElementById('end').value;
+  document.getElementById('pv-time').textContent=(s&&e)?`${s} – ${e}`:(s||e||'—');
+  const lieu=document.getElementById('lieu').value.trim();
+  const lw=document.getElementById('pv-lieu-wrap');
+  if(lieu){lw.hidden=false;document.getElementById('pv-lieu').textContent=lieu;}else{lw.hidden=true;}
+  const type=document.querySelector('input[name=type]:checked').value;
+  const TICON={
+    'Atelier':{k:'atelier',ic:'M14.7 6.3a4 4 0 0 1 .3 5.2L20 16l-2 2-4.5-5a4 4 0 0 1-5.2-.3 4 4 0 0 1 0-5.6l2.8 2.8 1.4-1.4L9.7 5.9a4 4 0 0 1 5 .4Z'},
+    'Réunion':{k:'reunion',ic:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75'},
+    'Rencontre':{k:'rencontre',ic:'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z'},
+    'Formation':{k:'formation',ic:'M22 10 12 5 2 10l10 5 10-5ZM6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5'},
+    'Conférence':{k:'conference',ic:'M3 11h3l4-4v10l-4-4H3zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14'}
+  };
+  const tm=TICON[type];
+  const pt=document.getElementById('pv-type');
+  pt.className='tag tag--type type-'+tm.k;
+  pt.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="${tm.ic}"/></svg>${type}`;
+  const mode=document.querySelector('input[name=mode]:checked').value;
+  const pm=document.getElementById('pv-mode');
+  pm.innerHTML=(mode==='tournant'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v6M12 22a10 10 0 1 1 6.9-17.2"/></svg>QR tournant'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7"/></svg>QR statique');
+}
+function createEvent(e){
+  e.preventDefault();
+  const req=[['title','f-title'],['date','f-date'],['start','f-start'],['end','f-end']];
+  let ok=true,first=null;
+  req.forEach(([id,fid])=>{const el=document.getElementById(id),f=document.getElementById(fid);
+    if(!el.value.trim()){f.classList.add('invalid');el.setAttribute('aria-invalid','true');ok=false;if(!first)first=el;}
+    else{f.classList.remove('invalid');el.removeAttribute('aria-invalid');}});
+  // cohérence horaires
+  const s=document.getElementById('start').value,en=document.getElementById('end').value;
+  if(s&&en&&en<=s){const f=document.getElementById('f-end');f.classList.add('invalid');f.querySelector('.err-msg').textContent='La fin doit être après le début.';document.getElementById('end').setAttribute('aria-invalid','true');ok=false;if(!first)first=document.getElementById('end');}
+  if(!ok){if(first)first.focus();return false;}
+  Toast.show('Événement créé');
+  setTimeout(()=>location.href='evenement-detail.html',900);
+  return false;
+}
+/* ===== Inviter des personnes (référentiel Personnel ACS Groupe) ===== */
+const PERSONNEL=[
+  {id:1,nom:'Traoré',prenom:'Awa',email:'awa.traore@acsgroupe.ci',dir:'Direction SI',serv:'Cybersécurité',poste:'RSSI'},
+  {id:2,nom:'Kouassi',prenom:'Jean-Marc',email:'jm.kouassi@acsgroupe.ci',dir:'Direction Technique',serv:'Infrastructure',poste:'Ingénieur réseau'},
+  {id:3,nom:'Bamba',prenom:'Fatou',email:'f.bamba@acsgroupe.ci',dir:'Direction Digitale',serv:'Produit',poste:'Product Owner'},
+  {id:4,nom:'Diomandé',prenom:'Aïcha',email:'aicha.diomande@acsgroupe.ci',dir:'Direction Risques',serv:'Conformité',poste:'Analyste conformité'},
+  {id:5,nom:'Koné',prenom:'Ibrahim',email:'i.kone@acsgroupe.ci',dir:'Direction SI',serv:'Études',poste:'Chef de projet'},
+  {id:6,nom:'Yao',prenom:'Sylvie',email:'s.yao@acsgroupe.ci',dir:'Direction Commerciale',serv:'Grands comptes',poste:'Responsable comptes'},
+  {id:7,nom:'Gnahoré',prenom:'Patrick',email:'p.gnahore@acsgroupe.ci',dir:'DGSSI',serv:'Audit',poste:'Auditeur SI'},
+  {id:8,nom:'Ouattara',prenom:'Mariam',email:'m.ouattara@acsgroupe.ci',dir:'Direction Technique',serv:'Support',poste:'Technicienne support'},
+  {id:9,nom:'N’Dri',prenom:'Kévin',email:'k.ndri@acsgroupe.ci',dir:'Direction Digitale',serv:'Data',poste:'Data analyst'},
+  {id:10,nom:'Assamoi',prenom:'Grace',email:'g.assamoi@acsgroupe.ci',dir:'Direction SI',serv:'Cybersécurité',poste:'Analyste SOC'}
+];
+const Invites={
+  selected:[], sel:0,
+  init(n){return (n.prenom[0]+n.nom[0]).toUpperCase();},
+  filter(q){
+    q=(q||'').toLowerCase().trim();
+    const pop=document.getElementById('inv-results');
+    const inp=document.getElementById('inv-search');
+    const pool=PERSONNEL.filter(p=>!this.selected.some(s=>s.id===p.id))
+      .filter(p=>!q||(`${p.prenom} ${p.nom} ${p.email} ${p.dir} ${p.serv}`).toLowerCase().includes(q))
+      .slice(0,6);
+    if(!pool.length){
+      pop.innerHTML=`<div class="combo__empty">${q?`Aucune personne ne correspond à « <b>${q}</b> ».`:'Toutes les personnes du référentiel sont déjà invitées.'}</div>`;
+    }else{
+      pop.innerHTML=pool.map(p=>`<button type="button" class="combo__opt" role="option" onclick="Invites.add(${p.id})">
+        <span class="av">${this.init(p)}</span>
+        <span><span class="combo__opt__t">${p.prenom} ${p.nom}</span><br><span class="combo__opt__d">${p.dir} · ${p.poste}</span></span>
+        <span class="add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg></span>
+      </button>`).join('');
+    }
+    pop.hidden=false;inp.setAttribute('aria-expanded','true');
+  },
+  add(id){
+    const p=PERSONNEL.find(x=>x.id===id);if(!p)return;
+    this.selected.push(p);
+    const inp=document.getElementById('inv-search');inp.value='';inp.focus();
+    this.filter('');this.render();
+  },
+  remove(id){this.selected=this.selected.filter(x=>x.id!==id);this.render();this.filter(document.getElementById('inv-search').value);},
+  render(){
+    const box=document.getElementById('inv-selected');
+    box.innerHTML=this.selected.map(p=>`<span class="chip-p">
+      <span class="av">${this.init(p)}</span>
+      <span><span class="chip-p__t">${p.prenom} ${p.nom}</span><br><span class="chip-p__d">${p.dir}</span></span>
+      <button type="button" class="chip-p__x" onclick="Invites.remove(${p.id})" aria-label="Retirer ${p.prenom} ${p.nom}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </span>`).join('');
+    const n=this.selected.length;
+    const c=document.getElementById('inv-count');c.hidden=n===0;c.innerHTML=`<b>${n}</b> personne${n>1?'s':''} invitée${n>1?'s':''}`;
+    const pw=document.getElementById('pv-inv-wrap');
+    if(n>0){pw.hidden=false;document.getElementById('pv-inv').textContent=`${n} invité${n>1?'s':''}`;}else pw.hidden=true;
+  }
+};
+document.addEventListener('click',e=>{if(!e.target.closest('.combo')){const pop=document.getElementById('inv-results');if(pop){pop.hidden=true;document.getElementById('inv-search').setAttribute('aria-expanded','false');}}});
+
+const Toast={t:null,show(msg){const el=document.getElementById('toast');el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>${msg}`;el.classList.add('show');clearTimeout(this.t);this.t=setTimeout(()=>el.classList.remove('show'),2600);}};
+function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme');const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.setAttribute('data-theme',dark?'light':'dark');}
+function toggleSide(){document.getElementById('side').classList.toggle('open');}
+sync();
+</script>
+</body>
+</html>

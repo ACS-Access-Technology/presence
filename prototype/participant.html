@@ -1,0 +1,813 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Émargement — ACS Groupe · Presence</title>
+<style>
+/* ============================================================
+   Presence — prototype parcours participant (ACS Groupe)
+   Design system maison + palette de marque ACS (marine/orange/rouge).
+   0 dépendance externe. Vanilla JS.
+   ============================================================ */
+:root{
+  /* fonds & surfaces (neutres maison) */
+  --bg:#eef0f4;
+  --surface:#ffffff;
+  --surface-2:#f7f8fa;
+  --surface-3:#eef0f4;
+  --border:#e3e6ec;
+  --border-strong:#d2d7e0;
+  /* texte */
+  --text:#12141a;
+  --muted:#565d6b;
+  --faint:#8a91a0;
+  --on-accent:#ffffff;
+  /* accent principal = bleu marine ACS */
+  --accent:#1e2a78;
+  --accent-hover:#162058;
+  --accent-bright:#33429c;
+  --accent-soft:#e9ecfa;
+  /* highlight orange marque (usage rare, gros éléments) */
+  --brand-orange:#f07a13;
+  --brand-orange-soft:#fdeddb;
+  /* rouge marque = sémantique erreur */
+  --error:#e42313;
+  --error-soft:#fbe4e1;
+  --success:#0e9e86;
+  --success-soft:#d8f3ec;
+  --warning:#b8770f;
+  --warning-soft:#fbefd6;
+  /* rayons */
+  --radius:16px;
+  --r-control:10px;
+  --r-pill:999px;
+  /* ombres douces */
+  --sh-1:0 1px 2px rgba(18,20,26,.05),0 1px 3px rgba(18,20,26,.05);
+  --sh-2:0 2px 4px rgba(18,20,26,.04),0 14px 30px -14px rgba(18,20,26,.18);
+  --sh-3:0 8px 16px -8px rgba(18,20,26,.12),0 30px 60px -28px rgba(18,20,26,.30);
+  --focus:0 0 0 3px rgba(30,42,120,.32);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+    --border:#272c38; --border-strong:#39404f;
+    --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+    --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+    --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+    --error:#ff6b6f; --error-soft:#3a1a1b;
+    --success:#37d6b8; --success-soft:#0f3a33;
+    --warning:#e7b45a; --warning-soft:#38290f;
+    --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+    --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+    --focus:0 0 0 3px rgba(124,147,240,.4);
+  }
+}
+[data-theme="dark"]{
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b;
+  --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  font-family:var(--sans);
+  background:var(--bg);
+  color:var(--text);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:24px 12px 64px;
+  min-height:100vh;
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---- Cadre mobile (démo desktop : on centre une "fenêtre téléphone") ---- */
+.phone{
+  max-width:560px;margin:0 auto;background:var(--surface);
+  border-radius:26px;box-shadow:var(--sh-3);overflow:hidden;
+  border:1px solid var(--border);
+}
+.phone__inner{padding:0}
+
+/* ---- En-tête ---- */
+.appbar{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 28px;border-bottom:1px solid var(--border);
+  background:var(--surface);position:sticky;top:0;z-index:5;
+}
+.appbar img{height:40px;width:auto;display:block}
+.appbar__ev{display:flex;flex-direction:column;min-width:0}
+.appbar__title{font-weight:700;font-size:.95rem;line-height:1.2;letter-spacing:-.01em}
+.appbar__meta{font-size:.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.screen{padding:22px 28px}
+.screen[hidden]{display:none}
+
+h1.title{font-size:1.35rem;font-weight:800;letter-spacing:-.02em;margin:.2rem 0 .1rem}
+.section-label{font-size:.7rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin:20px 0 10px}
+
+/* ---- Champs ---- */
+.field{margin-bottom:14px}
+.field > label{display:block;font-size:.82rem;font-weight:600;margin-bottom:6px;color:var(--text)}
+.field .opt{color:var(--faint);font-weight:400}
+.req{color:var(--error);font-weight:700}
+.control{
+  width:100%;font:inherit;font-size:.95rem;color:var(--text);
+  background:linear-gradient(180deg,var(--surface),var(--surface-2));
+  border:1px solid var(--border-strong);border-radius:var(--r-control);
+  padding:12px 13px;min-height:46px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 1px rgba(18,20,26,.03);
+  transition:border-color .15s,box-shadow .15s;
+}
+.control::placeholder{color:var(--faint)}
+.control:hover{border-color:var(--border-strong)}
+.control:focus-visible,.control:focus{outline:none;border-color:var(--accent);box-shadow:var(--focus)}
+.control[aria-invalid="true"]{border-color:var(--error);box-shadow:0 0 0 3px var(--error-soft)}
+.err-msg{display:none;color:var(--error);font-size:.76rem;margin-top:5px}
+.field.invalid .err-msg{display:block}
+.help{font-size:.76rem;color:var(--muted);margin-top:5px}
+
+/* ---- Boutons ---- */
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  font:inherit;font-weight:650;font-size:.95rem;cursor:pointer;
+  border-radius:var(--r-control);padding:12px 18px;min-height:48px;
+  border:1px solid transparent;transition:background .15s,transform .08s,box-shadow .15s;
+  text-decoration:none;
+}
+.btn:active{transform:translateY(1px)}
+.btn--primary{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 18px -10px rgba(30,42,120,.7)}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--primary:disabled{background:var(--border-strong);color:var(--faint);cursor:not-allowed;box-shadow:none}
+.btn--ghost{background:transparent;color:var(--accent);border-color:var(--border-strong)}
+.btn--ghost:hover{background:var(--surface-2)}
+.btn--block{width:100%}
+.btn--lg{min-height:52px;font-size:1rem}
+.btn:focus-visible{outline:none;box-shadow:var(--focus)}
+.linkbtn{background:none;border:none;color:var(--accent);font:inherit;font-weight:600;cursor:pointer;padding:4px 2px;text-decoration:underline;text-underline-offset:2px}
+.linkbtn:focus-visible{outline:none;box-shadow:var(--focus);border-radius:4px}
+
+/* ---- Bandeau géoloc ---- */
+.geo{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--surface-2);border:1px solid var(--border);
+  border-radius:var(--radius);padding:14px;margin-bottom:6px;
+}
+.geo__ic{flex:0 0 40px;height:40px;width:40px;border-radius:12px;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.geo__ic svg{width:22px;height:22px}
+.geo__body{flex:1;min-width:0}
+.geo__t{font-weight:700;font-size:.9rem}
+.geo__d{font-size:.8rem;color:var(--muted);margin:3px 0 0}
+.geo__body .btn{margin-top:10px}
+.geo--ok{background:var(--success-soft);border-color:transparent}
+.geo--ok .geo__ic{background:color-mix(in srgb,var(--success) 22%,transparent);color:var(--success)}
+.geo--pending .geo__ic{background:var(--accent-soft);color:var(--accent)}
+.spin{width:18px;height:18px;border:2.5px solid var(--accent-soft);border-top-color:var(--accent);border-radius:50%;animation:sp 0.8s linear infinite;display:inline-block}
+
+/* ---- Bandeau info (départ enregistré) ---- */
+.flash{display:flex;gap:10px;align-items:flex-start;background:var(--success-soft);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:.86rem}
+.flash svg{width:20px;height:20px;color:var(--success);flex:0 0 auto;margin-top:1px}
+.flash b{color:var(--text)}
+
+/* ---- Carte événement en cours (modal chevauchement) ---- */
+.ov-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-control);padding:13px 14px;margin:12px 0}
+.ov-card__t{font-weight:700;font-size:.95rem}
+.ov-card__row{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);margin-top:6px}
+.ov-card__row svg{width:15px;height:15px;color:var(--faint);flex:0 0 auto}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+/* ---- Reconnaissance récurrent ---- */
+.recog{display:flex;gap:12px;align-items:center;background:var(--accent-soft);border-radius:var(--radius);padding:14px;margin-bottom:6px}
+.avatar{flex:0 0 46px;height:46px;width:46px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.05rem}
+.recog__t{font-weight:750;font-size:1rem}
+.recog__d{font-size:.8rem;color:var(--muted)}
+.recog__edit{margin-top:2px}
+
+/* ---- Signature ---- */
+.sigwrap{position:relative;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);box-shadow:inset 0 1px 2px rgba(18,20,26,.04);overflow:hidden}
+#sigpad{display:block;width:100%;height:180px;touch-action:none;cursor:crosshair}
+.sig-ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--faint);font-size:.9rem;pointer-events:none;transition:opacity .2s}
+.sig-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.sig-actions .help{margin:0}
+
+/* ---- Case à cocher mentions ---- */
+.consent{display:flex;gap:10px;align-items:flex-start;margin:20px 0 10px;font-size:.83rem;color:var(--muted)}
+.consent input{margin-top:2px;width:20px;height:20px;accent-color:var(--accent);flex:0 0 auto}
+
+.foot{margin-top:22px;text-align:center;font-size:.75rem;color:var(--faint)}
+.foot .linkbtn{font-size:.75rem}
+
+/* ---- Confirmation ---- */
+.confirm{text-align:center;padding:34px 20px}
+.confirm__badge{width:88px;height:88px;margin:0 auto 18px;border-radius:50%;background:var(--success-soft);display:grid;place-items:center}
+.confirm__badge svg{width:48px;height:48px}
+.check-path{stroke:var(--success);stroke-width:4;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:48;stroke-dashoffset:48;animation:draw .6s .15s forwards ease-out}
+@keyframes draw{to{stroke-dashoffset:0}}
+.confirm h1{font-size:1.4rem;font-weight:800;margin:.2rem 0}
+.confirm p{color:var(--muted);margin:.4rem 0}
+.confirm .ref{display:inline-block;margin-top:8px;font-size:.8rem;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-control);padding:8px 12px;color:var(--text)}
+.confirm .ts{font-weight:600;color:var(--text)}
+
+/* ---- Écran d'erreur ---- */
+.errscreen{text-align:center;padding:30px 20px}
+.errscreen__ic{width:76px;height:76px;margin:0 auto 16px;border-radius:20px;display:grid;place-items:center;background:var(--warning-soft);color:var(--warning)}
+.errscreen__ic svg{width:40px;height:40px}
+.errscreen h1{font-size:1.3rem;font-weight:800;margin:.2rem 0 .3rem}
+.errscreen p{color:var(--muted);margin:.5rem 0}
+.tips{text-align:left;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;margin:16px 0;font-size:.85rem;color:var(--muted)}
+.tips li{margin:6px 0}
+.errscreen .btn{margin-top:6px}
+.errscreen .stack{display:flex;flex-direction:column;gap:10px;margin-top:10px}
+
+/* ---- Skeleton ---- */
+.sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 37%,var(--surface-2) 63%);background-size:400% 100%;animation:shim 1.4s ease infinite;border-radius:10px}
+@keyframes shim{0%{background-position:100% 0}100%{background-position:-100% 0}}
+.loading{padding:40px 20px;text-align:center}
+.loading .sk{height:16px;margin:10px auto;max-width:80%}
+.loading .lbl{color:var(--muted);margin-top:18px;font-size:.9rem}
+
+/* ---- Modal ---- */
+.scrim{position:fixed;inset:0;background:rgba(15,18,25,.5);backdrop-filter:blur(3px);display:grid;place-items:center;z-index:50;padding:16px}
+.scrim[hidden]{display:none}
+.modal{background:var(--surface);border-radius:20px;box-shadow:var(--sh-3);max-width:440px;width:100%;padding:22px 22px 18px;animation:pop .2s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}
+.modal__head{display:flex;align-items:flex-start;gap:12px}
+.modal__ic{flex:0 0 42px;height:42px;width:42px;border-radius:12px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.modal__ic svg{width:22px;height:22px}
+.modal__x{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);padding:8px;border-radius:8px;min-width:40px;min-height:40px}
+.modal__x:hover{background:var(--surface-2)}
+.modal h2{font-size:1.15rem;font-weight:750;margin:2px 0 6px}
+.modal p{color:var(--muted);font-size:.9rem;margin:0 0 4px}
+.modal .who{color:var(--text);font-weight:650}
+.modal__sep{border:none;border-top:1px solid var(--border);margin:16px 0}
+.modal__foot{display:flex;gap:10px;justify-content:flex-end}
+@media (max-width:460px){.modal__foot{flex-direction:column-reverse}.modal__foot .btn{width:100%}}
+
+/* ---- Panneau démo ---- */
+.demo{
+  position:fixed;top:10px;right:10px;z-index:80;
+  background:var(--surface);border:1px solid var(--border-strong);border-radius:14px;
+  box-shadow:var(--sh-2);padding:10px;max-width:190px;font-size:.72rem;
+}
+.demo__t{font-weight:700;font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin:0 0 8px;display:flex;align-items:center;gap:6px}
+.demo__t::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--brand-orange)}
+.demo button{display:block;width:100%;text-align:left;margin:4px 0;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;padding:7px 9px;font:inherit;font-size:.74rem;color:var(--text);cursor:pointer}
+.demo button:hover{border-color:var(--accent);color:var(--accent)}
+.demo__row{display:flex;gap:6px;align-items:center;margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+.demo__row label{font-size:.7rem;color:var(--muted);cursor:pointer}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+</style>
+</head>
+<body>
+
+<!-- Panneau de démonstration (non final) -->
+<aside class="demo" aria-label="Contrôles de démonstration">
+  <p class="demo__t">Aperçu démo</p>
+  <button type="button" onclick="Demo.go('email')">0 · Écran email</button>
+  <button type="button" onclick="Demo.go('complete')">1 · Premier passage</button>
+  <button type="button" onclick="Demo.go('recurrent')">2 · Participant récurrent</button>
+  <button type="button" onclick="Demo.go('error')">3 · Géoloc refusée</button>
+  <button type="button" onclick="Demo.go('confirm')">4 · Confirmation</button>
+  <button type="button" onclick="Demo.go('overlap')">5 · Déjà à un autre événement</button>
+  <div class="demo__row">
+    <input type="checkbox" id="forceRefuse" style="width:16px;height:16px;accent-color:var(--brand-orange)">
+    <label for="forceRefuse">Simuler refus géoloc</label>
+  </div>
+  <div class="demo__row">
+    <button type="button" onclick="Demo.theme()" style="text-align:center">Basculer thème</button>
+  </div>
+</aside>
+
+<div class="phone">
+  <header class="appbar">
+    <img src="assets/logo-acs-groupe.png" alt="ACS Groupe">
+    <div class="appbar__ev">
+      <span class="appbar__title">Atelier Cybersécurité</span>
+      <span class="appbar__meta">19 juil. 2026 · 14:00 · Salle Ébène</span>
+    </div>
+  </header>
+
+  <!-- ÉCRAN : chargement -->
+  <section class="screen" id="s-loading" aria-busy="true">
+    <div class="loading">
+      <div class="sk" style="width:120px;height:120px;border-radius:16px;margin:0 auto"></div>
+      <div class="sk"></div>
+      <div class="sk" style="max-width:60%"></div>
+      <p class="lbl">Vérification de l'accès…</p>
+    </div>
+  </section>
+
+  <!-- ÉCRAN : identification par email (avant tout le reste) -->
+  <section class="screen" id="s-email" hidden>
+    <div class="section-label">Votre email</div>
+    <div class="field" data-req data-type="email">
+      <label for="email">Email <span class="req">*</span></label>
+      <input class="control" id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="nom@entreprise.ci">
+      <div class="err-msg">Entrez un email valide, ex. nom@entreprise.ci</div>
+      <div class="help">Astuce démo : <b>awa@acs.ci</b> (reconnaissance) · <b>k.ndri@acs.ci</b> (déjà à un autre événement).</div>
+    </div>
+    <button type="button" class="btn btn--primary btn--block btn--lg" onclick="Flow.continueFromEmail()">Continuer</button>
+  </section>
+
+  <!-- ÉCRAN : formulaire (complet ou reconnaissance) -->
+  <section class="screen" id="s-form" hidden>
+
+    <!-- Bandeau départ enregistré (uniquement après un chevauchement confirmé) -->
+    <div id="departNote" class="flash" role="status" hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      <div>Votre départ de <b id="departNoteEv">l'événement précédent</b> a été enregistré. Vous pouvez maintenant vous enregistrer ici.</div>
+    </div>
+
+    <!-- Bandeau géoloc -->
+    <div id="geo" class="geo" role="status" aria-live="polite">
+      <div class="geo__ic" id="geoIc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      </div>
+      <div class="geo__body">
+        <div class="geo__t" id="geoT">Localisation en cours…</div>
+        <p class="geo__d" id="geoD">Confirme automatiquement que vous êtes bien sur place. Elle n'est pas utilisée à d'autres fins.</p>
+      </div>
+    </div>
+
+    <!-- Carte reconnaissance (uniquement si l'email est déjà en base) -->
+    <div id="recog" class="recog" hidden>
+      <div class="avatar" id="recogInit">AK</div>
+      <div>
+        <div class="recog__t" id="recogHello">On vous reconnaît, Awa</div>
+        <div class="recog__d" id="recogInfo">ACS Consulting · Direction SI</div>
+        <div class="recog__edit"><button type="button" class="linkbtn" onclick="Flow.expand()">Ce ne sont pas vos infos ? Modifier</button></div>
+      </div>
+    </div>
+
+    <form id="form" novalidate>
+      <!-- Bloc infos complètes (uniquement si l'email n'est PAS reconnu) -->
+      <div id="fullFields" hidden>
+        <div class="section-label">Vos coordonnées</div>
+
+        <div class="field" data-req>
+          <label for="nom">Nom <span class="req">*</span></label>
+          <input class="control" id="nom" name="nom" autocomplete="family-name" placeholder="Koné">
+          <div class="err-msg">Ce champ est requis.</div>
+        </div>
+        <div class="field" data-req>
+          <label for="prenom">Prénom(s) <span class="req">*</span></label>
+          <input class="control" id="prenom" name="prenom" autocomplete="given-name" placeholder="Awa">
+          <div class="err-msg">Ce champ est requis.</div>
+        </div>
+        <div class="field" data-req>
+          <label for="tel">Téléphone <span class="req">*</span></label>
+          <input class="control" id="tel" name="tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="+225 07 00 00 00 00">
+          <div class="err-msg">Ce champ est requis.</div>
+        </div>
+
+        <div class="section-label">Votre structure</div>
+
+        <div class="field" data-req>
+          <label for="entite">Entité / Entreprise <span class="req">*</span></label>
+          <input class="control" id="entite" name="entite" autocomplete="organization" placeholder="Votre entreprise">
+          <div class="err-msg">Ce champ est requis.</div>
+        </div>
+        <div class="field" data-req>
+          <label for="direction">Direction <span class="req">*</span></label>
+          <input class="control" id="direction" name="direction" placeholder="Direction des Systèmes d'Information">
+          <div class="err-msg">Ce champ est requis.</div>
+        </div>
+        <div class="field">
+          <label for="service">Service <span class="opt">(facultatif)</span></label>
+          <input class="control" id="service" name="service" placeholder="Sécurité applicative">
+        </div>
+        <div class="field" data-req>
+          <label for="poste">Poste ou Fonction <span class="req">*</span></label>
+          <input class="control" id="poste" name="poste" autocomplete="organization-title" placeholder="Analyste sécurité">
+          <div class="err-msg">Ce champ est requis.</div>
+        </div>
+      </div>
+
+      <!-- Signature (toujours requise, dans les deux cas) -->
+      <div class="section-label">Votre signature <span class="req" aria-hidden="true">*</span></div>
+      <div class="sigwrap">
+        <canvas id="sigpad" role="img" aria-label="Zone de signature manuscrite. Signez avec le doigt."></canvas>
+        <div class="sig-ph" id="sigPh">Signez avec le doigt</div>
+      </div>
+      <div class="sig-actions">
+        <span class="help">Utilisez votre doigt pour signer dans le cadre.</span>
+        <button type="button" class="btn btn--ghost" id="sigClear" onclick="Sig.clear()">Effacer</button>
+      </div>
+
+      <!-- Mentions -->
+      <label class="consent">
+        <input type="checkbox" id="consent" onchange="Flow.validate()">
+        <span>Je reconnais avoir pris connaissance du traitement de mes données.
+          <button type="button" class="linkbtn" onclick="Modal.open('mentions')">Détails</button></span>
+      </label>
+
+      <button type="button" class="btn btn--primary btn--block btn--lg" id="submit" disabled onclick="Flow.trySubmit()">
+        Valider ma présence
+      </button>
+
+      <div class="foot">
+        <button type="button" class="linkbtn" onclick="Modal.open('mentions')">Vos données</button> · ACS Groupe
+      </div>
+    </form>
+  </section>
+
+  <!-- ÉCRAN : confirmation -->
+  <section class="screen" id="s-confirm" hidden>
+    <div class="confirm" role="status">
+      <div class="confirm__badge">
+        <svg viewBox="0 0 52 52" aria-hidden="true"><path class="check-path" d="M14 27 l8 8 l16 -18"/></svg>
+      </div>
+      <h1>Présence enregistrée</h1>
+      <p id="confirmMsg">Merci Awa, votre présence à l'Atelier Cybersécurité est confirmée.</p>
+      <p class="ts">19 juil. 2026 · 14:07</p>
+      <div class="ref">Référence : PRS-4F2A9</div>
+      <p style="margin-top:18px">Vous pouvez fermer cette page.</p>
+      <div class="foot"><button type="button" class="linkbtn" onclick="Modal.open('mentions')">Vos données · mentions</button></div>
+    </div>
+  </section>
+
+  <!-- ÉCRAN : erreur géoloc (E4) -->
+  <section class="screen" id="s-error" hidden>
+    <div class="errscreen">
+      <div class="errscreen__ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><line x1="9.5" y1="9.5" x2="14.5" y2="14.5"/><line x1="14.5" y1="9.5" x2="9.5" y2="14.5"/></svg>
+      </div>
+      <h1>Nous avons besoin de votre position</h1>
+      <p>Votre position confirme votre présence sur place. Sans elle, l'émargement ne peut pas être validé.</p>
+      <ul class="tips">
+        <li>Autorisez la localisation dans votre navigateur.</li>
+        <li>Vérifiez que le GPS / la localisation est activé(e) sur votre appareil.</li>
+      </ul>
+      <div class="stack">
+        <button type="button" class="btn btn--primary btn--block" onclick="Geo.retry()">Réessayer la localisation</button>
+        <button type="button" class="btn btn--ghost btn--block" onclick="Modal.open('help')">Comment autoriser ?</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<!-- Modal de confirmation avant enregistrement -->
+<div class="scrim" id="scrim" hidden>
+  <!-- confirmation soumission -->
+  <div class="modal" id="modal-submit" role="dialog" aria-modal="true" aria-labelledby="m-sub-t" hidden>
+    <div class="modal__head">
+      <div class="modal__ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+      </div>
+      <button class="modal__x" aria-label="Fermer" onclick="Modal.close()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="20" height="20" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="m-sub-t">Confirmer votre présence ?</h2>
+    <p class="who" id="m-sub-who">Awa Koné · ACS Consulting</p>
+    <p>Votre position et votre signature vont être enregistrées pour cet événement.</p>
+    <hr class="modal__sep">
+    <div class="modal__foot">
+      <button type="button" class="btn btn--ghost" onclick="Modal.close()">Annuler</button>
+      <button type="button" class="btn btn--primary" id="m-confirm" onclick="Flow.submit()">Confirmer ma présence</button>
+    </div>
+  </div>
+
+  <!-- mentions données -->
+  <div class="modal" id="modal-mentions" role="dialog" aria-modal="true" aria-labelledby="m-men-t" hidden>
+    <div class="modal__head">
+      <div class="modal__ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="12" y1="11" x2="12" y2="16"/><circle cx="12" cy="8" r=".6" fill="currentColor"/></svg>
+      </div>
+      <button class="modal__x" aria-label="Fermer" onclick="Modal.close()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="20" height="20" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="m-men-t">Traitement de vos données</h2>
+    <p>ACS Groupe collecte ces informations (identité, coordonnées, structure, position et signature) dans le seul but d'établir la liste de présence de cet événement.</p>
+    <p style="margin-top:8px">Conservation, base légale et droits selon le cadre ivoirien (Loi n°2013-450, ARTCI). <i>(Contenu à finaliser.)</i></p>
+    <hr class="modal__sep">
+    <div class="modal__foot"><button type="button" class="btn btn--primary" onclick="Modal.close()">J'ai compris</button></div>
+  </div>
+
+  <!-- aide géoloc -->
+  <div class="modal" id="modal-help" role="dialog" aria-modal="true" aria-labelledby="m-help-t" hidden>
+    <div class="modal__head">
+      <div class="modal__ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+      </div>
+      <button class="modal__x" aria-label="Fermer" onclick="Modal.close()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="20" height="20" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="m-help-t">Autoriser la localisation</h2>
+    <p><b>iPhone (Safari)</b> : Réglages › Safari › Localisation › Autoriser, puis rechargez.</p>
+    <p style="margin-top:8px"><b>Android (Chrome)</b> : icône cadenas dans la barre d'adresse › Autorisations › Localisation › Autoriser.</p>
+    <p style="margin-top:8px"><b>Ordinateur</b> : cliquez sur le cadenas à gauche de l'adresse › Localisation › Autoriser.</p>
+    <hr class="modal__sep">
+    <div class="modal__foot"><button type="button" class="btn btn--primary" onclick="Modal.close()">Fermer</button></div>
+  </div>
+
+  <!-- choix anti-chevauchement (déjà à un autre événement) -->
+  <div class="modal" id="modal-overlap" role="dialog" aria-modal="true" aria-labelledby="m-ov-t" hidden>
+    <div class="modal__head">
+      <div class="modal__ic">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h13l-3-3M20 17H7l3 3"/></svg>
+      </div>
+      <button class="modal__x" aria-label="Fermer" onclick="Overlap.cancel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="20" height="20" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg>
+      </button>
+    </div>
+    <h2 id="m-ov-t">Vous êtes déjà à un autre événement</h2>
+    <p>D'après votre email, vous êtes actuellement enregistré(e) à cet événement :</p>
+    <div class="ov-card">
+      <div class="ov-card__t" id="ov-ev">Réunion Comité SI</div>
+      <div class="ov-card__row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ov-when">aujourd'hui · 13:30 → 15:30</span></div>
+      <div class="ov-card__row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg><span id="ov-lieu">Salle Acajou, Cocody</span></div>
+    </div>
+    <p>Pour vous enregistrer à <b class="who">l'Atelier Cybersécurité</b>, nous enregistrerons votre départ de l'événement ci-dessus. Vous ne pouvez être présent(e) qu'à un seul événement à la fois.</p>
+    <hr class="modal__sep">
+    <div class="modal__foot">
+      <button type="button" class="btn btn--ghost" onclick="Overlap.cancel()">Annuler</button>
+      <button type="button" class="btn btn--primary" onclick="Overlap.confirm()">Confirmer mon départ et continuer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ================= État global ================= */
+const State = { geo:'idle', recurrent:false, person:null, prevEv:null };
+const $ = s => document.querySelector(s);
+const screens = { loading:'#s-loading', email:'#s-email', form:'#s-form', confirm:'#s-confirm', error:'#s-error' };
+
+/* Emails connus (reconnaissance) — démo */
+const KNOWN = {
+  'awa@acs.ci':   { prenom:'Awa',     nom:'Koné',   init:'AK', ent:'ACS Consulting', detail:'Direction SI' },
+  'k.ndri@acs.ci':{ prenom:'Kouassi', nom:"N'Dri",  init:'KN', ent:'ACS Consulting', detail:'Infrastructure' }
+};
+/* Emails déjà actifs (présence sans départ) sur un autre événement en cours — démo.
+   awa@acs.ci n'y figure pas volontairement : son parcours de reconnaissance reste intact. */
+const ACTIVE_ELSEWHERE = {
+  'k.ndri@acs.ci': { ev:'Réunion Comité SI', when:"aujourd'hui · 13:30 → 15:30", lieu:'Salle Acajou, Cocody' }
+};
+
+function showScreen(name){
+  Object.values(screens).forEach(sel => $(sel).hidden = true);
+  $(screens[name]).hidden = false;
+  window.scrollTo({top:0, behavior:'auto'});
+}
+
+/* ================= Géolocalisation (simulée) ================= */
+const Geo = {
+  request(){
+    const box=$('#geo'), t=$('#geoT'), d=$('#geoD'), ic=$('#geoIc');
+    State.geo='pending';
+    box.className='geo geo--pending';
+    t.textContent='Localisation en cours…';
+    d.textContent='Merci de patienter quelques instants.';
+    ic.innerHTML='<span class="spin" aria-hidden="true"></span>';
+    setTimeout(()=>{
+      if($('#forceRefuse').checked){ Geo.fail(); }
+      else { Geo.success(); }
+    }, 1100);
+  },
+  success(){
+    State.geo='ok';
+    const box=$('#geo'), t=$('#geoT'), d=$('#geoD'), ic=$('#geoIc');
+    box.className='geo geo--ok';
+    ic.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+    t.textContent='Position enregistrée';
+    d.textContent='Vous pouvez valider votre présence.';
+    Flow.validate();
+  },
+  fail(){
+    State.geo='denied';
+    showScreen('error');
+  },
+  retry(){
+    // repart du formulaire avec géoloc à refaire
+    $('#forceRefuse').checked=false;
+    Geo.reset();
+    showScreen('form');
+    Geo.request();
+  },
+  reset(){
+    State.geo='idle';
+    const box=$('#geo'), t=$('#geoT'), d=$('#geoD'), ic=$('#geoIc');
+    box.className='geo';
+    ic.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>';
+    t.textContent='Localisation en cours…';
+    d.textContent='Confirme automatiquement que vous êtes bien sur place. Elle n\'est pas utilisée à d\'autres fins.';
+  }
+};
+
+/* ================= Signature (canvas réel) ================= */
+const Sig = {
+  canvas:null, ctx:null, drawing:false, hasInk:false, last:null,
+  init(){
+    this.canvas=$('#sigpad'); this.ctx=this.canvas.getContext('2d');
+    this.resize();
+    window.addEventListener('resize', ()=>this.resize());
+    const c=this.canvas;
+    c.addEventListener('pointerdown', e=>this.start(e));
+    c.addEventListener('pointermove', e=>this.move(e));
+    c.addEventListener('pointerup', ()=>this.end());
+    c.addEventListener('pointerleave', ()=>this.end());
+  },
+  resize(){
+    const r=this.canvas.getBoundingClientRect();
+    const dpr=window.devicePixelRatio||1;
+    const data = this.hasInk ? this.canvas.toDataURL() : null;
+    this.canvas.width=r.width*dpr; this.canvas.height=r.height*dpr;
+    this.ctx.scale(dpr,dpr);
+    this.ctx.lineWidth=2.5; this.ctx.lineCap='round'; this.ctx.lineJoin='round';
+    this.ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--text').trim()||'#12141a';
+  },
+  pos(e){
+    const r=this.canvas.getBoundingClientRect();
+    return { x:e.clientX-r.left, y:e.clientY-r.top };
+  },
+  start(e){ this.canvas.setPointerCapture(e.pointerId); this.drawing=true; this.last=this.pos(e); },
+  move(e){
+    if(!this.drawing) return;
+    e.preventDefault();
+    const p=this.pos(e), l=this.last;
+    const mx=(l.x+p.x)/2, my=(l.y+p.y)/2;
+    this.ctx.beginPath();
+    this.ctx.moveTo(l.x,l.y);
+    this.ctx.quadraticCurveTo(l.x,l.y,mx,my);
+    this.ctx.stroke();
+    this.last=p;
+    if(!this.hasInk){ this.hasInk=true; $('#sigPh').style.opacity='0'; Flow.validate(); }
+  },
+  end(){ this.drawing=false; },
+  clear(){
+    this.ctx.clearRect(0,0,this.canvas.width,this.canvas.height);
+    this.hasInk=false; $('#sigPh').style.opacity='1'; Flow.validate();
+  }
+};
+
+/* ================= Flow / validation ================= */
+const Flow = {
+  requiredIds(){
+    return State.recurrent ? [] : ['nom','prenom','tel','entite','direction','poste'];
+  },
+  fieldsFilled(){
+    return this.requiredIds().every(id => $('#'+id).value.trim()!=='');
+  },
+  validate(){
+    const ok = State.geo==='ok' && Sig.hasInk && $('#consent').checked && this.fieldsFilled();
+    $('#submit').disabled = !ok;
+    return ok;
+  },
+  continueFromEmail(){
+    const v=($('#email').value||'').trim().toLowerCase();
+    const f=$('#email').closest('.field');
+    if(!v || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v)){
+      f.classList.add('invalid'); $('#email').setAttribute('aria-invalid','true'); $('#email').focus(); return;
+    }
+    f.classList.remove('invalid'); $('#email').removeAttribute('aria-invalid');
+    // détection : déjà actif sur un autre événement en cours → choix (pas un blocage)
+    const act = ACTIVE_ELSEWHERE[v];
+    if(act){ Overlap.show(v, act); return; }
+    this.proceed(v, false);
+  },
+  // Poursuite normale du parcours après l'email (reconnaissance si connu, sinon formulaire)
+  proceed(email, fromOverlap){
+    const rec = KNOWN[email];
+    if(rec){ this.collapse(rec); } else { this.expand(); }
+    const note=$('#departNote');
+    if(fromOverlap && State.prevEv){ $('#departNoteEv').textContent = State.prevEv; note.hidden=false; }
+    else { note.hidden=true; }
+    showScreen('form');
+    Geo.reset();
+    Geo.request();
+  },
+  collapse(rec){
+    rec = rec || KNOWN['awa@acs.ci'];
+    State.recurrent=true;
+    State.person=rec;
+    $('#fullFields').hidden=true;
+    $('#recogInit').textContent=rec.init;
+    $('#recogHello').textContent='On vous reconnaît, '+rec.prenom;
+    $('#recogInfo').textContent=rec.ent+' · '+rec.detail;
+    const r=$('#recog'); r.hidden=false;
+    r.setAttribute('role','status'); r.setAttribute('aria-live','polite');
+    Flow.validate();
+  },
+  expand(){
+    State.recurrent=false;
+    State.person=null;
+    $('#fullFields').hidden=false;
+    $('#recog').hidden=true;
+    Flow.validate();
+  },
+  markErrors(){
+    let firstBad=null;
+    this.requiredIds().forEach(id=>{
+      const el=$('#'+id), f=el.closest('.field');
+      if(el.value.trim()===''){ f.classList.add('invalid'); el.setAttribute('aria-invalid','true'); if(!firstBad) firstBad=el; }
+      else { f.classList.remove('invalid'); el.removeAttribute('aria-invalid'); }
+    });
+    if(firstBad) firstBad.focus();
+  },
+  trySubmit(){
+    if(!this.validate()){ this.markErrors(); return; }
+    // récap dans le modal
+    const p = State.person;
+    const who = (State.recurrent && p) ? (p.prenom+' '+p.nom+' · '+p.ent)
+      : (($('#prenom').value||'').trim()+' '+($('#nom').value||'').trim()).trim()+' · '+($('#entite').value||'').trim();
+    $('#m-sub-who').textContent = who || '—';
+    Modal.open('submit');
+  },
+  submit(){
+    Modal.close();
+    const prenom = (State.recurrent && State.person) ? State.person.prenom
+      : (($('#prenom').value||'').trim() || 'à vous');
+    $('#confirmMsg').textContent = 'Merci '+prenom+', votre présence à l\'Atelier Cybersécurité est confirmée.';
+    showScreen('confirm');
+  }
+};
+
+/* ================= Anti-chevauchement (déjà à un autre événement) ================= */
+const Overlap = {
+  email:null,
+  show(email, act){
+    this.email=email;
+    State.prevEv=act.ev;
+    $('#ov-ev').textContent=act.ev;
+    $('#ov-when').textContent=act.when;
+    $('#ov-lieu').textContent=act.lieu;
+    Modal.open('overlap');
+  },
+  confirm(){
+    // le départ sur l'événement précédent est enregistré, puis on reprend le flux normal
+    Modal.close();
+    Flow.proceed(this.email, true);
+  },
+  cancel(){
+    // refus : on ne s'enregistre pas ici, on reste sur l'événement en cours — on referme juste le modal
+    Modal.close();
+  }
+};
+
+/* ================= Modal ================= */
+const Modal = {
+  current:null, lastFocus:null,
+  open(id){
+    this.lastFocus=document.activeElement;
+    $('#scrim').hidden=false;
+    ['submit','mentions','help','overlap'].forEach(m=> $('#modal-'+m).hidden = (m!==id));
+    this.current=id;
+    document.body.style.overflow='hidden';
+    // focus initial : PAS sur le bouton d'action
+    const dlg=$('#modal-'+id);
+    const target = dlg.querySelector('.modal__x') || dlg;
+    setTimeout(()=>target.focus(),30);
+    document.addEventListener('keydown', this._esc);
+  },
+  close(){
+    $('#scrim').hidden=true; this.current=null;
+    document.body.style.overflow='';
+    document.removeEventListener('keydown', Modal._esc);
+    if(Modal.lastFocus) Modal.lastFocus.focus();
+  },
+  _esc(e){ if(e.key==='Escape') Modal.close(); }
+};
+$('#scrim').addEventListener('click', e=>{ if(e.target===$('#scrim')) Modal.close(); });
+
+/* ================= Démo ================= */
+const Demo = {
+  go(what){
+    Modal.close();
+    $('#departNote').hidden=true;
+    if(what==='email'){ State.prevEv=null; $('#email').value=''; showScreen('email'); }
+    if(what==='complete'){ Flow.expand(); Geo.reset(); Sig.clear(); $('#consent').checked=false; $('#email').value=''; showScreen('form'); Geo.request(); }
+    if(what==='recurrent'){ Geo.reset(); Sig.clear(); $('#consent').checked=false; $('#email').value='awa@acs.ci'; showScreen('form'); Flow.collapse(); Geo.request(); }
+    if(what==='error'){ showScreen('error'); }
+    if(what==='confirm'){ showScreen('confirm'); }
+    if(what==='overlap'){ Sig.clear(); $('#consent').checked=false; $('#email').value='k.ndri@acs.ci'; showScreen('email'); Overlap.show('k.ndri@acs.ci', ACTIVE_ELSEWHERE['k.ndri@acs.ci']); }
+  },
+  theme(){
+    const cur=document.documentElement.getAttribute('data-theme');
+    const dark = cur ? cur==='dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+    document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+    Sig.resize();
+  }
+};
+
+/* ================= Init ================= */
+window.addEventListener('DOMContentLoaded', ()=>{
+  Sig.init();
+  showScreen('loading');
+  setTimeout(()=>showScreen('email'), 1300);
+});
+</script>
+</body>
+</html>

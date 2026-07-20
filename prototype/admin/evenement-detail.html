@@ -1,0 +1,1823 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Atelier Cybersécurité — Détail · Presence · ACS Groupe</title>
+<style>
+/* ============================================================
+   Presence — Dashboard organisateur · Détail événement (écran 4)
+   Design system maison ACS. 0 dépendance externe. Vanilla JS.
+   ============================================================ */
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --surface-2:#f7f8fa; --surface-3:#eef0f4;
+  --border:#e3e6ec; --border-strong:#d2d7e0;
+  --text:#12141a; --muted:#565d6b; --faint:#8a91a0; --on-accent:#fff;
+  --accent:#1e2a78; --accent-hover:#162058; --accent-bright:#33429c; --accent-soft:#e9ecfa;
+  --brand-orange:#f07a13; --brand-orange-soft:#fdeddb;
+  --error:#e42313; --error-soft:#fbe4e1;
+  --success:#0e9e86; --success-soft:#d8f3ec;
+  --warning:#b8770f; --warning-soft:#fbefd6;
+  /* palette dataviz (catégorielle accessible clair/sombre) */
+  --c1:#1e2a78; --c2:#0e9e86; --c3:#f07a13; --c4:#33429c; --c5:#7c93f0; --c6:#9aa3b2;
+  --info:#2563eb; --info-soft:#e5edfd; --violet:#7c3aed; --violet-soft:#efe9fd;
+  --type-atelier:#7c3aed; --type-atelier-bg:#efe9fd;
+  --type-reunion:#2563eb; --type-reunion-bg:#e5edfd;
+  --type-rencontre:#d6336c; --type-rencontre-bg:#fce3ec;
+  --type-formation:#0e9e86; --type-formation-bg:#d8f3ec;
+  --type-conference:#e0620d; --type-conference-bg:#fdeddb;
+  --radius:16px; --r-control:10px; --r-pill:999px;
+  --sh-1:0 1px 2px rgba(18,20,26,.05),0 1px 3px rgba(18,20,26,.05);
+  --sh-2:0 2px 4px rgba(18,20,26,.04),0 14px 30px -14px rgba(18,20,26,.18);
+  --sh-3:0 8px 16px -8px rgba(18,20,26,.12),0 30px 60px -28px rgba(18,20,26,.30);
+  --focus:0 0 0 3px rgba(30,42,120,.32);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b; --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --c1:#7c93f0; --c2:#37d6b8; --c3:#f79a45; --c4:#9fb0f7; --c5:#5b6fd6; --c6:#6d7484;
+  --info:#7aa2f7; --info-soft:#17244d; --violet:#c4b5fd; --violet-soft:#2c2150;
+  --type-atelier:#c4b5fd; --type-atelier-bg:#2c2150;
+  --type-reunion:#93b4fb; --type-reunion-bg:#17244d;
+  --type-rencontre:#f7a8c8; --type-rencontre-bg:#3d1526;
+  --type-formation:#37d6b8; --type-formation-bg:#0f3a33;
+  --type-conference:#f79a45; --type-conference-bg:#3a2711;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}}
+[data-theme="dark"]{
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b; --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --c1:#7c93f0; --c2:#37d6b8; --c3:#f79a45; --c4:#9fb0f7; --c5:#5b6fd6; --c6:#6d7484;
+  --info:#7aa2f7; --info-soft:#17244d; --violet:#c4b5fd; --violet-soft:#2c2150;
+  --type-atelier:#c4b5fd; --type-atelier-bg:#2c2150;
+  --type-reunion:#93b4fb; --type-reunion-bg:#17244d;
+  --type-rencontre:#f7a8c8; --type-rencontre-bg:#3d1526;
+  --type-formation:#37d6b8; --type-formation-bg:#0f3a33;
+  --type-conference:#f79a45; --type-conference-bg:#3a2711;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+a{color:inherit}
+
+/* ======================= Shell ======================= */
+.app{display:flex;min-height:100vh}
+.side{
+  width:248px;flex:0 0 248px;background:var(--surface);border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px;gap:4px;
+}
+.side__logo{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+.side__logo img{height:64px;width:auto}
+.side__logo .pn{font-weight:800;letter-spacing:-.02em;font-size:1.02rem}
+.side__logo .pn span{color:var(--brand-orange)}
+.navlbl{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}
+.nav a{
+  display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r-control);
+  color:var(--muted);font-weight:600;font-size:.9rem;text-decoration:none;transition:background .12s,color .12s;
+}
+.nav a svg{width:19px;height:19px;flex:0 0 auto}
+.nav a:hover{background:var(--surface-2);color:var(--text)}
+.nav a.active{background:var(--accent-soft);color:var(--accent)}
+.side__foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.user{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.user .av{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.82rem;flex:0 0 auto}
+.user__n{font-size:.84rem;font-weight:650;line-height:1.15}
+.user__r{font-size:.72rem;color:var(--faint)}
+.iconbtn{background:none;border:1px solid var(--border);border-radius:var(--r-control);color:var(--muted);cursor:pointer;padding:8px;display:inline-grid;place-items:center;min-width:38px;min-height:38px;transition:.12s}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn svg{width:18px;height:18px}
+
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{
+  position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;
+  padding:12px 22px;background:color-mix(in srgb,var(--surface) 86%,transparent);
+  backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--border);
+}
+.crumbs{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--muted);min-width:0}
+.crumbs a{text-decoration:none;color:var(--muted);font-weight:600;white-space:nowrap}
+.crumbs a:hover{color:var(--accent)}
+.crumbs .sep{color:var(--faint)}
+.crumbs .cur{color:var(--text);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .sp{flex:1}
+.kbtn{
+  display:inline-flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--border-strong);
+  border-radius:var(--r-control);padding:8px 12px;color:var(--muted);cursor:pointer;font:inherit;font-size:.85rem;min-height:40px;
+}
+.kbtn:hover{border-color:var(--accent);color:var(--accent)}
+.kbtn kbd{font-family:var(--mono);font-size:.72rem;background:var(--surface);border:1px solid var(--border-strong);border-radius:6px;padding:1px 6px;color:var(--faint)}
+.kbtn svg{width:16px;height:16px}
+
+.content{padding:22px;max-width:1180px;width:100%;margin:0 auto}
+
+/* ======================= Boutons ======================= */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:650;font-size:.88rem;cursor:pointer;border-radius:var(--r-control);padding:9px 14px;min-height:42px;border:1px solid transparent;transition:background .15s,transform .08s,box-shadow .15s,border-color .15s;white-space:nowrap;text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:17px;height:17px}
+.btn--primary{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 18px -10px rgba(30,42,120,.7)}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn--ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn--sm{min-height:36px;padding:7px 11px;font-size:.83rem}
+.btn:focus-visible{outline:none;box-shadow:var(--focus)}
+
+/* ======================= En-tête événement ======================= */
+.evhead{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);padding:20px 22px;margin-bottom:18px}
+.evhead__top{display:flex;align-items:flex-start;gap:16px;flex-wrap:wrap}
+.evhead h1{font-size:1.5rem;font-weight:820;letter-spacing:-.02em;margin:0 0 6px}
+.evhead__meta{display:flex;flex-wrap:wrap;gap:16px;color:var(--muted);font-size:.88rem}
+.evhead__meta span{display:inline-flex;align-items:center;gap:6px}
+.evhead__meta span[hidden]{display:none}
+.evhead__meta svg{width:16px;height:16px;color:var(--faint)}
+.evhead__actions{margin-left:auto;display:flex;gap:9px;flex-wrap:wrap}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:.76rem;font-weight:700;padding:5px 11px;border-radius:var(--r-pill);border:1px solid transparent}
+.tag svg{width:13px;height:13px}
+.tag--live{color:var(--success);background:var(--success-soft)}
+.tag--live::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 55%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.tag--soon{color:var(--accent);background:var(--accent-soft)}
+.tag--done{color:var(--muted);background:var(--surface-3)}
+.tag--mode{color:var(--muted);background:var(--surface-2);border-color:var(--border)}
+.tag--type svg{width:13px;height:13px}
+.type-atelier{color:var(--type-atelier);background:var(--type-atelier-bg)}
+.type-reunion{color:var(--type-reunion);background:var(--type-reunion-bg)}
+.type-rencontre{color:var(--type-rencontre);background:var(--type-rencontre-bg)}
+.type-formation{color:var(--type-formation);background:var(--type-formation-bg)}
+.type-conference{color:var(--type-conference);background:var(--type-conference-bg)}
+.tag--cancelled{color:var(--error);background:var(--error-soft)}
+.tag--reported{color:var(--warning);background:var(--warning-soft)}
+.evhead__meta .reportnote{color:var(--warning)}
+.evhead__meta .reportnote svg{color:var(--warning)}
+h1.is-cancelled{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--error) 55%,transparent)}
+
+/* bannière d'état (annulé / reporté) */
+.evbanner{display:flex;gap:13px;align-items:flex-start;padding:15px 17px;border-radius:var(--radius);margin-bottom:18px;font-size:.9rem}
+.evbanner[hidden]{display:none}
+.evbanner svg{width:20px;height:20px;flex:0 0 auto;margin-top:1px}
+.evbanner__t{font-weight:750}
+.evbanner__d{color:var(--muted);margin-top:2px}
+.evbanner--danger{background:var(--error-soft)}
+.evbanner--danger .evbanner__t{color:var(--error)}
+.evbanner--danger svg{color:var(--error)}
+.evbanner--warn{background:var(--warning-soft)}
+.evbanner--warn .evbanner__t{color:var(--warning)}
+.evbanner--warn svg{color:var(--warning)}
+.evbanner .evbanner__d{color:inherit;opacity:.85}
+
+/* bouton danger + menu ⋯ */
+.btn--danger{background:var(--error);color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--error) 70%,transparent)}
+.btn--danger:hover{background:color-mix(in srgb,var(--error) 88%,#000)}
+.evmenu{position:fixed;z-index:65;min-width:220px;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--sh-3);padding:6px}
+.evmenu[hidden]{display:none}
+.evmenu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;font:inherit;font-size:.87rem;font-weight:600;color:var(--text);padding:9px 10px;border-radius:8px;cursor:pointer}
+.evmenu button:hover{background:var(--surface-2)}
+.evmenu button svg{width:16px;height:16px;color:var(--faint);flex:0 0 auto}
+.evmenu button.danger{color:var(--error)}
+.evmenu button.danger svg{color:var(--error)}
+.evmenu button.danger:hover{background:var(--error-soft)}
+.evmenu .sep{height:1px;background:var(--border);margin:5px 4px}
+.warnbox{display:flex;gap:11px;align-items:flex-start;margin-top:14px;padding:12px 13px;border-radius:11px;background:var(--warning-soft);color:var(--warning);font-size:.84rem}
+.warnbox[hidden]{display:none}
+.warnbox svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+
+/* ======================= Onglets ======================= */
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:18px}
+.tab{
+  appearance:none;background:none;border:none;font:inherit;font-weight:650;font-size:.92rem;color:var(--muted);
+  padding:11px 15px;cursor:pointer;position:relative;border-radius:8px 8px 0 0;display:inline-flex;align-items:center;gap:8px;
+}
+.tab:hover{color:var(--text);background:var(--surface-2)}
+.tab[aria-selected="true"]{color:var(--accent)}
+.tab[aria-selected="true"]::after{content:"";position:absolute;left:8px;right:8px;bottom:-1px;height:3px;background:var(--accent);border-radius:3px}
+.tab .cnt{font-size:.72rem;background:var(--surface-3);color:var(--muted);padding:1px 8px;border-radius:var(--r-pill);font-weight:700}
+.tab[aria-selected="true"] .cnt{background:var(--accent-soft);color:var(--accent)}
+.panel[hidden]{display:none}
+
+/* ======================= KPI ======================= */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 16px;box-shadow:var(--sh-1)}
+.kpi__lbl{font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint);display:flex;align-items:center;gap:6px}
+.kpi__lbl svg{width:15px;height:15px}
+.kpi__val{font-size:1.9rem;font-weight:820;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums;line-height:1}
+.kpi__sub{font-size:.78rem;color:var(--muted);margin-top:5px}
+.kpi__sub b{color:var(--success)}
+
+/* ======================= Barre de table ======================= */
+.tablebar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.search{display:flex;align-items:center;gap:8px;flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-control);padding:8px 12px;min-height:42px}
+.search svg{width:17px;height:17px;color:var(--faint);flex:0 0 auto}
+.search input{border:none;background:none;font:inherit;font-size:.9rem;color:var(--text);width:100%;outline:none}
+.search input::placeholder{color:var(--faint)}
+.search:focus-within{border-color:var(--accent);box-shadow:var(--focus)}
+.chipset{display:flex;gap:6px}
+.chip{font:inherit;font-size:.8rem;font-weight:600;padding:7px 12px;border-radius:var(--r-pill);border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);cursor:pointer;min-height:36px}
+.chip:hover{border-color:var(--accent);color:var(--accent)}
+.chip[aria-pressed="true"]{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.kpi__ic{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto}
+.kpi__ic svg{width:15px;height:15px}
+.tb-actions{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+.btn--accentsoft{background:var(--accent-soft);color:var(--accent);border-color:transparent}
+.btn--accentsoft:hover{background:var(--accent);color:var(--on-accent)}
+/* badge saisie manuelle dans le tableau */
+.badge-manual{display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:700;color:var(--warning);background:var(--warning-soft);padding:3px 9px;border-radius:var(--r-pill);white-space:nowrap}
+.badge-manual svg{width:12px;height:12px}
+.tag-manual{font-size:.66rem;font-weight:700;color:var(--warning);background:var(--warning-soft);padding:2px 7px;border-radius:var(--r-pill);margin-left:6px;vertical-align:middle}
+
+/* ===== Champs de formulaire (modals) ===== */
+.mform{display:grid;grid-template-columns:1fr 1fr;gap:13px;margin:4px 0 2px}
+.mfield{display:flex;flex-direction:column;gap:6px}
+.mfield.full{grid-column:1 / -1}
+.mfield label{font-size:.8rem;font-weight:650}
+.mfield .opt{color:var(--faint);font-weight:400}
+.minput{width:100%;font:inherit;font-size:.9rem;color:var(--text);background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--border-strong);border-radius:var(--r-control);padding:10px 12px;min-height:44px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 1px rgba(18,20,26,.03);transition:border-color .15s,box-shadow .15s}
+.minput::placeholder{color:var(--faint)}
+.minput:focus{outline:none;border-color:var(--accent);box-shadow:var(--focus)}
+.minput[aria-invalid="true"]{border-color:var(--error);box-shadow:0 0 0 3px var(--error-soft)}
+
+/* case à cocher maison (relief léger) */
+.checkline{display:flex;align-items:flex-start;gap:11px;padding:12px 13px;border:1px solid var(--border-strong);border-radius:var(--r-control);background:var(--surface-2);cursor:pointer;margin-top:6px}
+.checkline:hover{border-color:var(--accent)}
+.checkline input{position:absolute;opacity:0;width:0;height:0}
+.cbx{width:22px;height:22px;flex:0 0 auto;border-radius:7px;border:1.5px solid var(--border-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.6);transition:.15s;margin-top:1px}
+.cbx svg{width:14px;height:14px;color:#fff;opacity:0;transition:.15s}
+.checkline input:checked + .cbx{background:var(--accent);border-color:var(--accent)}
+.checkline input:checked + .cbx svg{opacity:1}
+.checkline input:focus-visible + .cbx{box-shadow:var(--focus)}
+.checkline__t{font-size:.87rem;font-weight:650;line-height:1.35}
+.checkline__d{font-size:.78rem;color:var(--muted);margin-top:2px}
+
+/* modal plus large pour envoi / saisie */
+.modal--lg{max-width:560px}
+.modal__scroll{max-height:min(64vh,540px);overflow-y:auto;margin:0 -4px;padding:0 4px}
+
+/* choix radio destinataires */
+.sendopt{display:flex;align-items:flex-start;gap:11px;padding:13px;border:1px solid var(--border-strong);border-radius:var(--r-control);cursor:pointer;transition:.15s;margin-bottom:10px}
+.sendopt:hover{border-color:var(--accent)}
+.sendopt input{position:absolute;opacity:0;width:0;height:0}
+.rdo{width:22px;height:22px;flex:0 0 auto;border-radius:50%;border:1.5px solid var(--border-strong);background:linear-gradient(180deg,var(--surface),var(--surface-2));display:grid;place-items:center;margin-top:1px;transition:.15s}
+.rdo::after{content:"";width:9px;height:9px;border-radius:50%;background:#fff;opacity:0;transition:.15s}
+.sendopt input:checked + .rdo{background:var(--accent);border-color:var(--accent)}
+.sendopt input:checked + .rdo::after{opacity:1}
+.sendopt input:focus-visible + .rdo{box-shadow:var(--focus)}
+.sendopt input:checked ~ .sendopt__b .sendopt__t{color:var(--accent)}
+.sendopt__t{font-size:.9rem;font-weight:700}
+.sendopt__d{font-size:.79rem;color:var(--muted);margin-top:2px}
+
+/* liste de destinataires */
+.rcpt{border:1px solid var(--border);border-radius:var(--r-control);overflow:hidden;margin-top:4px}
+.rcpt__bar{display:flex;align-items:center;gap:8px;padding:9px 11px;border-bottom:1px solid var(--border);background:var(--surface-2)}
+.rcpt__bar svg{width:16px;height:16px;color:var(--faint);flex:0 0 auto}
+.rcpt__bar input{border:none;background:none;outline:none;font:inherit;font-size:.86rem;color:var(--text);width:100%}
+.rcpt__all{font:inherit;font-size:.78rem;font-weight:650;color:var(--accent);background:none;border:none;cursor:pointer;white-space:nowrap;padding:4px 6px;border-radius:6px}
+.rcpt__all:hover{background:var(--accent-soft)}
+.rcpt__list{max-height:230px;overflow-y:auto}
+.rcpt__it{display:flex;align-items:center;gap:11px;padding:9px 12px;border-bottom:1px solid var(--border);cursor:pointer}
+.rcpt__it:last-child{border-bottom:none}
+.rcpt__it:hover{background:var(--surface-2)}
+.rcpt__it input{position:absolute;opacity:0;width:0;height:0}
+.rcpt__it .cbx{width:20px;height:20px}
+.rcpt__it .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.72rem;color:#fff;flex:0 0 auto}
+.rcpt__it__n{font-size:.86rem;font-weight:650}
+.rcpt__it__e{font-size:.75rem;color:var(--faint)}
+.rcpt__foot{padding:9px 12px;font-size:.8rem;color:var(--muted);border-top:1px solid var(--border);background:var(--surface-2)}
+.rcpt__foot b{color:var(--text)}
+.send-summary{display:flex;gap:10px;align-items:flex-start;padding:12px 13px;border-radius:var(--r-control);background:var(--info-soft);color:var(--info);font-size:.83rem;margin-top:6px}
+.send-summary svg{width:17px;height:17px;flex:0 0 auto;margin-top:1px}
+
+/* état succès d'envoi */
+.sent-ok{text-align:center;padding:14px 8px 6px}
+.sent-ok__ic{width:60px;height:60px;border-radius:50%;background:var(--success-soft);color:var(--success);display:grid;place-items:center;margin:0 auto 14px}
+.sent-ok__ic svg{width:30px;height:30px}
+.sent-ok h3{font-size:1.1rem;font-weight:750;margin:0 0 6px}
+.sent-ok p{color:var(--muted);font-size:.88rem;margin:0 auto;max-width:38ch}
+
+/* ======================= Datatable ======================= */
+.tablewrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);overflow:hidden}
+.tscroll{overflow-x:auto}
+table.dt{width:100%;border-collapse:collapse;font-size:.88rem;min-width:720px}
+.dt thead th{
+  text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);
+  padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface-2);position:sticky;top:0;white-space:nowrap;cursor:pointer;user-select:none;
+}
+.dt thead th .ar{opacity:.4;font-size:.8em}
+.dt thead th[aria-sort="ascending"] .ar,.dt thead th[aria-sort="descending"] .ar{opacity:1;color:var(--accent)}
+.dt tbody td{padding:11px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.dt tbody tr:last-child td{border-bottom:none}
+.dt tbody tr:hover{background:var(--surface-2)}
+.person{display:flex;align-items:center;gap:11px}
+.person .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.78rem;flex:0 0 auto;color:#fff}
+.person__n{font-weight:650}
+.person__e{font-size:.76rem;color:var(--faint)}
+.badge-new{font-size:.68rem;font-weight:700;color:var(--brand-orange);background:var(--brand-orange-soft);padding:2px 7px;border-radius:var(--r-pill);margin-left:6px;vertical-align:middle}
+.mut{color:var(--muted)}
+.hh{font-variant-numeric:tabular-nums;font-weight:600}
+.sig-thumb{
+  width:74px;height:38px;border:1px solid var(--border);border-radius:8px;background:var(--surface-2);
+  cursor:pointer;padding:0;display:block;overflow:hidden;transition:.12s
+}
+.sig-thumb:hover{border-color:var(--accent);box-shadow:var(--sh-1)}
+.sig-thumb svg{width:100%;height:100%;display:block}
+.rowmenu{background:none;border:none;color:var(--faint);cursor:pointer;padding:6px;border-radius:8px}
+.rowmenu:hover{background:var(--surface-3);color:var(--text)}
+.rowmenu svg{width:18px;height:18px}
+/* participant parti : ligne atténuée + badge + heure de départ */
+.dt tbody tr.is-left td{opacity:.55}
+.dt tbody tr.is-left:hover td{opacity:.72}
+.badge-left{display:inline-flex;align-items:center;gap:5px;font-size:.68rem;font-weight:700;color:var(--muted);background:var(--surface-3);padding:2px 8px;border-radius:var(--r-pill);margin-left:6px;vertical-align:middle;white-space:nowrap}
+.badge-left svg{width:11px;height:11px}
+.depart-time{font-variant-numeric:tabular-nums;font-weight:600;color:var(--muted)}
+/* popover d'actions de ligne */
+.rowpop{position:fixed;z-index:55;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--sh-3);padding:6px;min-width:200px;animation:pop .14s ease-out}
+.rowpop[hidden]{display:none}
+.rowpop button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;font:inherit;font-size:.86rem;font-weight:600;color:var(--text);padding:9px 10px;border-radius:8px;cursor:pointer}
+.rowpop button:hover{background:var(--surface-2)}
+.rowpop button svg{width:16px;height:16px;color:var(--faint);flex:0 0 auto}
+.rowpop__sep{height:1px;background:var(--border);margin:5px 4px}
+.dt-empty{padding:48px 20px;text-align:center;color:var(--muted)}
+.dt-empty svg{width:44px;height:44px;color:var(--faint);margin-bottom:10px}
+
+.tfooter{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);font-size:.82rem;color:var(--muted);flex-wrap:wrap;gap:8px}
+.live-dot{display:inline-flex;align-items:center;gap:7px;color:var(--success);font-weight:600}
+.live-dot::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+
+/* ======================= Statistiques ======================= */
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);padding:18px}
+.card h3{font-size:.98rem;font-weight:750;margin:0 0 3px}
+.card p.sub{font-size:.8rem;color:var(--muted);margin:0 0 14px}
+.card--wide{grid-column:1 / -1}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:12px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:3px;display:inline-block}
+/* barres horizontales */
+.hbars{display:flex;flex-direction:column;gap:11px}
+.hbar{display:grid;grid-template-columns:150px 1fr auto;align-items:center;gap:12px}
+.hbar__lbl{font-size:.84rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbar__track{height:22px;background:var(--surface-3);border-radius:7px;overflow:hidden}
+.hbar__fill{height:100%;border-radius:7px;transform-origin:left;animation:grow .7s cubic-bezier(.2,.7,.2,1) both}
+@keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+.hbar__val{font-size:.82rem;font-weight:700;font-variant-numeric:tabular-nums;color:var(--muted);min-width:44px;text-align:right}
+.donutwrap{display:flex;align-items:center;gap:22px;flex-wrap:wrap}
+.donut-center{font-size:1.7rem;font-weight:820;fill:var(--text)}
+.donut-sub{font-size:.5rem;font-weight:600;fill:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+
+/* ======================= Compte-rendu ======================= */
+.cr-banner{display:flex;align-items:flex-start;gap:11px;padding:12px 14px;border-radius:var(--r-control);background:var(--success-soft);font-size:.85rem;margin-bottom:16px}
+.cr-banner svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px;color:var(--success)}
+.cr-banner b{color:var(--success)}
+.cr-banner span{color:var(--muted)}
+.cr-grid{display:grid;grid-template-columns:1fr 340px;gap:16px;margin-bottom:16px;align-items:start}
+.cr-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);padding:18px;margin-bottom:16px}
+.cr-grid .cr-card{margin-bottom:0}
+.cr-card__head{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.cr-card h3{font-size:1rem;font-weight:750;margin:0;display:flex;align-items:center;gap:8px}
+.cr-card h3 .cnt{font-size:.72rem;background:var(--surface-3);color:var(--muted);padding:1px 8px;border-radius:var(--r-pill);font-weight:700}
+.cr-card__sub{font-size:.8rem;color:var(--muted);margin:3px 0 0}
+.cr-savestate{margin-left:auto;font-size:.76rem;font-weight:600;color:var(--faint);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.cr-savestate svg{width:14px;height:14px}
+.cr-savestate.dirty{color:var(--warning)}
+.cr-savestate.saved{color:var(--success)}
+.cr-toolbar{display:flex;gap:2px;padding:6px;background:var(--surface-2);border:1px solid var(--border-strong);border-bottom:none;border-radius:var(--r-control) var(--r-control) 0 0}
+.cr-toolbar button{width:32px;height:32px;border:none;background:none;border-radius:7px;color:var(--muted);cursor:pointer;display:grid;place-items:center;font-weight:800;font-size:.9rem;font-family:var(--sans)}
+.cr-toolbar button:hover{background:var(--surface);color:var(--accent)}
+.cr-toolbar button svg{width:16px;height:16px}
+.cr-toolbar .sepv{width:1px;background:var(--border);margin:5px 4px}
+.cr-textarea{width:100%;min-height:320px;resize:vertical;font:inherit;font-size:.92rem;line-height:1.6;color:var(--text);background:var(--surface);border:1px solid var(--border-strong);border-radius:0 0 var(--r-control) var(--r-control);padding:14px;outline:none;box-shadow:inset 0 1px 0 rgba(255,255,255,.5)}
+.cr-textarea:focus{border-color:var(--accent);box-shadow:var(--focus)}
+.cr-textarea::placeholder{color:var(--faint)}
+.cr-count{text-align:right;font-size:.75rem;color:var(--faint);margin-top:8px}
+/* Dropzone */
+.dropzone{border:1.5px dashed var(--border-strong);border-radius:var(--r-control);background:var(--surface-2);padding:20px 16px;text-align:center;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:8px}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-soft)}
+.dropzone:focus-visible{outline:none;box-shadow:var(--focus);border-color:var(--accent)}
+.dropzone__ic{width:42px;height:42px;border-radius:12px;background:var(--surface-3);color:var(--accent);display:grid;place-items:center}
+.dropzone.drag .dropzone__ic{background:var(--surface)}
+.dropzone__ic svg{width:22px;height:22px}
+.dropzone__t{font-size:.86rem;font-weight:650}
+.dropzone__t b{color:var(--accent)}
+.dropzone__d{font-size:.75rem;color:var(--faint)}
+.dropzone--photo{padding:26px 16px;margin-bottom:14px}
+/* Liste de fichiers */
+.filelist{list-style:none;margin:14px 0 0;padding:0;display:flex;flex-direction:column;gap:8px}
+.fileitem{display:flex;align-items:center;gap:11px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-control);background:var(--surface-2)}
+.fileitem__ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;flex:0 0 auto;font-size:.58rem;font-weight:800;letter-spacing:.02em;color:#fff}
+.fileitem__b{min-width:0;flex:1}
+.fileitem__n{font-size:.84rem;font-weight:650;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fileitem__m{font-size:.74rem;color:var(--faint)}
+.fileitem__x{background:none;border:none;color:var(--faint);cursor:pointer;padding:6px;border-radius:7px;flex:0 0 auto}
+.fileitem__x:hover{background:var(--error-soft);color:var(--error)}
+.fileitem__x svg{width:16px;height:16px}
+.ft-pdf{background:#d64542}.ft-doc{background:#2563eb}.ft-xls{background:#0e9e86}.ft-ppt{background:#e0620d}.ft-img{background:#7c3aed}.ft-gen{background:var(--faint)}
+/* Grille de photos */
+.photogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+.photo{position:relative;aspect-ratio:4/3;border-radius:12px;overflow:hidden;border:1px solid var(--border);background:var(--surface-3);cursor:pointer;padding:0}
+.photo img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .2s}
+.photo:hover img{transform:scale(1.04)}
+.photo__x{position:absolute;top:7px;right:7px;width:28px;height:28px;border:none;border-radius:8px;background:rgba(15,18,25,.62);color:#fff;cursor:pointer;display:grid;place-items:center;opacity:0;transition:.15s}
+.photo:hover .photo__x,.photo:focus-within .photo__x{opacity:1}
+.photo__x:hover{background:var(--error)}
+.photo__x svg{width:15px;height:15px}
+.photo__zoom{position:absolute;left:7px;bottom:7px;font-size:.66rem;font-weight:700;color:#fff;background:rgba(15,18,25,.55);padding:3px 8px;border-radius:var(--r-pill);opacity:0;transition:.15s;pointer-events:none}
+.photo:hover .photo__zoom{opacity:1}
+.cr-empty{grid-column:1/-1;text-align:center;color:var(--muted);font-size:.85rem;padding:18px}
+.cr-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:4px}
+.cr-actions .cr-hint{font-size:.78rem;color:var(--faint);margin-right:auto}
+/* État verrouillé (événement à venir) */
+.cr-locked{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);padding:48px 24px;text-align:center;max-width:520px;margin:0 auto}
+.cr-locked__ic{width:64px;height:64px;border-radius:16px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;margin:0 auto 16px}
+.cr-locked__ic svg{width:30px;height:30px}
+.cr-locked h3{font-size:1.12rem;font-weight:750;margin:0 0 8px}
+.cr-locked p{color:var(--muted);font-size:.88rem;margin:0 auto;max-width:44ch;line-height:1.55}
+.cr-locked__meta{display:inline-flex;align-items:center;gap:7px;margin-top:16px;font-size:.8rem;font-weight:650;color:var(--accent);background:var(--accent-soft);padding:7px 13px;border-radius:var(--r-pill)}
+.cr-locked__meta svg{width:15px;height:15px}
+/* Lightbox photo */
+.modal--photo{max-width:780px}
+.lightbox{border-radius:14px;overflow:hidden;background:var(--surface-2);border:1px solid var(--border)}
+.lightbox img{width:100%;display:block}
+
+/* ======================= Modal ======================= */
+.scrim{position:fixed;inset:0;background:rgba(15,18,25,.5);backdrop-filter:blur(3px);display:grid;place-items:center;z-index:50;padding:16px}
+.scrim[hidden]{display:none}
+.modal{background:var(--surface);border-radius:20px;box-shadow:var(--sh-3);max-width:460px;width:100%;padding:22px;animation:pop .2s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.96) translateY(6px)}to{opacity:1;transform:none}}
+.modal__head{display:flex;align-items:flex-start;gap:12px;margin-bottom:6px}
+.modal h2{font-size:1.12rem;font-weight:750;margin:0}
+.modal__x{margin-left:auto;background:none;border:none;cursor:pointer;color:var(--muted);padding:8px;border-radius:8px;min-width:38px;min-height:38px}
+.modal__x:hover{background:var(--surface-2)}
+.modal__x svg{width:20px;height:20px}
+.sig-big{border:1px solid var(--border);border-radius:12px;background:var(--surface-2);padding:14px;margin:8px 0}
+.sig-big svg{width:100%;height:150px;display:block}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:.86rem;margin-top:6px}
+.kv dt{color:var(--faint);font-weight:600}
+.kv dd{margin:0;font-weight:600}
+
+/* Modal QR projeter/imprimer */
+.qr-choices{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:8px}
+.qr-choice{display:flex;flex-direction:column;gap:8px;padding:16px;border:1px solid var(--border-strong);border-radius:var(--radius);text-decoration:none;color:var(--text);transition:.12s;background:var(--surface)}
+.qr-choice:hover{border-color:var(--accent);background:var(--surface-2)}
+.qr-choice .ic{width:40px;height:40px;border-radius:11px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center}
+.qr-choice .ic svg{width:22px;height:22px}
+.qr-choice b{font-size:.95rem}
+.qr-choice small{color:var(--muted);font-size:.78rem;line-height:1.35}
+
+/* ======================= Palette ⌘K ======================= */
+.cmdk-scrim{position:fixed;inset:0;background:rgba(15,18,25,.5);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;z-index:60}
+.cmdk-scrim[hidden]{display:none}
+.cmdk{width:100%;max-width:580px;background:var(--surface);border:1px solid var(--border-strong);border-radius:16px;box-shadow:var(--sh-3);overflow:hidden;animation:pop .16s ease-out}
+.cmdk__in{display:flex;align-items:center;gap:11px;padding:15px 18px;border-bottom:1px solid var(--border)}
+.cmdk__in svg{width:19px;height:19px;color:var(--faint);flex:0 0 auto}
+.cmdk__in input{border:none;background:none;outline:none;font:inherit;font-size:1.02rem;color:var(--text);width:100%}
+.cmdk__in kbd{font-family:var(--mono);font-size:.7rem;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:6px;padding:2px 7px;color:var(--faint)}
+.cmdk__list{max-height:46vh;overflow-y:auto;padding:8px}
+.cmdk__grp{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:10px 12px 5px}
+.cmdk__it{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer}
+.cmdk__it .av{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.72rem;color:#fff;flex:0 0 auto}
+.cmdk__it .ic{width:30px;height:30px;border-radius:8px;background:var(--surface-3);color:var(--muted);display:grid;place-items:center;flex:0 0 auto}
+.cmdk__it .ic svg{width:16px;height:16px}
+.cmdk__it[aria-selected="true"]{background:var(--accent-soft)}
+.cmdk__it__t{font-weight:650;font-size:.9rem}
+.cmdk__it__d{font-size:.76rem;color:var(--faint)}
+.cmdk__it .go{margin-left:auto;font-size:.7rem;color:var(--faint)}
+.cmdk__empty{padding:30px;text-align:center;color:var(--muted);font-size:.9rem}
+
+/* ======================= Toast ======================= */
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--surface);padding:12px 18px;border-radius:12px;font-size:.88rem;font-weight:600;box-shadow:var(--sh-3);z-index:80;opacity:0;transition:.25s;display:flex;align-items:center;gap:9px}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast svg{width:17px;height:17px;color:var(--success)}
+
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+/* mobile hamburger */
+.menutgl{display:none}
+@media (max-width:960px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+@media (max-width:820px){
+  .side{position:fixed;left:0;top:0;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--sh-3)}
+  .side.open{transform:none}
+  .menutgl{display:inline-grid}
+  .evhead__actions{width:100%;margin-left:0}
+  .kbtn .txt{display:none}
+}
+@media (max-width:560px){.kpis{grid-template-columns:1fr 1fr}.hbar{grid-template-columns:110px 1fr auto}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ===================== Sidebar ===================== -->
+  <aside class="side" id="side" aria-label="Navigation principale">
+    <div class="side__logo">
+      <img src="../assets/logo-acs-groupe.png" alt="ACS Groupe">
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="evenements.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Événements
+      </a>
+      <a href="evenement-detail.html" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+        Détail & présences
+      </a>
+      <a href="creer-evenement.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+        Nouvel événement
+      </a>
+      <a href="participants.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Participants
+      </a>
+      <a href="portfolio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+        Portfolio
+      </a>
+      <div class="navlbl">Compte</div>
+      <a href="#" onclick="return false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Utilisateurs ACS
+      </a>
+      <a href="parametres.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Paramètres
+      </a>
+      <a href="connexion.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Se déconnecter
+      </a>
+    </nav>
+    <div class="side__foot">
+      <div class="user">
+        <div class="av">NK</div>
+        <div>
+          <div class="user__n">N'Guessan Koffi</div>
+          <div class="user__r">Organisateur · ACS</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ===================== Main ===================== -->
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn menutgl" onclick="toggleSide()" aria-label="Ouvrir le menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <nav class="crumbs" aria-label="Fil d'Ariane">
+        <a href="evenements.html">Événements</a>
+        <span class="sep">/</span>
+        <span class="cur">Atelier Cybersécurité</span>
+      </nav>
+      <span class="sp"></span>
+      <button class="kbtn" onclick="Cmdk.open()" aria-label="Rechercher un participant">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span class="txt">Rechercher un participant…</span>
+        <kbd>⌘K</kbd>
+      </button>
+      <button class="iconbtn" onclick="toggleTheme()" aria-label="Basculer le thème">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      </button>
+    </header>
+
+    <main class="content">
+
+      <!-- En-tête événement -->
+      <section class="evhead">
+        <div class="evhead__top">
+          <div style="min-width:0">
+            <h1 id="ev-h1">Atelier Cybersécurité</h1>
+            <div class="evhead__meta" id="ev-meta">
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="ev-date">19 juillet 2026</span></span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span id="ev-time">14:00 – 16:00</span></span>
+              <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>Salle Ébène, Cocody</span>
+              <span class="reportnote" id="ev-reportnote" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><span id="ev-reportnote-txt"></span></span>
+            </div>
+            <div class="tags" id="ev-tags">
+              <span class="tag tag--type type-atelier">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M14.7 6.3a4 4 0 0 1 .3 5.2L20 16l-2 2-4.5-5a4 4 0 0 1-5.2-.3 4 4 0 0 1 0-5.6l2.8 2.8 1.4-1.4L9.7 5.9a4 4 0 0 1 5 .4Z"/></svg>
+                Atelier
+              </span>
+              <span class="tag tag--live" id="ev-status">En cours</span>
+              <span class="tag tag--mode">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v6M12 22a10 10 0 1 1 6.9-17.2"/></svg>
+                QR tournant · 15 s
+              </span>
+            </div>
+          </div>
+          <div class="evhead__actions">
+            <button class="btn btn--ghost" onclick="Modal.open('export')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+              Exporter CSV
+            </button>
+            <button class="btn btn--primary" id="btn-qr" onclick="Modal.open('qr')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3M21 14v.01M17 21h.01M21 21v-4M14 21v.01"/></svg>
+              Projeter / imprimer le QR
+            </button>
+            <button class="iconbtn" id="btn-more" aria-haspopup="menu" aria-label="Plus d'actions" onclick="EvMenu.toggle(this)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Bannière d'état (annulé / reporté) -->
+      <div class="evbanner" id="ev-banner" hidden role="status"></div>
+
+      <!-- Onglets -->
+      <div class="tabs" role="tablist" aria-label="Sections de l'événement">
+        <button class="tab" role="tab" id="tab-liste" aria-selected="true" aria-controls="panel-liste" onclick="showTab('liste')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+          Liste de présence <span class="cnt" id="cnt-liste">24</span>
+        </button>
+        <button class="tab" role="tab" id="tab-stats" aria-selected="false" aria-controls="panel-stats" onclick="showTab('stats')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg>
+          Statistiques
+        </button>
+        <button class="tab" role="tab" id="tab-invites" aria-selected="false" aria-controls="panel-invites" onclick="showTab('invites')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          Invités <span class="cnt" id="cnt-invites">8</span>
+        </button>
+        <button class="tab" role="tab" id="tab-cr" aria-selected="false" aria-controls="panel-cr" onclick="showTab('cr')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>
+          Compte-rendu <span class="cnt" id="cnt-cr">3</span>
+        </button>
+      </div>
+
+      <!-- ============ PANEL LISTE ============ -->
+      <section class="panel" id="panel-liste" role="tabpanel" aria-labelledby="tab-liste">
+        <div class="kpis">
+          <div class="kpi">
+            <div class="kpi__lbl"><span class="kpi__ic" style="background:var(--success-soft);color:var(--success)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6M16 11l2 2 4-4"/></svg></span>Présents</div>
+            <div class="kpi__val" id="kpi-total">24</div>
+            <div class="kpi__sub"><b>+3</b> ces 10 dernières min</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__lbl"><span class="kpi__ic" style="background:var(--info-soft);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg></span>Entreprises</div>
+            <div class="kpi__val" id="kpi-ent">9</div>
+            <div class="kpi__sub">structures représentées</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__lbl"><span class="kpi__ic" style="background:var(--type-rencontre-bg);color:var(--type-rencontre)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></span>Nouveaux</div>
+            <div class="kpi__val" id="kpi-new">15</div>
+            <div class="kpi__sub">1<sup>er</sup> émargement</div>
+          </div>
+          <div class="kpi">
+            <div class="kpi__lbl"><span class="kpi__ic" style="background:var(--violet-soft);color:var(--violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span>Récurrents</div>
+            <div class="kpi__val" id="kpi-rec">9</div>
+            <div class="kpi__sub">déjà venus à un événement</div>
+          </div>
+        </div>
+
+        <div class="tablebar">
+          <label class="search">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="filter" type="search" placeholder="Filtrer dans cette liste (nom, entité, direction…)" oninput="Table.render()" aria-label="Filtrer la liste">
+          </label>
+          <div class="chipset" role="group" aria-label="Filtres">
+            <button class="chip" aria-pressed="true" data-f="all" onclick="Table.setFilter('all',this)">Tous</button>
+            <button class="chip" aria-pressed="false" data-f="new" onclick="Table.setFilter('new',this)">Nouveaux</button>
+            <button class="chip" aria-pressed="false" data-f="rec" onclick="Table.setFilter('rec',this)">Récurrents</button>
+          </div>
+          <div class="tb-actions">
+            <button class="btn btn--ghost btn--sm" onclick="ManualForm.open()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>
+              Ajouter une présence
+            </button>
+            <button class="btn btn--accentsoft btn--sm" onclick="Send.open()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+              Envoyer le récapitulatif
+            </button>
+          </div>
+        </div>
+
+        <div class="tablewrap">
+          <div class="tscroll">
+            <table class="dt" aria-label="Liste de présence">
+              <thead>
+                <tr>
+                  <th onclick="Table.sort('name',this)" aria-sort="none">Participant <span class="ar">↕</span></th>
+                  <th onclick="Table.sort('ent',this)" aria-sort="none">Entité / Entreprise <span class="ar">↕</span></th>
+                  <th onclick="Table.sort('dir',this)" aria-sort="none">Direction <span class="ar">↕</span></th>
+                  <th onclick="Table.sort('time',this)" aria-sort="descending">Heure <span class="ar">↕</span></th>
+                  <th onclick="Table.sort('left',this)" aria-sort="none">Départ <span class="ar">↕</span></th>
+                  <th>Signature</th>
+                  <th aria-label="Actions"></th>
+                </tr>
+              </thead>
+              <tbody id="tbody"><!-- injecté --></tbody>
+            </table>
+          </div>
+          <div class="tfooter">
+            <span id="tcount">24 présences</span>
+            <span class="live-dot">Mise à jour en direct (polling 15 s)</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PANEL INVITÉS ============ -->
+      <section class="panel" id="panel-invites" role="tabpanel" aria-labelledby="tab-invites" hidden>
+        <div class="warnbox" style="margin:0 0 16px 0;background:var(--accent-soft);color:var(--accent)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+          <span>Les invités sont les personnes conviées via le référentiel ACS Groupe. <strong>Une invitation ne vaut pas présence</strong> : l'émargement est confirmé uniquement quand la personne scanne le QR et signe. Le suivi ci-dessous croise les deux.</span>
+        </div>
+        <div class="tablewrap">
+          <div class="tscroll">
+            <table class="dt" aria-label="Liste des invités">
+              <thead><tr><th>Invité</th><th>Direction</th><th>Service</th><th>Statut d'émargement</th></tr></thead>
+              <tbody id="invites-body"></tbody>
+            </table>
+          </div>
+          <div class="tfooter">
+            <span id="invites-count">—</span>
+            <span class="live-dot">Statut synchronisé avec la liste de présence</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PANEL STATS ============ -->
+      <section class="panel" id="panel-stats" role="tabpanel" aria-labelledby="tab-stats" hidden>
+        <div class="grid2">
+          <!-- Évolution dans le temps -->
+          <div class="card card--wide">
+            <h3>Évolution des émargements</h3>
+            <p class="sub">Cumul des présences depuis l'ouverture (14:00 → maintenant)</p>
+            <div id="chart-line"></div>
+          </div>
+
+          <!-- Répartition par entreprise -->
+          <div class="card">
+            <h3>Répartition par entreprise</h3>
+            <p class="sub">Provenance des participants</p>
+            <div class="hbars" id="chart-ent"></div>
+          </div>
+
+          <!-- Répartition par direction -->
+          <div class="card">
+            <h3>Répartition par direction</h3>
+            <p class="sub">Directions les plus représentées</p>
+            <div class="hbars" id="chart-dir"></div>
+          </div>
+
+          <!-- Récurrents vs nouveaux -->
+          <div class="card">
+            <h3>Nouveaux vs récurrents</h3>
+            <p class="sub">Part des participants déjà connus en base</p>
+            <div class="donutwrap">
+              <div id="chart-donut"></div>
+              <div class="legend" style="flex-direction:column;gap:9px">
+                <span><i style="background:var(--c3)"></i> Nouveaux — <b style="color:var(--text);margin-left:4px">15 (63 %)</b></span>
+                <span><i style="background:var(--c1)"></i> Récurrents — <b style="color:var(--text);margin-left:4px">9 (37 %)</b></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rythme d'arrivée par tranche -->
+          <div class="card">
+            <h3>Rythme d'arrivée</h3>
+            <p class="sub">Émargements par tranche de 15 minutes</p>
+            <div id="chart-bars"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ PANEL COMPTE-RENDU ============ -->
+      <section class="panel" id="panel-cr" role="tabpanel" aria-labelledby="tab-cr" hidden>
+
+        <!-- État affiché seulement si l'événement n'a pas encore eu lieu -->
+        <div class="cr-locked" id="cr-locked" hidden>
+          <div class="cr-locked__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
+          <h3>Le compte-rendu s'ouvrira après l'événement</h3>
+          <p>Cette activité n'a pas encore eu lieu. Une fois qu'elle aura démarré, vous pourrez rédiger le compte-rendu, joindre des documents et ajouter les photos — le tout viendra alimenter le portfolio.</p>
+          <div class="cr-locked__meta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg><span id="cr-locked-date">Débute le 19 juil. 2026 à 14:00</span></div>
+        </div>
+
+        <!-- Éditeur (événement en cours ou clôturé) -->
+        <div id="cr-editor">
+          <div class="cr-banner">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
+            <div><b>Activité en cours.</b> <span>Vous pouvez compléter le compte-rendu en direct puis le finaliser à la clôture. Documents et photos sont conservés et visibles dans le portfolio.</span></div>
+          </div>
+
+          <div class="cr-grid">
+            <!-- Compte-rendu -->
+            <div>
+              <div class="cr-card">
+                <div class="cr-card__head">
+                  <div>
+                    <h3>Compte-rendu de l'activité</h3>
+                    <p class="cr-card__sub">Synthèse, décisions et points d'action</p>
+                  </div>
+                  <span class="cr-savestate saved" id="cr-savestate"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Enregistré</span>
+                </div>
+                <div class="cr-toolbar" role="toolbar" aria-label="Mise en forme (démonstration)">
+                  <button type="button" title="Gras" onclick="CR.wrap('**')"><b>B</b></button>
+                  <button type="button" title="Italique" onclick="CR.wrap('_')"><i>I</i></button>
+                  <span class="sepv"></span>
+                  <button type="button" title="Titre" onclick="CR.prefix('## ')">H</button>
+                  <button type="button" title="Liste à puces" onclick="CR.prefix('- ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+                  <button type="button" title="Case à cocher" onclick="CR.prefix('- [ ] ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg></button>
+                </div>
+                <textarea class="cr-textarea" id="cr-text" placeholder="Rédigez ici le compte-rendu de l'activité : objectifs, déroulé, décisions prises, actions à suivre…" oninput="CR.touch();CR.updateChars()"></textarea>
+                <div class="cr-count"><span id="cr-chars">0</span> caractères · mise en forme Markdown simple</div>
+              </div>
+            </div>
+
+            <!-- Documents -->
+            <aside>
+              <div class="cr-card">
+                <div class="cr-card__head">
+                  <div><h3>Documents <span class="cnt" id="cr-doc-cnt">0</span></h3><p class="cr-card__sub">PDF, Word, Excel, présentations…</p></div>
+                </div>
+                <div class="dropzone" id="dz-doc" role="button" tabindex="0" aria-label="Ajouter des documents">
+                  <div class="dropzone__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 21h14"/></svg></div>
+                  <div class="dropzone__t"><b>Cliquez pour importer</b> ou glissez-déposez</div>
+                  <div class="dropzone__d">PDF, DOCX, XLSX, PPTX — 20 Mo max / fichier</div>
+                </div>
+                <input type="file" id="file-doc" multiple hidden>
+                <ul class="filelist" id="filelist"></ul>
+              </div>
+            </aside>
+          </div>
+
+          <!-- Photos -->
+          <div class="cr-card">
+            <div class="cr-card__head">
+              <div><h3>Photos de l'activité <span class="cnt" id="cr-photo-cnt">0</span></h3><p class="cr-card__sub">Glissez plusieurs photos ou importez-les — elles composent la galerie du portfolio</p></div>
+            </div>
+            <div class="dropzone dropzone--photo" id="dz-photo" role="button" tabindex="0" aria-label="Ajouter des photos">
+              <div class="dropzone__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></div>
+              <div class="dropzone__t"><b>Ajouter des photos</b> ou glissez-déposez</div>
+              <div class="dropzone__d">JPG, PNG, HEIC — sélection multiple possible</div>
+            </div>
+            <input type="file" id="file-photo" accept="image/*" multiple hidden>
+            <div class="photogrid" id="photogrid"></div>
+          </div>
+
+          <div class="cr-actions">
+            <span class="cr-hint">Les modifications sont propagées au portfolio des activités.</span>
+            <a class="btn btn--ghost" href="portfolio.html">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+              Voir le portfolio
+            </a>
+            <button class="btn btn--primary" onclick="CR.save()">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+              Enregistrer le compte-rendu
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+</div>
+
+<!-- ===================== Palette ⌘K ===================== -->
+<div class="cmdk-scrim" id="cmdk" hidden onclick="if(event.target===this)Cmdk.close()">
+  <div class="cmdk" role="dialog" aria-modal="true" aria-label="Recherche de participants">
+    <div class="cmdk__in">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="cmdk-input" type="text" placeholder="Rechercher un participant, une entreprise, une action…" autocomplete="off" aria-label="Recherche">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="cmdk__list" id="cmdk-list"></div>
+  </div>
+</div>
+
+<!-- ===================== Modals ===================== -->
+<div class="scrim" id="scrim" hidden onclick="if(event.target===this)Modal.close()">
+
+  <!-- Signature agrandie -->
+  <div class="modal" id="modal-sig" role="dialog" aria-modal="true" aria-labelledby="sig-t" hidden>
+    <div class="modal__head">
+      <h2 id="sig-t">Signature</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="sig-big" id="sig-big"></div>
+    <dl class="kv" id="sig-kv"></dl>
+  </div>
+
+  <!-- QR projeter / imprimer -->
+  <div class="modal" id="modal-qr" role="dialog" aria-modal="true" aria-labelledby="qr-t" hidden>
+    <div class="modal__head">
+      <h2 id="qr-t">Diffuser le QR d'émargement</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p style="color:var(--muted);font-size:.88rem;margin:0 0 4px">Cet événement est en mode <b style="color:var(--text)">QR tournant</b>. Projetez le code sur un écran ; il se régénère toutes les 15 s.</p>
+    <div class="qr-choices">
+      <a class="qr-choice" href="../dashboard.html" target="_blank" rel="noopener">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <b>Projeter en plein écran</b>
+        <small>Ouvre l'écran de projection avec le compte à rebours (15 s).</small>
+      </a>
+      <a class="qr-choice" href="#" onclick="Toast.show('Aperçu impression — à brancher côté serveur');return false">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7"/><rect x="6" y="13" width="12" height="8"/><path d="M6 17H2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5h-4"/></svg></div>
+        <b>Affiche imprimable</b>
+        <small>Génère une affiche A4 avec le QR statique de secours.</small>
+      </a>
+    </div>
+  </div>
+
+  <!-- Export CSV -->
+  <div class="modal" id="modal-export" role="dialog" aria-modal="true" aria-labelledby="exp-t" hidden>
+    <div class="modal__head">
+      <h2 id="exp-t">Exporter la liste de présence</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p style="color:var(--muted);font-size:.88rem">24 présences seront exportées au format CSV (UTF-8), avec toutes les colonnes : identité, coordonnées, entité, direction, service, poste, horodatage serveur.</p>
+    <dl class="kv" style="margin:14px 0">
+      <dt>Fichier</dt><dd>presence_atelier-cybersecurite_2026-07-19.csv</dd>
+      <dt>Lignes</dt><dd>24 présences</dd>
+      <dt>Séparateur</dt><dd>point-virgule (;) — compatible Excel FR</dd>
+    </dl>
+    <div style="display:flex;gap:9px;justify-content:flex-end">
+      <button class="btn btn--ghost" onclick="Modal.close()">Annuler</button>
+      <button class="btn btn--primary" onclick="downloadCsv()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        Télécharger le CSV
+      </button>
+    </div>
+  </div>
+
+  <!-- Envoi du récapitulatif -->
+  <div class="modal modal--lg" id="modal-send" role="dialog" aria-modal="true" aria-labelledby="send-t" hidden>
+    <div class="modal__head">
+      <h2 id="send-t">Envoyer le récapitulatif</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+
+    <div id="send-body">
+      <p style="color:var(--muted);font-size:.88rem;margin:0 0 14px">Le récapitulatif de présence et l'attestation sont envoyés par e-mail aux destinataires choisis.</p>
+
+      <div role="radiogroup" aria-label="Destinataires">
+        <label class="sendopt">
+          <input type="radio" name="sendto" value="all" checked onchange="Send.mode('all')">
+          <span class="rdo"></span>
+          <span class="sendopt__b"><span class="sendopt__t">Envoyer à tous les participants</span><span class="sendopt__d">Les <b id="send-all-n">24</b> personnes présentes reçoivent le récapitulatif.</span></span>
+        </label>
+        <label class="sendopt">
+          <input type="radio" name="sendto" value="some" onchange="Send.mode('some')">
+          <span class="rdo"></span>
+          <span class="sendopt__b"><span class="sendopt__t">Choisir des destinataires</span><span class="sendopt__d">Sélectionnez une ou plusieurs personnes précises.</span></span>
+        </label>
+      </div>
+
+      <div id="send-picker" hidden>
+        <div class="rcpt">
+          <div class="rcpt__bar">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+            <input id="rcpt-search" placeholder="Rechercher un participant…" oninput="Send.renderList()" aria-label="Rechercher un destinataire">
+            <button class="rcpt__all" id="rcpt-all" onclick="Send.toggleAll()">Tout sélectionner</button>
+          </div>
+          <div class="rcpt__list" id="rcpt-list"></div>
+          <div class="rcpt__foot"><b id="rcpt-count">0</b> destinataire(s) sélectionné(s)</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+        <button class="btn btn--ghost" onclick="Modal.close()">Annuler</button>
+        <button class="btn btn--primary" id="send-go" onclick="Send.confirm()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>
+          <span id="send-go-lbl">Envoyer à tous (24)</span>
+        </button>
+      </div>
+    </div>
+
+    <div id="send-done" hidden>
+      <div class="sent-ok">
+        <div class="sent-ok__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M20 6 9 17l-5-5"/></svg></div>
+        <h3>Récapitulatif envoyé</h3>
+        <p id="sent-msg">Le récapitulatif a bien été envoyé.</p>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:14px">
+        <button class="btn btn--primary" onclick="Modal.close()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Saisie manuelle de présence -->
+  <div class="modal modal--lg" id="modal-manual" role="dialog" aria-modal="true" aria-labelledby="man-t" hidden>
+    <div class="modal__head">
+      <h2 id="man-t">Ajouter une présence manuelle</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p style="color:var(--muted);font-size:.88rem;margin:0 0 6px">Pour un visiteur sans smartphone : l'organisateur renseigne la fiche à sa place. Sans géolocalisation ni signature tactile.</p>
+    <div class="modal__scroll">
+      <div class="mform">
+        <div class="mfield"><label for="m-nom">Nom <span class="req">*</span></label><input class="minput" id="m-nom" autocomplete="off"></div>
+        <div class="mfield"><label for="m-prenom">Prénom(s) <span class="req">*</span></label><input class="minput" id="m-prenom" autocomplete="off"></div>
+        <div class="mfield full"><label for="m-email">Email <span class="opt">(facultatif)</span></label><input class="minput" id="m-email" type="email" placeholder="prenom.nom@exemple.ci" autocomplete="off"></div>
+        <div class="mfield full"><label for="m-tel">Téléphone <span class="opt">(facultatif)</span></label><input class="minput" id="m-tel" placeholder="+225 …" autocomplete="off"></div>
+        <div class="mfield"><label for="m-ent">Entité / Entreprise <span class="req">*</span></label><input class="minput" id="m-ent" autocomplete="off"></div>
+        <div class="mfield"><label for="m-dir">Direction <span class="opt">(facultatif)</span></label><input class="minput" id="m-dir" autocomplete="off"></div>
+        <div class="mfield"><label for="m-serv">Service <span class="opt">(facultatif)</span></label><input class="minput" id="m-serv" autocomplete="off"></div>
+        <div class="mfield"><label for="m-poste">Poste <span class="opt">(facultatif)</span></label><input class="minput" id="m-poste" autocomplete="off"></div>
+      </div>
+      <label class="checkline" id="m-confirm-line">
+        <input type="checkbox" id="m-confirm">
+        <span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <span><span class="checkline__t">Présence confirmée manuellement par l'organisateur <span class="req">*</span></span><span class="checkline__d">Tracée « Saisie manuelle » dans la liste, distincte d'un émargement auto-signé.</span></span>
+      </label>
+      <div class="err-msg" id="m-err" style="display:none;color:var(--error);font-size:.8rem;margin-top:8px">Renseignez le nom, le prénom, l'entité et cochez la confirmation.</div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn--ghost" onclick="Modal.close()">Annuler</button>
+      <button class="btn btn--primary" onclick="ManualForm.save()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Enregistrer la présence
+      </button>
+    </div>
+  </div>
+
+  <!-- Confirmation de départ -->
+  <div class="modal" id="modal-depart" role="dialog" aria-modal="true" aria-labelledby="dp-t" hidden>
+    <div class="modal__head">
+      <h2 id="dp-t">Marquer un départ</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;margin:0 0 6px">Confirmez le départ de <b style="color:var(--text)" id="dp-who">—</b>. Son heure de départ sera enregistrée à <b style="color:var(--text)" id="dp-time">—</b>.</p>
+    <p style="color:var(--muted);font-size:.84rem;margin:0">La personne reste dans la liste de présence ; elle apparaît simplement comme partie.</p>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn--ghost" onclick="Modal.close()">Annuler</button>
+      <button class="btn btn--primary" onclick="Depart.confirm()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Confirmer le départ
+      </button>
+    </div>
+  </div>
+
+  <!-- Lightbox photo -->
+  <div class="modal modal--photo" id="modal-photo" role="dialog" aria-modal="true" aria-labelledby="photo-t" hidden>
+    <div class="modal__head">
+      <h2 id="photo-t">Photo</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <div class="lightbox" id="lightbox"></div>
+  </div>
+
+  <!-- Reporter l'événement -->
+  <div class="modal modal--lg" id="modal-report" role="dialog" aria-modal="true" aria-labelledby="rep-t" hidden>
+    <div class="modal__head">
+      <h2 id="rep-t">Reporter l'événement</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p style="color:var(--muted);font-size:.88rem;margin:0 0 4px">Date actuelle : <b style="color:var(--text)" id="rep-old">19 juil. 2026 · 14:00</b>. Choisissez le nouveau créneau. Le mode QR et le statut restent inchangés ; les invités seront notifiés.</p>
+    <div class="mform" style="margin-top:12px">
+      <div class="mfield full"><label for="rep-date">Nouvelle date <span class="req">*</span></label><input class="minput" id="rep-date" type="date" value="2026-07-19"></div>
+      <div class="mfield"><label for="rep-start">Heure de début <span class="req">*</span></label><input class="minput" id="rep-start" type="time" value="14:00"></div>
+      <div class="mfield"><label for="rep-end">Heure de fin <span class="req">*</span></label><input class="minput" id="rep-end" type="time" value="16:00"></div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn--ghost" onclick="Modal.close()">Annuler</button>
+      <button class="btn btn--primary" onclick="EvState.confirmReport()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+        Reporter l'événement
+      </button>
+    </div>
+  </div>
+
+  <!-- Annuler l'événement -->
+  <div class="modal" id="modal-cancel" role="dialog" aria-modal="true" aria-labelledby="can-t" hidden>
+    <div class="modal__head">
+      <h2 id="can-t">Annuler l'événement</h2>
+      <button class="modal__x" onclick="Modal.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <p style="color:var(--muted);font-size:.9rem;margin:0 0 4px">L'événement passera au statut <b style="color:var(--text)">Annulé</b>. Il reste visible dans la liste mais n'est plus scannable ni émargeable.</p>
+    <div class="warnbox" id="can-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span id="can-warn-txt"></span></div>
+    <div class="mform" style="grid-template-columns:1fr;margin-top:14px">
+      <div class="mfield full"><label for="can-motif">Motif de l'annulation <span class="opt">(facultatif)</span></label><textarea class="minput" id="can-motif" style="min-height:74px;resize:vertical" placeholder="Ex. Report d'agenda, indisponibilité de la salle…"></textarea></div>
+    </div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:16px">
+      <button class="btn btn--ghost" onclick="Modal.close()">Revenir</button>
+      <button class="btn btn--danger" onclick="EvState.confirmCancel()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg>
+        Confirmer l'annulation
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Popover d'actions de ligne -->
+<div class="rowpop" id="rowpop" role="menu" hidden></div>
+
+<!-- Menu ⋯ de l'événement -->
+<div class="evmenu" id="evmenu" hidden role="menu" aria-label="Actions de l'événement"></div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/* ================= Données de démonstration ================= */
+const AV_COLORS=['#1e2a78','#0e9e86','#f07a13','#33429c','#7c93f0','#565d6b','#b8770f','#9a3a86'];
+function initials(n){return n.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');}
+function avColor(n){let s=0;for(const c of n)s+=c.charCodeAt(0);return AV_COLORS[s%AV_COLORS.length];}
+
+// seeds de signature (paths SVG stylisés, purement décoratifs)
+const SIGS=[
+ "M6 34 C 22 6, 34 44, 52 20 S 74 8, 96 30 S 120 40, 140 16",
+ "M8 30 C 26 10, 40 40, 58 22 C 72 8, 90 34, 110 20 S 130 12, 148 28",
+ "M6 28 C 18 44, 40 6, 56 30 S 82 44, 100 18 S 132 34, 150 22",
+ "M10 36 C 30 12, 44 38, 62 20 S 86 10, 104 32 S 128 16, 146 30",
+ "M6 22 C 24 40, 42 8, 60 28 S 88 42, 108 16 S 134 30, 150 20"
+];
+function sigSvg(i,stroke){const p=SIGS[i%SIGS.length];return `<svg viewBox="0 0 156 48" preserveAspectRatio="xMidYMid meet" aria-hidden="true"><path d="${p}" fill="none" stroke="${stroke||'var(--accent)'}" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
+
+const PEOPLE=[
+ {name:"Awa Koné",ent:"ACS Consulting",dir:"Direction SI",serv:"Sécurité applicative",poste:"Analyste sécurité",tel:"+225 07 01 02 03 04",email:"awa.kone@acs.ci",time:"14:07",rec:true,sig:0},
+ {name:"Mamadou Traoré",ent:"Orange CI",dir:"Direction Technique",serv:"Réseaux",poste:"Ingénieur réseau",tel:"+225 07 55 12 88 21",email:"m.traore@orange.ci",time:"14:09",rec:false,sig:1,left:"14:41"},
+ {name:"Fatou Diallo",ent:"NSIA Banque",dir:"Direction Risques",serv:"Conformité",poste:"Responsable conformité",tel:"+225 05 44 90 12 03",email:"f.diallo@nsia.ci",time:"14:10",rec:false,sig:2,left:"14:46"},
+ {name:"Kouassi N'Dri",ent:"ACS Consulting",dir:"Direction SI",serv:"Infrastructure",poste:"Admin systèmes",tel:"+225 01 23 45 67 89",email:"k.ndri@acs.ci",time:"14:12",rec:true,sig:3},
+ {name:"Aya Bamba",ent:"MTN CI",dir:"Direction Commerciale",serv:"Grands comptes",poste:"Key Account Manager",tel:"+225 07 88 77 66 55",email:"aya.bamba@mtn.ci",time:"14:13",rec:false,sig:4},
+ {name:"Ibrahim Cissé",ent:"SGBCI",dir:"Direction Digitale",serv:"Cybersécurité",poste:"RSSI adjoint",tel:"+225 05 11 22 33 44",email:"i.cisse@sgbci.ci",time:"14:15",rec:true,sig:0},
+ {name:"Mariam Ouattara",ent:"Ministère du Numérique",dir:"DGSSI",serv:"Gouvernance",poste:"Chargée de mission",tel:"+225 01 99 88 77 66",email:"m.ouattara@gouv.ci",time:"14:16",rec:false,sig:1},
+ {name:"Yao Kouamé",ent:"Orange CI",dir:"Direction Technique",serv:"SOC",poste:"Analyste SOC",tel:"+225 07 33 44 55 66",email:"y.kouame@orange.ci",time:"14:18",rec:false,sig:2},
+ {name:"Adjoua Kouadio",ent:"ACS Consulting",dir:"Direction Commerciale",serv:"Avant-vente",poste:"Consultante",tel:"+225 05 66 77 88 99",email:"a.kouadio@acs.ci",time:"14:19",rec:true,sig:3},
+ {name:"Sékou Bakayoko",ent:"CIE",dir:"Direction SI",serv:"Exploitation",poste:"Chef de projet",tel:"+225 01 44 55 66 77",email:"s.bakayoko@cie.ci",time:"14:21",rec:false,sig:4},
+ {name:"Rokia Sanogo",ent:"NSIA Banque",dir:"Direction Risques",serv:"Audit",poste:"Auditrice interne",tel:"+225 07 12 34 56 78",email:"r.sanogo@nsia.ci",time:"14:22",rec:false,sig:0},
+ {name:"David Aka",ent:"MTN CI",dir:"Direction Technique",serv:"Cloud",poste:"Architecte cloud",tel:"+225 05 98 76 54 32",email:"d.aka@mtn.ci",time:"14:24",rec:false,sig:1},
+ {name:"Nadège Gnamien",ent:"SGBCI",dir:"Direction Digitale",serv:"Data",poste:"Data analyst",tel:"+225 01 22 33 44 55",email:"n.gnamien@sgbci.ci",time:"14:26",rec:false,sig:2},
+ {name:"Bakary Touré",ent:"ACS Consulting",dir:"Direction SI",serv:"Sécurité applicative",poste:"Pentesteur",tel:"+225 07 45 67 89 01",email:"b.toure@acs.ci",time:"14:27",rec:true,sig:3},
+ {name:"Estelle Zadi",ent:"Ministère du Numérique",dir:"DGSSI",serv:"Cyberdéfense",poste:"Ingénieure cyber",tel:"+225 05 33 22 11 00",email:"e.zadi@gouv.ci",time:"14:29",rec:false,sig:4},
+ {name:"Franck Yéboué",ent:"CIE",dir:"Direction SI",serv:"Support",poste:"Technicien support",tel:"+225 01 55 44 33 22",email:"f.yeboue@cie.ci",time:"14:31",rec:false,sig:0},
+ {name:"Salimata Coulibaly",ent:"Orange CI",dir:"Direction Commerciale",serv:"Marketing",poste:"Chef de produit",tel:"+225 07 66 55 44 33",email:"s.coulibaly@orange.ci",time:"14:33",rec:false,sig:1},
+ {name:"Olivier Tanoh",ent:"ACS Consulting",dir:"Direction SI",serv:"Infrastructure",poste:"Ingénieur DevOps",tel:"+225 05 77 88 99 00",email:"o.tanoh@acs.ci",time:"14:35",rec:true,sig:2},
+ {name:"Grace Amenan",ent:"NSIA Banque",dir:"Direction Digitale",serv:"Innovation",poste:"Product owner",tel:"+225 01 11 00 99 88",email:"g.amenan@nsia.ci",time:"14:37",rec:false,sig:3},
+ {name:"Hervé Gbagbo",ent:"PME Tech Abidjan",dir:"Direction Générale",serv:"—",poste:"Gérant",tel:"+225 07 22 44 66 88",email:"h.gbagbo@pmetech.ci",time:"14:39",rec:false,sig:4},
+ {name:"Christelle Yao",ent:"MTN CI",dir:"Direction Technique",serv:"Sécurité",poste:"Analyste sécurité",tel:"+225 05 44 33 22 11",email:"c.yao@mtn.ci",time:"14:41",rec:true,sig:0},
+ {name:"Idrissa Fofana",ent:"CIE",dir:"Direction Technique",serv:"OT/SCADA",poste:"Ingénieur OT",tel:"+225 01 66 77 88 99",email:"i.fofana@cie.ci",time:"14:44",rec:false,sig:1},
+ {name:"Patricia Ehui",ent:"SGBCI",dir:"Direction Risques",serv:"Fraude",poste:"Analyste fraude",tel:"+225 07 99 88 77 66",email:"p.ehui@sgbci.ci",time:"14:48",rec:false,sig:2},
+ {name:"Zié Silué",ent:"ACS Consulting",dir:"Direction SI",serv:"Sécurité applicative",poste:"Lead sécurité",tel:"+225 05 12 12 12 12",email:"z.silue@acs.ci",time:"14:52",rec:true,sig:3}
+];
+
+/* ================= Datatable ================= */
+const Table={
+  filter:'all', sortKey:'time', sortDir:-1,
+  setFilter(f,btn){this.filter=f;document.querySelectorAll('.chip').forEach(c=>c.setAttribute('aria-pressed', c===btn));this.render();},
+  sort(key,th){
+    if(this.sortKey===key){this.sortDir*=-1;}else{this.sortKey=key;this.sortDir=1;}
+    document.querySelectorAll('.dt thead th').forEach(h=>h.setAttribute('aria-sort','none'));
+    th.setAttribute('aria-sort', this.sortDir>0?'ascending':'descending');
+    this.render();
+  },
+  data(){
+    let q=(document.getElementById('filter').value||'').toLowerCase().trim();
+    let rows=PEOPLE.filter(p=>{
+      if(this.filter==='new'&&p.rec)return false;
+      if(this.filter==='rec'&&!p.rec)return false;
+      if(q){return (p.name+p.ent+p.dir+p.poste+p.email).toLowerCase().includes(q);}
+      return true;
+    });
+    const key={name:'name',ent:'ent',dir:'dir',time:'time',left:'left'}[this.sortKey];
+    rows.sort((a,b)=>{const va=a[key]||'',vb=b[key]||''; return va<vb?-1*this.sortDir : va>vb?1*this.sortDir:0;});
+    return rows;
+  },
+  render(){
+    const rows=this.data(), tb=document.getElementById('tbody');
+    if(!rows.length){
+      tb.innerHTML=`<tr><td colspan="7"><div class="dt-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg><div>Aucun participant ne correspond à ce filtre.</div></div></td></tr>`;
+    } else {
+      tb.innerHTML=rows.map(p=>{
+        const idx=PEOPLE.indexOf(p);
+        const sigCell = p.manual
+          ? `<span class="badge-manual"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>Saisie manuelle</span>`
+          : `<button class="sig-thumb" onclick="Modal.sig(${idx})" aria-label="Voir la signature de ${p.name}">${sigSvg(p.sig,'var(--accent)')}</button>`;
+        const leftBadge = p.left ? `<span class="badge-left"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Parti à ${p.left}</span>` : '';
+        const leftCell = p.left ? `<span class="depart-time">${p.left}</span>` : `<span class="mut">—</span>`;
+        return `<tr class="${p.left?'is-left':''}">
+          <td><div class="person">
+            <div class="av" style="background:${avColor(p.name)}">${initials(p.name)}</div>
+            <div><div class="person__n">${p.name}${p.rec?'':'<span class="badge-new">Nouveau</span>'}${p.manual?'<span class="tag-manual">Manuel</span>':''}${leftBadge}</div><div class="person__e">${p.email||'—'}</div></div>
+          </div></td>
+          <td>${p.ent}</td>
+          <td class="mut">${p.dir}</td>
+          <td class="hh">${p.time}</td>
+          <td>${leftCell}</td>
+          <td>${sigCell}</td>
+          <td><button class="rowmenu" aria-label="Actions pour ${p.name}" aria-haspopup="menu" onclick="Row.menu(${idx},this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="5" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="12" cy="19" r="1.4"/></svg></button></td>
+        </tr>`;
+      }).join('');
+    }
+    document.getElementById('tcount').textContent=`${rows.length} présence${rows.length>1?'s':''}`+(rows.length!==PEOPLE.length?` / ${PEOPLE.length}`:'');
+  }
+};
+
+/* ================= Onglets ================= */
+function showTab(name){
+  ['liste','invites','stats','cr'].forEach(t=>{
+    document.getElementById('tab-'+t).setAttribute('aria-selected', String(t===name));
+    document.getElementById('panel-'+t).hidden = (t!==name);
+  });
+  if(name==='invites') Invites.render();
+  if(name==='stats') Charts.render();
+  if(name==='cr') CR.onShow();
+}
+
+/* ================= Invités (attendus vs émargés) ================= */
+const INVITES=[
+  {nom:'Traoré Awa',dir:'Direction SI',serv:'Cybersécurité',present:true},
+  {nom:'Kouassi Jean-Marc',dir:'Direction Technique',serv:'Infrastructure',present:true},
+  {nom:'Bamba Fatou',dir:'Direction Digitale',serv:'Produit',present:false},
+  {nom:'Diomandé Aïcha',dir:'Direction Risques',serv:'Conformité',present:true},
+  {nom:'Koné Ibrahim',dir:'Direction SI',serv:'Études',present:false},
+  {nom:'Yao Sylvie',dir:'Direction Commerciale',serv:'Grands comptes',present:false},
+  {nom:'Gnahoré Patrick',dir:'DGSSI',serv:'Audit',present:true},
+  {nom:'Ouattara Mariam',dir:'Direction Technique',serv:'Support',present:false},
+];
+const Invites={
+  render(){
+    const ok='<span class="tag" style="color:var(--success);background:var(--success-soft)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>A émargé</span>';
+    const wait='<span class="tag" style="color:var(--muted);background:var(--surface-3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2"/></svg>En attente</span>';
+    document.getElementById('invites-body').innerHTML=INVITES.map(i=>`<tr>
+      <td><div class="cellname" style="font-weight:700">${i.nom}</div></td>
+      <td>${i.dir}</td>
+      <td>${i.serv}</td>
+      <td>${i.present?ok:wait}</td>
+    </tr>`).join('');
+    const present=INVITES.filter(i=>i.present).length;
+    document.getElementById('cnt-invites').textContent=INVITES.length;
+    document.getElementById('invites-count').innerHTML=`<b>${INVITES.length}</b> invités · <b style="color:var(--success)">${present}</b> ont émargé · <b>${INVITES.length-present}</b> en attente`;
+  }
+};
+
+/* ================= Graphiques SVG inline ================= */
+const Charts={
+  rendered:false,
+  cssVar(v){return getComputedStyle(document.body).getPropertyValue(v).trim();},
+  render(){ // rendu à chaque affichage pour prendre le thème courant
+    this.line(); this.bars();
+    if(this.rendered) return; // barres/donut : une fois suffit (statique)
+    this.hbars('chart-ent',[
+      {l:'ACS Consulting',v:6,c:'--c1'},{l:'Orange CI',v:3,c:'--c2'},{l:'NSIA Banque',v:3,c:'--c4'},
+      {l:'MTN CI',v:3,c:'--c5'},{l:'SGBCI',v:3,c:'--c3'},{l:'CIE',v:3,c:'--c6'},{l:'Ministère Num.',v:2,c:'--c1'},{l:'Autres',v:1,c:'--c6'}
+    ]);
+    this.hbars('chart-dir',[
+      {l:'Direction SI',v:8,c:'--c1'},{l:'Direction Technique',v:5,c:'--c2'},{l:'Direction Risques',v:4,c:'--c4'},
+      {l:'Direction Digitale',v:3,c:'--c5'},{l:'Direction Commerciale',v:3,c:'--c3'},{l:'DGSSI',v:2,c:'--c6'}
+    ]);
+    this.donut();
+    this.rendered=true;
+  },
+  hbars(id,data){
+    const max=Math.max(...data.map(d=>d.v));
+    document.getElementById(id).innerHTML=data.map(d=>`
+      <div class="hbar">
+        <div class="hbar__lbl" title="${d.l}">${d.l}</div>
+        <div class="hbar__track"><div class="hbar__fill" style="width:${d.v/max*100}%;background:var(${d.c})"></div></div>
+        <div class="hbar__val">${d.v}</div>
+      </div>`).join('');
+  },
+  line(){
+    // cumul de présences dans le temps (14:00 -> 14:55, pas de 5 min)
+    const pts=[0,0,2,4,6,8,10,12,14,16,18,20,24];
+    const W=680,H=220,pad=32, n=pts.length, maxY=24;
+    const x=i=>pad+ i*( (W-pad*2)/(n-1) );
+    const y=v=>H-pad - v/maxY*(H-pad*2);
+    const line=pts.map((v,i)=>`${i?'L':'M'}${x(i).toFixed(1)} ${y(v).toFixed(1)}`).join(' ');
+    const area=`${line} L${x(n-1).toFixed(1)} ${H-pad} L${pad} ${H-pad} Z`;
+    const grid=[0,6,12,18,24].map(v=>`<line x1="${pad}" y1="${y(v)}" x2="${W-pad}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/><text x="${pad-8}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--faint)">${v}</text>`).join('');
+    const labels=['14:00','','14:10','','14:20','','14:30','','14:40','','14:50','','14:55'];
+    const xl=labels.map((l,i)=>l?`<text x="${x(i)}" y="${H-pad+16}" text-anchor="middle" font-size="10" fill="var(--faint)">${l}</text>`:'').join('');
+    const dots=pts.map((v,i)=> i===n-1?`<circle cx="${x(i)}" cy="${y(v)}" r="4.5" fill="var(--accent)" stroke="var(--surface)" stroke-width="2"/>`:'').join('');
+    document.getElementById('chart-line').innerHTML=`
+    <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Courbe cumulée des émargements, 0 à 24 présences entre 14h00 et 14h55">
+      <defs><linearGradient id="g1" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--accent)" stop-opacity="0.22"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+      ${grid}
+      <path d="${area}" fill="url(#g1)"/>
+      <path d="${line}" fill="none" stroke="var(--accent)" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/>
+      ${dots}${xl}
+    </svg>`;
+  },
+  bars(){
+    // arrivées par tranche de 15 min
+    const data=[{l:'14:00',v:6},{l:'14:15',v:8},{l:'14:30',v:6},{l:'14:45',v:4}];
+    const W=520,H=200,pad=30,bw=64, maxY=8, gap=( (W-pad*2) - bw*data.length)/(data.length-1);
+    const y=v=>H-pad - v/maxY*(H-pad*2);
+    const grid=[0,2,4,6,8].map(v=>`<line x1="${pad}" y1="${y(v)}" x2="${W-pad}" y2="${y(v)}" stroke="var(--border)" stroke-width="1"/><text x="${pad-8}" y="${y(v)+4}" text-anchor="end" font-size="10" fill="var(--faint)">${v}</text>`).join('');
+    const bars=data.map((d,i)=>{const bx=pad+i*(bw+gap);const by=y(d.v);const h=(H-pad)-by;
+      return `<rect x="${bx}" y="${by}" width="${bw}" height="${h}" rx="6" fill="var(--c4)"/>
+      <text x="${bx+bw/2}" y="${by-7}" text-anchor="middle" font-size="11" font-weight="700" fill="var(--text)">${d.v}</text>
+      <text x="${bx+bw/2}" y="${H-pad+16}" text-anchor="middle" font-size="10" fill="var(--faint)">${d.l}</text>`;}).join('');
+    document.getElementById('chart-bars').innerHTML=`<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Histogramme des arrivées par tranche de 15 minutes">${grid}${bars}</svg>`;
+  },
+  donut(){
+    const rec=9,nw=15,tot=24, r=52,cx=70,cy=70,C=2*Math.PI*r;
+    const seg=(val,color,offset)=>`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(${color})" stroke-width="20" stroke-dasharray="${(val/tot*C).toFixed(1)} ${C}" stroke-dashoffset="${offset}" transform="rotate(-90 ${cx} ${cy})"/>`;
+    document.getElementById('chart-donut').innerHTML=`
+    <svg viewBox="0 0 140 140" width="150" height="150" role="img" aria-label="Anneau : 15 nouveaux, 9 récurrents sur 24">
+      <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--surface-3)" stroke-width="20"/>
+      ${seg(nw,'--c3',0)}
+      ${seg(rec,'--c1', -(nw/tot*C))}
+      <text x="${cx}" y="${cy-2}" text-anchor="middle" class="donut-center">24</text>
+      <text x="${cx}" y="${cy+16}" text-anchor="middle" class="donut-sub">présents</text>
+    </svg>`;
+  }
+};
+
+/* ================= Modal ================= */
+const Modal={
+  last:null,
+  open(id){
+    this.last=document.activeElement;
+    document.getElementById('scrim').hidden=false;
+    ['sig','qr','export','send','manual','photo','depart','report','cancel'].forEach(m=>document.getElementById('modal-'+m).hidden=(m!==id));
+    document.body.style.overflow='hidden';
+    const dlg=document.getElementById('modal-'+id);
+    setTimeout(()=>(dlg.querySelector('.modal__x')||dlg).focus(),30);
+    document.addEventListener('keydown',this._esc);
+  },
+  sig(idx){
+    const p=PEOPLE[idx];
+    document.getElementById('sig-t').textContent='Signature — '+p.name;
+    document.getElementById('sig-big').innerHTML=`<svg viewBox="0 0 156 48" preserveAspectRatio="xMidYMid meet"><path d="${SIGS[p.sig%SIGS.length]}" fill="none" stroke="var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    document.getElementById('sig-kv').innerHTML=`
+      <dt>Entité</dt><dd>${p.ent}</dd>
+      <dt>Direction</dt><dd>${p.dir}</dd>
+      <dt>Poste</dt><dd>${p.poste}</dd>
+      <dt>Horodatage</dt><dd>19 juil. 2026 · ${p.time} (serveur)</dd>
+      ${p.left?`<dt>Départ</dt><dd>19 juil. 2026 · ${p.left}</dd>`:''}
+      <dt>Position</dt><dd>Confirmée · Salle Ébène</dd>`;
+    this.open('sig');
+  },
+  close(){
+    document.getElementById('scrim').hidden=true;
+    document.body.style.overflow='';
+    document.removeEventListener('keydown',Modal._esc);
+    if(Modal.last)Modal.last.focus();
+  },
+  _esc(e){if(e.key==='Escape')Modal.close();}
+};
+
+/* ================= Menu ⋯ de l'événement ================= */
+const EvMenu={
+  toggle(btn){
+    const m=document.getElementById('evmenu');
+    if(!m.hidden){this.close();return;}
+    const cancelled=EvState.status==='cancelled';
+    let items=[];
+    if(cancelled){
+      items.push(`<button role="menuitem" onclick="EvMenu.pick('restore')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Rétablir l'événement</button>`);
+    }else{
+      items.push(`<button role="menuitem" onclick="EvMenu.pick('report')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg>Reporter l'événement…</button>`);
+      items.push(`<div class="sep"></div>`);
+      items.push(`<button role="menuitem" class="danger" onclick="EvMenu.pick('cancel')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg>Annuler l'événement…</button>`);
+    }
+    m.innerHTML=items.join('');
+    m.hidden=false;
+    const r=btn.getBoundingClientRect();
+    const mw=m.offsetWidth||224, mh=m.offsetHeight;
+    let left=Math.max(8,Math.min(r.right-mw,window.innerWidth-mw-8));
+    let top=r.bottom+6; if(top+mh>window.innerHeight-8) top=Math.max(8,r.top-mh-6);
+    m.style.left=left+'px';m.style.top=top+'px';
+    m.querySelector('button').focus();
+  },
+  close(){document.getElementById('evmenu').hidden=true;},
+  pick(a){
+    this.close();
+    if(a==='report'){EvState.openReport();return;}
+    if(a==='cancel'){EvState.openCancel();return;}
+    if(a==='restore'){EvState.restore();return;}
+  }
+};
+document.addEventListener('click',e=>{if(!e.target.closest('#evmenu')&&!e.target.closest('#btn-more'))EvMenu.close();});
+window.addEventListener('scroll',()=>EvMenu.close(),true);
+window.addEventListener('resize',()=>EvMenu.close());
+
+/* ================= État de l'événement (annuler / reporter) ================= */
+const MONTHS_ABBR=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const EvState={
+  status:'live', reportedFrom:null,
+  presentCount(){return parseInt(document.getElementById('kpi-total').textContent,10)||0;},
+  openReport(){
+    Modal.open('report');
+    setTimeout(()=>document.getElementById('rep-date').focus(),40);
+  },
+  confirmReport(){
+    const di=document.getElementById('rep-date').value, s=document.getElementById('rep-start').value, en=document.getElementById('rep-end').value;
+    if(!di||!s||!en) return;
+    if(en<=s){const f=document.getElementById('rep-end');f.setAttribute('aria-invalid','true');f.focus();return;}
+    // conserve l'ancien créneau au 1er report
+    if(this.status!=='reported'){
+      this.reportedFrom=`${document.getElementById('ev-date').textContent} · ${document.getElementById('ev-time').textContent.split(' – ')[0]}`;
+    }
+    const [y,mo,d]=di.split('-').map(Number);
+    document.getElementById('ev-date').textContent=`${d} ${MONTHS_ABBR[mo-1]} ${y}`;
+    document.getElementById('ev-time').textContent=`${s} – ${en}`;
+    this.status='reported';
+    this.paint();
+    Modal.close();Toast.show('Événement reporté — invités notifiés');
+  },
+  openCancel(){
+    const n=this.presentCount();
+    const w=document.getElementById('can-warn');
+    if(n>0){w.hidden=false;document.getElementById('can-warn-txt').innerHTML=`<strong>${n} présence${n>1?'s':''} déjà enregistrée${n>1?'s':''}</strong> sur cet événement. L'annulation ne les supprime pas ; elles restent consultables ici.`;}
+    else w.hidden=true;
+    document.getElementById('can-motif').value='';
+    Modal.open('cancel');
+    setTimeout(()=>document.getElementById('can-motif').focus(),40);
+  },
+  confirmCancel(){
+    this.motif=document.getElementById('can-motif').value.trim();
+    this.status='cancelled';
+    this.paint();
+    Modal.close();Toast.show('Événement annulé');
+  },
+  restore(){
+    this.status=this.reportedFrom?'reported':'live';
+    this.motif=null;
+    this.paint();Toast.show('Événement rétabli');
+  },
+  paint(){
+    const badge=document.getElementById('ev-status');
+    const h1=document.getElementById('ev-h1');
+    const banner=document.getElementById('ev-banner');
+    const qrBtn=document.getElementById('btn-qr');
+    const rn=document.getElementById('ev-reportnote');
+    // report note
+    if(this.reportedFrom && this.status!=='cancelled'){rn.hidden=false;document.getElementById('ev-reportnote-txt').textContent='Reporté depuis le '+this.reportedFrom;}
+    else if(this.reportedFrom && this.status==='cancelled'){rn.hidden=true;}
+    else rn.hidden=true;
+    if(this.status==='cancelled'){
+      h1.classList.add('is-cancelled');
+      badge.className='tag tag--cancelled';badge.textContent='Annulé';
+      banner.className='evbanner evbanner--danger';banner.hidden=false;
+      banner.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg><div><div class="evbanner__t">Événement annulé</div><div class="evbanner__d">Le QR d'émargement est désactivé.${this.motif?` Motif : ${this.motif}`:''}</div></div>`;
+      qrBtn.disabled=true;qrBtn.style.opacity='.5';qrBtn.style.pointerEvents='none';
+    }else if(this.status==='reported'){
+      h1.classList.remove('is-cancelled');
+      badge.className='tag tag--reported';badge.innerHTML='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reporté';
+      banner.className='evbanner evbanner--warn';banner.hidden=false;
+      banner.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg><div><div class="evbanner__t">Événement reporté</div><div class="evbanner__d">Nouveau créneau appliqué. Ancien créneau : ${this.reportedFrom}. Le mode QR est inchangé.</div></div>`;
+      qrBtn.disabled=false;qrBtn.style.opacity='';qrBtn.style.pointerEvents='';
+    }else{
+      h1.classList.remove('is-cancelled');
+      badge.className='tag tag--live';badge.textContent='En cours';
+      banner.hidden=true;
+      qrBtn.disabled=false;qrBtn.style.opacity='';qrBtn.style.pointerEvents='';
+    }
+  }
+};
+
+/* ================= Départ (anti-chevauchement) ================= */
+// Horloge de démo : part de 14:56 (après la dernière arrivée), avance d'1 min par départ.
+let _demoClock=14*60+56;
+function demoNow(){const m=Math.min(_demoClock++,16*60);return String(Math.floor(m/60)).padStart(2,'0')+':'+String(m%60).padStart(2,'0');}
+
+const Row={
+  cur:null,
+  menu(idx,btn){
+    const pop=document.getElementById('rowpop');
+    if(this.cur===idx && !pop.hidden){this.close();return;}
+    this.cur=idx;
+    const p=PEOPLE[idx];
+    const sigItem = p.manual ? '' :
+      `<button type="button" role="menuitem" onclick="Row.act('sig')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>Voir la signature</button>`;
+    const departItem = p.left
+      ? `<button type="button" role="menuitem" onclick="Row.act('undo')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Annuler le départ</button>`
+      : `<button type="button" role="menuitem" onclick="Row.act('depart')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>Marquer un départ</button>`;
+    pop.innerHTML = sigItem + (sigItem?'<div class="rowpop__sep"></div>':'') + departItem;
+    pop.hidden=false;
+    const r=btn.getBoundingClientRect(), w=pop.offsetWidth, h=pop.offsetHeight;
+    let top=r.bottom+6; if(top+h>innerHeight-8) top=Math.max(8,r.top-6-h);
+    let left=r.right-w; if(left<8) left=8;
+    pop.style.top=top+'px'; pop.style.left=left+'px';
+    setTimeout(()=>{(pop.querySelector('button')||pop).focus();},20);
+  },
+  close(){const pop=document.getElementById('rowpop');if(pop){pop.hidden=true;}this.cur=null;},
+  act(a){const idx=this.cur;this.close();if(idx==null)return;
+    if(a==='sig'){Modal.sig(idx);return;}
+    if(a==='depart'){Depart.open(idx);return;}
+    if(a==='undo'){Depart.undo(idx);return;}
+  }
+};
+document.addEventListener('click',e=>{if(!e.target.closest('.rowpop')&&!e.target.closest('.rowmenu'))Row.close();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')Row.close();});
+window.addEventListener('scroll',()=>Row.close(),true);
+window.addEventListener('resize',()=>Row.close());
+
+const Depart={
+  idx:null, time:null,
+  open(idx){this.idx=idx;this.time=demoNow();const p=PEOPLE[idx];
+    document.getElementById('dp-who').textContent=p.name;
+    document.getElementById('dp-time').textContent=this.time;
+    Modal.open('depart');
+  },
+  confirm(){const p=PEOPLE[this.idx];p.left=this.time;Table.render();Modal.close();
+    Toast.show(`Départ de ${p.name} enregistré à ${p.left}`);
+  },
+  undo(idx){const p=PEOPLE[idx];delete p.left;Table.render();
+    Toast.show(`Départ de ${p.name} annulé`);
+  }
+};
+
+/* ================= Palette ⌘K ================= */
+const Cmdk={
+  sel:0, items:[],
+  actions:[
+    {t:'Envoyer le récapitulatif',d:'Action',ic:'send',run:()=>{Cmdk.close();Send.open();}},
+    {t:'Ajouter une présence manuelle',d:'Action',ic:'adduser',run:()=>{Cmdk.close();ManualForm.open();}},
+    {t:'Exporter la liste en CSV',d:'Action',ic:'export',run:()=>{Cmdk.close();Modal.open('export');}},
+    {t:'Projeter le QR code',d:'Action',ic:'qr',run:()=>{Cmdk.close();Modal.open('qr');}},
+    {t:'Voir les statistiques',d:'Action',ic:'chart',run:()=>{Cmdk.close();showTab('stats');}},
+    {t:'Ouvrir le compte-rendu',d:'Action',ic:'report',run:()=>{Cmdk.close();showTab('cr');}},
+    {t:'Ajouter des photos de l\'activité',d:'Action',ic:'image',run:()=>{Cmdk.close();showTab('cr');setTimeout(()=>document.getElementById('file-photo').click(),120);}},
+    {t:'Voir le portfolio des activités',d:'Navigation',ic:'grid',run:()=>{location.href='portfolio.html';}},
+    {t:'Retour à la liste des événements',d:'Navigation',ic:'back',run:()=>{location.href='evenements.html';}}
+  ],
+  open(){document.getElementById('cmdk').hidden=false;document.body.style.overflow='hidden';const i=document.getElementById('cmdk-input');i.value='';this.filter('');setTimeout(()=>i.focus(),30);document.addEventListener('keydown',this._key);},
+  close(){document.getElementById('cmdk').hidden=true;document.body.style.overflow='';document.removeEventListener('keydown',this._key);},
+  filter(q){
+    q=q.toLowerCase().trim();
+    const ppl=PEOPLE.map((p,idx)=>({p,idx})).filter(({p})=>!q||(p.name+p.ent+p.dir+p.email).toLowerCase().includes(q)).slice(0,6);
+    const acts=this.actions.filter(a=>!q||a.t.toLowerCase().includes(q));
+    this.items=[];
+    let html='';
+    if(acts.length){html+='<div class="cmdk__grp">Actions</div>';acts.forEach(a=>{const i=this.items.length;this.items.push(a.run);
+      html+=`<div class="cmdk__it" role="option" aria-selected="false" data-i="${i}" onclick="Cmdk.run(${i})" onmousemove="Cmdk.hover(${i})">
+        <div class="ic">${ICON(a.ic)}</div><div><div class="cmdk__it__t">${a.t}</div><div class="cmdk__it__d">${a.d}</div></div><span class="go">↵</span></div>`;});}
+    if(ppl.length){html+='<div class="cmdk__grp">Participants présents</div>';ppl.forEach(({p,idx})=>{const i=this.items.length;this.items.push(()=>{Cmdk.close();Modal.sig(idx);});
+      html+=`<div class="cmdk__it" role="option" aria-selected="false" data-i="${i}" onclick="Cmdk.run(${i})" onmousemove="Cmdk.hover(${i})">
+        <div class="av" style="background:${avColor(p.name)}">${initials(p.name)}</div>
+        <div><div class="cmdk__it__t">${p.name}${p.rec?'':' · nouveau'}</div><div class="cmdk__it__d">${p.ent} · ${p.dir} · émargé ${p.time}</div></div><span class="go">Voir</span></div>`;});}
+    if(!this.items.length){html=`<div class="cmdk__empty">Aucun résultat pour « ${q} ».<br><small>Essayez un nom, une entreprise ou une direction.</small></div>`;}
+    document.getElementById('cmdk-list').innerHTML=html;this.sel=0;this.mark();
+  },
+  mark(){document.querySelectorAll('.cmdk__it').forEach((el,i)=>el.setAttribute('aria-selected', i===this.sel));const cur=document.querySelector('.cmdk__it[aria-selected="true"]');if(cur)cur.scrollIntoView({block:'nearest'});},
+  hover(i){this.sel=i;this.mark();},
+  run(i){if(this.items[i])this.items[i]();},
+  _key(e){
+    if(e.key==='Escape'){Cmdk.close();return;}
+    if(e.key==='ArrowDown'){e.preventDefault();Cmdk.sel=Math.min(Cmdk.sel+1,Cmdk.items.length-1);Cmdk.mark();}
+    if(e.key==='ArrowUp'){e.preventDefault();Cmdk.sel=Math.max(Cmdk.sel-1,0);Cmdk.mark();}
+    if(e.key==='Enter'){e.preventDefault();Cmdk.run(Cmdk.sel);}
+  }
+};
+function ICON(n){const m={
+  send:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 2 11 13M22 2l-7 20-4-9-9-4 20-7Z"/></svg>',
+  adduser:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg>',
+  export:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v12M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>',
+  qr:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 3v18h18"/><path d="M7 14l3-4 3 3 4-6"/></svg>',
+  report:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6M9 13h6M9 17h4"/></svg>',
+  image:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>',
+  grid:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>',
+  back:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>'
+};return m[n]||'';}
+
+document.getElementById('cmdk-input').addEventListener('input',e=>Cmdk.filter(e.target.value));
+
+/* ================= Toast ================= */
+const Toast={t:null,show(msg){const el=document.getElementById('toast');el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>${msg}`;el.classList.add('show');clearTimeout(this.t);this.t=setTimeout(()=>el.classList.remove('show'),2600);}};
+
+/* ================= Export CSV réel ================= */
+function downloadCsv(){
+  const head=['Nom','Prenom(s)','Email','Telephone','Entite/Entreprise','Direction','Service','Poste','Statut','Horodatage','Heure de depart'];
+  const rows=PEOPLE.map(p=>{const [prenom,...nom]=p.name.split(' ');return [nom.join(' ')||prenom,prenom,p.email,p.tel,p.ent,p.dir,p.serv,p.poste,p.rec?'Recurrent':'Nouveau','2026-07-19 '+p.time+':00',p.left?('2026-07-19 '+p.left+':00'):''];});
+  const csv=[head,...rows].map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\r\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='presence_atelier-cybersecurite_2026-07-19.csv';a.click();
+  Modal.close();Toast.show('CSV exporté (24 présences)');
+}
+
+/* ================= KPI (recalcul) ================= */
+function refreshKpis(){
+  const tot=PEOPLE.length;
+  const ent=new Set(PEOPLE.map(p=>p.ent)).size;
+  const rec=PEOPLE.filter(p=>p.rec).length;
+  const nw=tot-rec;
+  document.getElementById('kpi-total').textContent=tot;
+  document.getElementById('kpi-ent').textContent=ent;
+  document.getElementById('kpi-new').textContent=nw;
+  document.getElementById('kpi-rec').textContent=rec;
+  document.getElementById('cnt-liste').textContent=tot;
+  const an=document.getElementById('send-all-n');if(an)an.textContent=tot;
+}
+
+/* ================= Envoi du récapitulatif ================= */
+const Send={
+  sel:new Set(),
+  open(){
+    this.sel=new Set();
+    document.getElementById('send-body').hidden=false;
+    document.getElementById('send-done').hidden=true;
+    document.querySelector('input[name=sendto][value=all]').checked=true;
+    document.getElementById('send-picker').hidden=true;
+    document.getElementById('rcpt-search').value='';
+    this.updateGo();
+    Modal.open('send');
+    this.renderList();
+  },
+  mode(m){
+    document.getElementById('send-picker').hidden=(m!=='some');
+    if(m==='some'){this.renderList();setTimeout(()=>document.getElementById('rcpt-search').focus(),20);}
+    this.updateGo();
+  },
+  renderList(){
+    const q=(document.getElementById('rcpt-search').value||'').toLowerCase().trim();
+    const list=document.getElementById('rcpt-list');
+    const rows=PEOPLE.map((p,i)=>({p,i})).filter(({p})=>!q||(p.name+p.ent+(p.email||'')).toLowerCase().includes(q));
+    list.innerHTML=rows.map(({p,i})=>`
+      <label class="rcpt__it">
+        <input type="checkbox" ${this.sel.has(i)?'checked':''} onchange="Send.toggle(${i},this.checked)">
+        <span class="cbx"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M20 6 9 17l-5-5"/></svg></span>
+        <span class="av" style="background:${avColor(p.name)}">${initials(p.name)}</span>
+        <span style="min-width:0"><span class="rcpt__it__n">${p.name}</span><span class="rcpt__it__e" style="display:block">${p.email||'— pas d\'e-mail'}</span></span>
+      </label>`).join('') || `<div style="padding:16px;text-align:center;color:var(--muted);font-size:.85rem">Aucun participant ne correspond.</div>`;
+    this.updateCount();
+  },
+  toggle(i,on){on?this.sel.add(i):this.sel.delete(i);this.updateCount();this.updateGo();},
+  toggleAll(){
+    const q=(document.getElementById('rcpt-search').value||'').toLowerCase().trim();
+    const idx=PEOPLE.map((p,i)=>({p,i})).filter(({p})=>!q||(p.name+p.ent+(p.email||'')).toLowerCase().includes(q)).map(({i})=>i);
+    const allSel=idx.every(i=>this.sel.has(i));
+    idx.forEach(i=>allSel?this.sel.delete(i):this.sel.add(i));
+    this.renderList();this.updateGo();
+  },
+  updateCount(){
+    document.getElementById('rcpt-count').textContent=this.sel.size;
+    const idx=[...document.querySelectorAll('#rcpt-list .rcpt__it')];
+    // libellé bouton tout sélectionner
+    const q=(document.getElementById('rcpt-search').value||'').toLowerCase().trim();
+    const filtered=PEOPLE.map((p,i)=>({p,i})).filter(({p})=>!q||(p.name+p.ent+(p.email||'')).toLowerCase().includes(q)).map(({i})=>i);
+    const allSel=filtered.length&&filtered.every(i=>this.sel.has(i));
+    document.getElementById('rcpt-all').textContent=allSel?'Tout désélectionner':'Tout sélectionner';
+  },
+  mode_current(){return document.querySelector('input[name=sendto]:checked').value;},
+  updateGo(){
+    const go=document.getElementById('send-go'),lbl=document.getElementById('send-go-lbl');
+    if(this.mode_current()==='all'){lbl.textContent=`Envoyer à tous (${PEOPLE.length})`;go.disabled=false;go.style.opacity='';go.style.pointerEvents='';}
+    else{const n=this.sel.size;lbl.textContent=n?`Envoyer (${n})`:'Envoyer';go.disabled=!n;go.style.opacity=n?'':'.5';go.style.pointerEvents=n?'':'none';}
+  },
+  confirm(){
+    const all=this.mode_current()==='all';
+    const n=all?PEOPLE.length:this.sel.size;
+    if(!all&&!n)return;
+    // simulation d'envoi
+    document.getElementById('send-body').hidden=true;
+    const done=document.getElementById('send-done');done.hidden=false;
+    document.getElementById('sent-msg').textContent=all
+      ? `Le récapitulatif a été envoyé aux ${n} participants présents.`
+      : `Le récapitulatif a été envoyé à ${n} destinataire${n>1?'s':''} sélectionné${n>1?'s':''}.`;
+    Toast.show(`Récapitulatif envoyé à ${n} personne${n>1?'s':''}`);
+  }
+};
+
+/* ================= Saisie manuelle ================= */
+const ManualForm={
+  open(){
+    ['m-nom','m-prenom','m-email','m-tel','m-ent','m-dir','m-serv','m-poste'].forEach(id=>document.getElementById(id).value='');
+    document.getElementById('m-confirm').checked=false;
+    document.getElementById('m-err').style.display='none';
+    Modal.open('manual');
+    setTimeout(()=>document.getElementById('m-nom').focus(),30);
+  },
+  save(){
+    const g=id=>document.getElementById(id).value.trim();
+    const nom=g('m-nom'),prenom=g('m-prenom'),ent=g('m-ent'),confirm=document.getElementById('m-confirm').checked;
+    if(!nom||!prenom||!ent||!confirm){
+      document.getElementById('m-err').style.display='block';
+      ['m-nom','m-prenom','m-ent'].forEach(id=>{const el=document.getElementById(id);if(!el.value.trim())el.setAttribute('aria-invalid','true');else el.removeAttribute('aria-invalid');});
+      return;
+    }
+    const now=new Date();const time=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+    PEOPLE.push({name:`${prenom} ${nom}`,ent,dir:g('m-dir')||'—',serv:g('m-serv')||'—',poste:g('m-poste')||'—',tel:g('m-tel')||'—',email:g('m-email'),time,rec:false,manual:true,sig:0});
+    Table.render();refreshKpis();
+    Charts.rendered=false; // recalcul stats à la prochaine ouverture
+    Modal.close();
+    Toast.show(`Présence de ${prenom} ${nom} enregistrée`);
+  }
+};
+
+/* ================= Divers ================= */
+function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme');const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.setAttribute('data-theme',dark?'light':'dark');if(!document.getElementById('panel-stats').hidden){Charts.rendered=false;Charts.render();}}
+function toggleSide(){document.getElementById('side').classList.toggle('open');}
+window.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();Cmdk.open();}});
+
+/* ================= Compte-rendu ================= */
+// Génère une photo de démonstration (SVG dégradé sobre, teinté). En prod ce seront de vraies photos.
+function svgPhoto(c1,c2,label){
+  const s=`<svg xmlns='http://www.w3.org/2000/svg' width='320' height='240'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='${c1}'/><stop offset='1' stop-color='${c2}'/></linearGradient></defs><rect width='320' height='240' fill='url(#g)'/><g fill='none' stroke='#ffffff' stroke-opacity='0.30' stroke-width='5' stroke-linecap='round'><circle cx='250' cy='60' r='34'/><path d='M40 210 q60 -90 120 -40 q40 34 120 -20'/><path d='M60 150 h70 M60 170 h40'/></g><text x='18' y='224' font-family='-apple-system,Segoe UI,Roboto,sans-serif' font-size='15' font-weight='700' fill='#ffffff' fill-opacity='0.9'>${label}</text></svg>`;
+  return 'data:image/svg+xml;utf8,'+encodeURIComponent(s);
+}
+function humanSize(b){if(b<1024)return b+' o';if(b<1048576)return (b/1024).toFixed(0)+' Ko';return (b/1048576).toFixed(1).replace('.',',')+' Mo';}
+function extType(name){const e=(name.split('.').pop()||'').toLowerCase();
+  if(e==='pdf')return{cls:'ft-pdf',lbl:'PDF'};
+  if(['doc','docx','odt','rtf'].includes(e))return{cls:'ft-doc',lbl:'DOC'};
+  if(['xls','xlsx','csv','ods'].includes(e))return{cls:'ft-xls',lbl:'XLS'};
+  if(['ppt','pptx','key','odp'].includes(e))return{cls:'ft-ppt',lbl:'PPT'};
+  if(['png','jpg','jpeg','gif','webp','heic'].includes(e))return{cls:'ft-img',lbl:'IMG'};
+  return{cls:'ft-gen',lbl:e?e.slice(0,3).toUpperCase():'FIC'};}
+
+const CR={
+  status:'live',            // 'soon' = pas encore eu lieu · 'live'/'done' = éditeur actif
+  dirty:false, started:false,
+  docs:[
+    {name:'Support_atelier_cybersecurite.pdf',size:'2,4 Mo',type:'pdf'},
+    {name:'Plan_actions_a_suivre.docx',size:'46 Ko',type:'doc'},
+    {name:'Feuille_de_presence_signee.xlsx',size:'118 Ko',type:'xls'}
+  ],
+  photos:[
+    {src:svgPhoto('#1e2a78','#33429c','Ouverture · 14:05'),name:'ouverture.jpg'},
+    {src:svgPhoto('#0e9e86','#33b79c','Démonstration live'),name:'demo-live.jpg'},
+    {src:svgPhoto('#f07a13','#f5a24a','Atelier pratique'),name:'atelier-pratique.jpg'},
+    {src:svgPhoto('#7c3aed','#9a6bf0','Questions / réponses'),name:'echanges.jpg'}
+  ],
+  text:`## Objectif de la séance
+Sensibiliser les participants aux risques cyber majeurs (phishing, rançongiciels, fuite de données) et présenter les bonnes pratiques ACS.
+
+## Déroulé
+- Accueil et tour de table des entités présentes
+- Démonstration en direct d'une attaque de phishing
+- Atelier pratique : reconnaître un e-mail frauduleux
+- Échanges et questions
+
+## Décisions & actions à suivre
+- [ ] Diffuser la charte de sécurité à toutes les directions
+- [ ] Planifier une campagne de faux phishing en septembre
+- [x] Partager le support et le replay aux participants`,
+  init(){
+    const soon=this.status==='soon';
+    document.getElementById('cr-locked').hidden=!soon;
+    document.getElementById('cr-editor').hidden=soon;
+    if(soon)return;
+    document.getElementById('cr-text').value=this.text;
+    this.renderDocs(); this.renderPhotos(); this.updateChars(); this.setSaved();
+    this.wireDrop('dz-doc','file-doc',files=>this.addDocs(files));
+    this.wireDrop('dz-photo','file-photo',files=>this.addPhotos(files));
+    this.started=true;
+  },
+  onShow(){ if(!this.started) this.init(); },
+  wireDrop(zoneId,inputId,cb){
+    const z=document.getElementById(zoneId),inp=document.getElementById(inputId);
+    z.addEventListener('click',()=>inp.click());
+    z.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();inp.click();}});
+    inp.addEventListener('change',e=>{cb([...e.target.files]);inp.value='';});
+    ['dragenter','dragover'].forEach(ev=>z.addEventListener(ev,e=>{e.preventDefault();z.classList.add('drag');}));
+    z.addEventListener('dragleave',e=>{if(!z.contains(e.relatedTarget))z.classList.remove('drag');});
+    z.addEventListener('drop',e=>{e.preventDefault();z.classList.remove('drag');cb([...(e.dataTransfer.files||[])]);});
+  },
+  addDocs(files){
+    if(!files.length)return;
+    files.forEach(f=>this.docs.push({name:f.name,size:humanSize(f.size),type:(f.name.split('.').pop()||'').toLowerCase()}));
+    this.renderDocs();this.touch();
+    Toast.show(`${files.length} document${files.length>1?'s':''} joint${files.length>1?'s':''}`);
+  },
+  addPhotos(files){
+    const imgs=files.filter(f=>/^image\//.test(f.type));
+    if(files.length&&!imgs.length){Toast.show('Formats image uniquement dans la galerie');return;}
+    imgs.forEach(f=>{const r=new FileReader();r.onload=e=>{this.photos.push({src:e.target.result,name:f.name});this.renderPhotos();this.touch();};r.readAsDataURL(f);});
+    if(imgs.length)Toast.show(`${imgs.length} photo${imgs.length>1?'s':''} ajoutée${imgs.length>1?'s':''}`);
+  },
+  renderDocs(){
+    const el=document.getElementById('filelist');
+    el.innerHTML=this.docs.map((d,i)=>{const t=extType(d.name);return `
+      <li class="fileitem">
+        <span class="fileitem__ic ${t.cls}">${t.lbl}</span>
+        <span class="fileitem__b"><span class="fileitem__n" title="${d.name}">${d.name}</span><span class="fileitem__m">${d.size||''}</span></span>
+        <button class="fileitem__x" onclick="CR.delDoc(${i})" aria-label="Supprimer ${d.name}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>
+      </li>`;}).join('') || `<li class="cr-empty" style="border:1px dashed var(--border);border-radius:var(--r-control)">Aucun document joint pour l'instant.</li>`;
+    document.getElementById('cr-doc-cnt').textContent=this.docs.length;
+    document.getElementById('cnt-cr').textContent=this.docs.length;
+  },
+  renderPhotos(){
+    const el=document.getElementById('photogrid');
+    el.innerHTML=this.photos.map((p,i)=>`
+      <button class="photo" onclick="CR.zoom(${i})" aria-label="Agrandir ${p.name||'la photo'}">
+        <img src="${p.src}" alt="${p.name||"Photo de l'activité"}" loading="lazy">
+        <span class="photo__zoom">Agrandir</span>
+        <span class="photo__x" role="button" tabindex="0" onclick="event.stopPropagation();CR.delPhoto(${i})" onkeydown="if(event.key==='Enter'){event.stopPropagation();CR.delPhoto(${i})}" aria-label="Supprimer la photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></span>
+      </button>`).join('') || `<div class="cr-empty">Aucune photo pour l'instant — ajoutez les clichés de l'activité.</div>`;
+    document.getElementById('cr-photo-cnt').textContent=this.photos.length;
+  },
+  delDoc(i){this.docs.splice(i,1);this.renderDocs();this.touch();},
+  delPhoto(i){this.photos.splice(i,1);this.renderPhotos();this.touch();},
+  zoom(i){const p=this.photos[i];document.getElementById('photo-t').textContent=p.name||'Photo';document.getElementById('lightbox').innerHTML=`<img src="${p.src}" alt="${p.name||"Photo de l'activité"}">`;Modal.open('photo');},
+  updateChars(){document.getElementById('cr-chars').textContent=document.getElementById('cr-text').value.length;},
+  touch(){this.dirty=true;const s=document.getElementById('cr-savestate');s.className='cr-savestate dirty';s.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v4"/><path d="M12 16h.01"/></svg>Modifications non enregistrées`;},
+  setSaved(){this.dirty=false;const s=document.getElementById('cr-savestate');s.className='cr-savestate saved';s.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Enregistré`;},
+  save(){this.text=document.getElementById('cr-text').value;this.setSaved();Toast.show('Compte-rendu enregistré');},
+  // mise en forme Markdown légère (démo)
+  wrap(mark){const t=document.getElementById('cr-text');const s=t.selectionStart,e=t.selectionEnd;const sel=t.value.slice(s,e)||'texte';t.value=t.value.slice(0,s)+mark+sel+mark+t.value.slice(e);t.focus();t.selectionStart=s+mark.length;t.selectionEnd=s+mark.length+sel.length;this.touch();this.updateChars();},
+  prefix(p){const t=document.getElementById('cr-text');const s=t.selectionStart;const ls=t.value.lastIndexOf('\n',s-1)+1;t.value=t.value.slice(0,ls)+p+t.value.slice(ls);t.focus();t.selectionStart=t.selectionEnd=s+p.length;this.touch();this.updateChars();}
+};
+
+/* ================= Init ================= */
+Table.render();
+refreshKpis();
+CR.init();
+if(location.hash==='#compte-rendu'||location.hash==='#cr') showTab('cr');
+</script>
+</body>
+</html>

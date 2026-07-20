@@ -1,0 +1,720 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Événements · Presence · ACS Groupe</title>
+<style>
+:root{
+  --bg:#eef0f4; --surface:#ffffff; --surface-2:#f7f8fa; --surface-3:#eef0f4;
+  --border:#e3e6ec; --border-strong:#d2d7e0;
+  --text:#12141a; --muted:#565d6b; --faint:#8a91a0; --on-accent:#fff;
+  --accent:#1e2a78; --accent-hover:#162058; --accent-bright:#33429c; --accent-soft:#e9ecfa;
+  --brand-orange:#f07a13; --brand-orange-soft:#fdeddb;
+  --error:#e42313; --error-soft:#fbe4e1;
+  --success:#0e9e86; --success-soft:#d8f3ec;
+  --warning:#b8770f; --warning-soft:#fbefd6;
+  --info:#2563eb; --info-soft:#e5edfd; --violet:#7c3aed; --violet-soft:#efe9fd;
+  /* types d'événement (catégoriel, accessible clair/sombre) */
+  --type-atelier:#7c3aed; --type-atelier-bg:#efe9fd;
+  --type-reunion:#2563eb; --type-reunion-bg:#e5edfd;
+  --type-rencontre:#d6336c; --type-rencontre-bg:#fce3ec;
+  --type-formation:#0e9e86; --type-formation-bg:#d8f3ec;
+  --type-conference:#e0620d; --type-conference-bg:#fdeddb;
+  --radius:16px; --r-control:10px; --r-pill:999px;
+  --sh-1:0 1px 2px rgba(18,20,26,.05),0 1px 3px rgba(18,20,26,.05);
+  --sh-2:0 2px 4px rgba(18,20,26,.04),0 14px 30px -14px rgba(18,20,26,.18);
+  --sh-3:0 8px 16px -8px rgba(18,20,26,.12),0 30px 60px -28px rgba(18,20,26,.30);
+  --focus:0 0 0 3px rgba(30,42,120,.32);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b; --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --info:#7aa2f7; --info-soft:#17244d; --violet:#c4b5fd; --violet-soft:#2c2150;
+  --type-atelier:#c4b5fd; --type-atelier-bg:#2c2150;
+  --type-reunion:#93b4fb; --type-reunion-bg:#17244d;
+  --type-rencontre:#f7a8c8; --type-rencontre-bg:#3d1526;
+  --type-formation:#37d6b8; --type-formation-bg:#0f3a33;
+  --type-conference:#f79a45; --type-conference-bg:#3a2711;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}}
+[data-theme="dark"]{
+  --bg:#0d0f15; --surface:#161923; --surface-2:#1c202b; --surface-3:#232834;
+  --border:#272c38; --border-strong:#39404f;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-hover:#97a9f5; --accent-bright:#9fb0f7; --accent-soft:#1b2450;
+  --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --error:#ff6b6f; --error-soft:#3a1a1b; --success:#37d6b8; --success-soft:#0f3a33;
+  --warning:#e7b45a; --warning-soft:#38290f;
+  --info:#7aa2f7; --info-soft:#17244d; --violet:#c4b5fd; --violet-soft:#2c2150;
+  --type-atelier:#c4b5fd; --type-atelier-bg:#2c2150;
+  --type-reunion:#93b4fb; --type-reunion-bg:#17244d;
+  --type-rencontre:#f7a8c8; --type-rencontre-bg:#3d1526;
+  --type-formation:#37d6b8; --type-formation-bg:#0f3a33;
+  --type-conference:#f79a45; --type-conference-bg:#3a2711;
+  --sh-2:0 2px 6px rgba(0,0,0,.4),0 16px 34px -16px rgba(0,0,0,.7);
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  --focus:0 0 0 3px rgba(124,147,240,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased;min-height:100vh}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===== Shell (identique au détail) ===== */
+.app{display:flex;min-height:100vh}
+.side{width:248px;flex:0 0 248px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px;gap:4px}
+.side__logo{display:flex;align-items:center;gap:10px;padding:6px 8px 16px}
+.side__logo img{height:64px;width:auto}
+.side__logo .pn{font-weight:800;letter-spacing:-.02em;font-size:1.02rem}
+.side__logo .pn span{color:var(--brand-orange)}
+.navlbl{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}
+.nav a{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:var(--r-control);color:var(--muted);font-weight:600;font-size:.9rem;text-decoration:none;transition:background .12s,color .12s}
+.nav a svg{width:19px;height:19px;flex:0 0 auto}
+.nav a:hover{background:var(--surface-2);color:var(--text)}
+.nav a.active{background:var(--accent-soft);color:var(--accent)}
+.side__foot{margin-top:auto;display:flex;flex-direction:column;gap:8px;padding-top:12px;border-top:1px solid var(--border)}
+.user{display:flex;align-items:center;gap:10px;padding:6px 8px}
+.user .av{width:34px;height:34px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:.82rem;flex:0 0 auto}
+.user__n{font-size:.84rem;font-weight:650;line-height:1.15}
+.user__r{font-size:.72rem;color:var(--faint)}
+.iconbtn{background:none;border:1px solid var(--border);border-radius:var(--r-control);color:var(--muted);cursor:pointer;padding:8px;display:inline-grid;place-items:center;min-width:38px;min-height:38px;transition:.12s}
+.iconbtn:hover{border-color:var(--accent);color:var(--accent)}
+.iconbtn svg{width:18px;height:18px}
+.main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;padding:12px 22px;background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:saturate(1.4) blur(8px);border-bottom:1px solid var(--border)}
+.pagetitle{font-size:1.05rem;font-weight:750;letter-spacing:-.01em}
+.topbar .sp{flex:1}
+.kbtn{display:inline-flex;align-items:center;gap:9px;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:var(--r-control);padding:8px 12px;color:var(--muted);cursor:pointer;font:inherit;font-size:.85rem;min-height:40px}
+.kbtn:hover{border-color:var(--accent);color:var(--accent)}
+.kbtn kbd{font-family:var(--mono);font-size:.72rem;background:var(--surface);border:1px solid var(--border-strong);border-radius:6px;padding:1px 6px;color:var(--faint)}
+.kbtn svg{width:16px;height:16px}
+.content{padding:22px;max-width:1180px;width:100%;margin:0 auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;font:inherit;font-weight:650;font-size:.88rem;cursor:pointer;border-radius:var(--r-control);padding:9px 14px;min-height:42px;border:1px solid transparent;transition:background .15s,transform .08s,box-shadow .15s,border-color .15s;white-space:nowrap;text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:17px;height:17px}
+.btn--primary{background:var(--accent);color:var(--on-accent);box-shadow:0 8px 18px -10px rgba(30,42,120,.7)}
+.btn--primary:hover{background:var(--accent-hover)}
+.btn--ghost{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+.btn--ghost:hover{border-color:var(--accent);color:var(--accent)}
+.btn--sm{min-height:36px;padding:7px 11px;font-size:.83rem}
+.btn:focus-visible{outline:none;box-shadow:var(--focus)}
+
+/* ===== En-tête de page ===== */
+.pagehead{display:flex;align-items:flex-end;gap:16px;flex-wrap:wrap;margin-bottom:20px}
+.pagehead h1{font-size:1.6rem;font-weight:820;letter-spacing:-.02em;margin:0}
+.pagehead p{color:var(--muted);font-size:.9rem;margin:4px 0 0}
+.pagehead .btn{margin-left:auto}
+
+/* ===== KPI résumé ===== */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:15px 16px;box-shadow:var(--sh-1);display:flex;gap:13px;align-items:center}
+.kpi .ic{width:40px;height:40px;border-radius:11px;display:grid;place-items:center;flex:0 0 auto}
+.kpi .ic svg{width:20px;height:20px}
+.kpi__val{font-size:1.5rem;font-weight:800;letter-spacing:-.02em;line-height:1;font-variant-numeric:tabular-nums}
+.kpi__lbl{font-size:.78rem;color:var(--muted);margin-top:3px}
+
+/* ===== Filtres ===== */
+.toolbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.search{display:flex;align-items:center;gap:8px;flex:1;min-width:220px;background:var(--surface);border:1px solid var(--border-strong);border-radius:var(--r-control);padding:8px 12px;min-height:42px}
+.search svg{width:17px;height:17px;color:var(--faint);flex:0 0 auto}
+.search input{border:none;background:none;font:inherit;font-size:.9rem;color:var(--text);width:100%;outline:none}
+.search input::placeholder{color:var(--faint)}
+.search:focus-within{border-color:var(--accent);box-shadow:var(--focus)}
+.segbar{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-control);padding:3px}
+.segbar button{appearance:none;border:none;background:none;font:inherit;font-size:.83rem;font-weight:600;color:var(--muted);padding:7px 13px;border-radius:8px;cursor:pointer}
+.segbar button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:var(--sh-1)}
+.viewtgl{display:inline-flex;gap:2px;background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-control);padding:3px}
+.viewtgl button{appearance:none;border:none;background:none;color:var(--muted);padding:7px;border-radius:7px;cursor:pointer;display:grid;place-items:center}
+.viewtgl button svg{width:18px;height:18px}
+.viewtgl button[aria-pressed="true"]{background:var(--surface);color:var(--accent);box-shadow:var(--sh-1)}
+
+/* ===== Cartes événements (grille) ===== */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.ev{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);padding:18px;display:flex;flex-direction:column;gap:13px;transition:box-shadow .15s,transform .12s;text-decoration:none;color:inherit}
+.ev:hover{box-shadow:var(--sh-2);transform:translateY(-2px)}
+.ev__top{display:flex;align-items:flex-start;gap:10px}
+.ev__date{flex:0 0 52px;width:52px;height:56px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;line-height:1}
+.ev__date .d{font-size:1.35rem;font-weight:820;letter-spacing:-.02em}
+.ev__date .m{font-size:.66rem;font-weight:700;text-transform:uppercase;color:var(--faint);letter-spacing:.05em;margin-top:2px}
+.ev__hd{min-width:0;flex:1}
+.ev__t{font-size:1.05rem;font-weight:750;letter-spacing:-.01em;line-height:1.25}
+.ev__m{font-size:.8rem;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:5px}
+.ev__m svg{width:14px;height:14px;color:var(--faint);flex:0 0 auto}
+.tags{display:flex;gap:7px;flex-wrap:wrap}
+.tag{display:inline-flex;align-items:center;gap:6px;font-size:.72rem;font-weight:700;padding:4px 10px;border-radius:var(--r-pill);border:1px solid transparent}
+.tag svg{width:12px;height:12px}
+.tag--live{color:var(--success);background:var(--success-soft)}
+.tag--live::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--success);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 55%,transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.tag--soon{color:var(--accent);background:var(--accent-soft)}
+.tag--done{color:var(--muted);background:var(--surface-3)}
+.tag--mode{color:var(--muted);background:var(--surface-2);border-color:var(--border)}
+.tag--cancelled{color:var(--error);background:var(--error-soft)}
+.tag--reported{color:var(--warning);background:var(--warning-soft)}
+.ev__t.is-cancelled,.dt .evname.is-cancelled{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--error) 55%,transparent);color:var(--muted)}
+.ev.is-cancelled{opacity:.82}
+.reportnote{font-size:.75rem;color:var(--warning);display:inline-flex;align-items:center;gap:5px}
+.reportnote svg{width:13px;height:13px;flex:0 0 auto}
+/* badges de type d'événement */
+.tag--type svg{width:12px;height:12px}
+.type-atelier{color:var(--type-atelier);background:var(--type-atelier-bg)}
+.type-reunion{color:var(--type-reunion);background:var(--type-reunion-bg)}
+.type-rencontre{color:var(--type-rencontre);background:var(--type-rencontre-bg)}
+.type-formation{color:var(--type-formation);background:var(--type-formation-bg)}
+.type-conference{color:var(--type-conference);background:var(--type-conference-bg)}
+/* pastille date teintée par type */
+.ev__date .d{color:inherit}
+.ev__stat{display:flex;align-items:center;justify-content:space-between;padding-top:13px;border-top:1px solid var(--border);margin-top:auto}
+.ev__count{display:flex;align-items:baseline;gap:7px}
+.ev__count b{font-size:1.35rem;font-weight:820;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.ev__count span{font-size:.8rem;color:var(--muted)}
+.ev__actions{display:flex;gap:6px}
+.mini{width:36px;height:36px;border-radius:9px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);display:grid;place-items:center;cursor:pointer;transition:.12s}
+.mini:hover{border-color:var(--accent);color:var(--accent)}
+.mini--danger:hover{border-color:var(--error);color:var(--error)}
+.mini svg{width:17px;height:17px}
+
+/* ===== Menu déroulant (⋯) ===== */
+.menu{position:fixed;z-index:65;min-width:214px;background:var(--surface);border:1px solid var(--border-strong);border-radius:12px;box-shadow:var(--sh-3);padding:6px;animation:pop .14s ease-out}
+.menu[hidden]{display:none}
+.menu button{display:flex;align-items:center;gap:10px;width:100%;text-align:left;background:none;border:none;font:inherit;font-size:.86rem;font-weight:600;color:var(--text);padding:9px 10px;border-radius:8px;cursor:pointer}
+.menu button:hover{background:var(--surface-2)}
+.menu button svg{width:16px;height:16px;color:var(--faint);flex:0 0 auto}
+.menu button.danger{color:var(--error)}
+.menu button.danger svg{color:var(--error)}
+.menu button:hover.danger{background:var(--error-soft)}
+.menu .sep{height:1px;background:var(--border);margin:5px 4px}
+
+/* ===== Modals (pattern maison) ===== */
+.scrim{position:fixed;inset:0;background:rgba(15,18,25,.5);backdrop-filter:blur(3px);display:flex;justify-content:center;align-items:flex-start;padding:9vh 16px 16px;z-index:70}
+.scrim[hidden]{display:none}
+.modal{width:100%;max-width:480px;background:var(--surface);border:1px solid var(--border-strong);border-radius:20px;box-shadow:var(--sh-3);overflow:hidden;animation:pop .18s ease-out}
+.modal__hd{display:flex;align-items:flex-start;gap:13px;padding:22px 22px 0}
+.modal__ic{width:44px;height:44px;border-radius:12px;display:grid;place-items:center;flex:0 0 auto}
+.modal__ic svg{width:22px;height:22px}
+.ic-danger{background:var(--error-soft);color:var(--error)}
+.ic-warn{background:var(--warning-soft);color:var(--warning)}
+.modal__hd h2{font-size:1.12rem;font-weight:780;margin:2px 0 0;letter-spacing:-.01em}
+.modal__x{margin-left:auto;background:none;border:none;color:var(--faint);cursor:pointer;padding:8px;border-radius:9px;display:grid;place-items:center;min-width:40px;min-height:40px}
+.modal__x:hover{background:var(--surface-2);color:var(--text)}
+.modal__x svg{width:19px;height:19px}
+.modal__body{padding:14px 22px 4px;color:var(--muted);font-size:.92rem}
+.modal__body strong{color:var(--text)}
+.modal__foot{display:flex;gap:10px;justify-content:flex-end;padding:18px 22px 22px;margin-top:8px;border-top:1px solid var(--border);flex-wrap:wrap}
+.modal__foot .btn{min-height:44px}
+.btn--danger{background:var(--error);color:#fff;box-shadow:0 8px 18px -10px color-mix(in srgb,var(--error) 70%,transparent)}
+.btn--danger:hover{background:color-mix(in srgb,var(--error) 88%,#000)}
+.field{margin-top:14px}
+.field label{display:block;font-size:.83rem;font-weight:650;margin-bottom:7px;color:var(--text)}
+.field .opt{color:var(--faint);font-weight:400}
+.control{width:100%;font:inherit;font-size:.94rem;color:var(--text);background:linear-gradient(180deg,var(--surface),var(--surface-2));border:1px solid var(--border-strong);border-radius:var(--r-control);padding:11px 13px;min-height:46px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 1px 1px rgba(18,20,26,.03);transition:border-color .15s,box-shadow .15s}
+.control::placeholder{color:var(--faint)}
+.control:focus{outline:none;border-color:var(--accent);box-shadow:var(--focus)}
+textarea.control{min-height:76px;resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.warnbox{display:flex;gap:11px;align-items:flex-start;margin-top:14px;padding:12px 13px;border-radius:11px;background:var(--warning-soft);color:var(--warning);font-size:.84rem}
+.warnbox svg{width:18px;height:18px;flex:0 0 auto;margin-top:1px}
+
+/* ===== Vue tableau ===== */
+.tablewrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--sh-1);overflow:hidden}
+.tscroll{overflow-x:auto}
+table.dt{width:100%;border-collapse:collapse;font-size:.88rem;min-width:760px}
+.dt thead th{text-align:left;font-size:.72rem;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--faint);padding:12px 16px;border-bottom:1px solid var(--border);background:var(--surface-2);white-space:nowrap}
+.dt tbody td{padding:12px 16px;border-bottom:1px solid var(--border);vertical-align:middle}
+.dt tbody tr:last-child td{border-bottom:none}
+.dt tbody tr{cursor:pointer}
+.dt tbody tr:hover{background:var(--surface-2)}
+.dt .evname{font-weight:700}
+.dt .evsub{font-size:.78rem;color:var(--faint)}
+.dt .cnt{font-weight:800;font-variant-numeric:tabular-nums}
+
+.empty{padding:60px 20px;text-align:center;color:var(--muted)}
+.empty svg{width:48px;height:48px;color:var(--faint);margin-bottom:12px}
+.empty h3{font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 4px}
+
+/* ===== Palette ⌘K (réutilisée) ===== */
+.cmdk-scrim{position:fixed;inset:0;background:rgba(15,18,25,.5);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;padding:12vh 16px 16px;z-index:60}
+.cmdk-scrim[hidden]{display:none}
+.cmdk{width:100%;max-width:580px;background:var(--surface);border:1px solid var(--border-strong);border-radius:16px;box-shadow:var(--sh-3);overflow:hidden;animation:pop .16s ease-out}
+@keyframes pop{from{opacity:0;transform:scale(.97) translateY(6px)}to{opacity:1;transform:none}}
+.cmdk__in{display:flex;align-items:center;gap:11px;padding:15px 18px;border-bottom:1px solid var(--border)}
+.cmdk__in svg{width:19px;height:19px;color:var(--faint);flex:0 0 auto}
+.cmdk__in input{border:none;background:none;outline:none;font:inherit;font-size:1.02rem;color:var(--text);width:100%}
+.cmdk__in kbd{font-family:var(--mono);font-size:.7rem;background:var(--surface-2);border:1px solid var(--border-strong);border-radius:6px;padding:2px 7px;color:var(--faint)}
+.cmdk__list{max-height:46vh;overflow-y:auto;padding:8px}
+.cmdk__grp{font-size:.68rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);padding:10px 12px 5px}
+.cmdk__it{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:10px;cursor:pointer}
+.cmdk__it .ic{width:30px;height:30px;border-radius:8px;background:var(--surface-3);color:var(--muted);display:grid;place-items:center;flex:0 0 auto}
+.cmdk__it .ic svg{width:16px;height:16px}
+.cmdk__it[aria-selected="true"]{background:var(--accent-soft)}
+.cmdk__it__t{font-weight:650;font-size:.9rem}
+.cmdk__it__d{font-size:.76rem;color:var(--faint)}
+.cmdk__it .go{margin-left:auto;font-size:.7rem;color:var(--faint)}
+.cmdk__empty{padding:30px;text-align:center;color:var(--muted);font-size:.9rem}
+
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--surface);padding:12px 18px;border-radius:12px;font-size:.88rem;font-weight:600;box-shadow:var(--sh-3);z-index:80;opacity:0;transition:.25s;display:flex;align-items:center;gap:9px}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast svg{width:17px;height:17px;color:var(--success)}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+
+.menutgl{display:none}
+@media (max-width:960px){.kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:820px){
+  .side{position:fixed;left:0;top:0;z-index:70;transform:translateX(-100%);transition:transform .2s;box-shadow:var(--sh-3)}
+  .side.open{transform:none}
+  .menutgl{display:inline-grid}
+  .kbtn .txt{display:none}
+}
+@media (max-width:560px){.kpis{grid-template-columns:1fr 1fr}.pagehead .btn{margin-left:0;width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <aside class="side" id="side" aria-label="Navigation principale">
+    <div class="side__logo">
+      <img src="../assets/logo-acs-groupe.png" alt="ACS Groupe">
+    </div>
+    <nav class="nav" aria-label="Sections">
+      <a href="evenements.html" class="active" aria-current="page">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        Événements
+      </a>
+      <a href="creer-evenement.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
+        Nouvel événement
+      </a>
+      <a href="participants.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Participants
+      </a>
+      <a href="portfolio.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+        Portfolio
+      </a>
+      <div class="navlbl">Compte</div>
+      <a href="#" onclick="return false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+        Utilisateurs ACS
+      </a>
+      <a href="parametres.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Paramètres
+      </a>
+      <a href="connexion.html">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg>
+        Se déconnecter
+      </a>
+    </nav>
+    <div class="side__foot">
+      <div class="user">
+        <div class="av">NK</div>
+        <div>
+          <div class="user__n">N'Guessan Koffi</div>
+          <div class="user__r">Organisateur · ACS</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <header class="topbar">
+      <button class="iconbtn menutgl" onclick="toggleSide()" aria-label="Ouvrir le menu">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <span class="pagetitle">Événements</span>
+      <span class="sp"></span>
+      <button class="kbtn" onclick="Cmdk.open()" aria-label="Rechercher">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <span class="txt">Rechercher…</span>
+        <kbd>⌘K</kbd>
+      </button>
+      <button class="iconbtn" onclick="toggleTheme()" aria-label="Basculer le thème">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      </button>
+    </header>
+
+    <main class="content">
+      <div class="pagehead">
+        <div>
+          <h1>Événements</h1>
+          <p>Tous les événements d'ACS Groupe — vue partagée entre organisateurs.</p>
+        </div>
+        <a class="btn btn--primary" href="creer-evenement.html">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg>
+          Nouvel événement
+        </a>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="ic" style="background:var(--success-soft);color:var(--success)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg></div><div><div class="kpi__val">1</div><div class="kpi__lbl">En cours maintenant</div></div></div>
+        <div class="kpi"><div class="ic" style="background:var(--info-soft);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></div><div><div class="kpi__val">3</div><div class="kpi__lbl">À venir</div></div></div>
+        <div class="kpi"><div class="ic" style="background:var(--violet-soft);color:var(--violet)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div><div><div class="kpi__val">12</div><div class="kpi__lbl">Clôturés</div></div></div>
+        <div class="kpi"><div class="ic" style="background:var(--brand-orange-soft);color:var(--brand-orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg></div><div><div class="kpi__val">1 248</div><div class="kpi__lbl">Présences cumulées</div></div></div>
+      </div>
+
+      <div class="toolbar">
+        <label class="search">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input id="filter" type="search" placeholder="Rechercher un événement (titre, lieu…)" oninput="render()" aria-label="Rechercher un événement">
+        </label>
+        <div class="segbar" role="group" aria-label="Filtrer par statut">
+          <button aria-pressed="true" data-s="all" onclick="setStatus('all',this)">Tous</button>
+          <button aria-pressed="false" data-s="live" onclick="setStatus('live',this)">En cours</button>
+          <button aria-pressed="false" data-s="soon" onclick="setStatus('soon',this)">À venir</button>
+          <button aria-pressed="false" data-s="done" onclick="setStatus('done',this)">Clôturés</button>
+          <button aria-pressed="false" data-s="reported" onclick="setStatus('reported',this)">Reportés</button>
+          <button aria-pressed="false" data-s="cancelled" onclick="setStatus('cancelled',this)">Annulés</button>
+        </div>
+        <div class="viewtgl" role="group" aria-label="Affichage">
+          <button id="v-grid" aria-pressed="true" onclick="setView('grid')" aria-label="Vue cartes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
+          <button id="v-list" aria-pressed="false" onclick="setView('list')" aria-label="Vue tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
+        </div>
+      </div>
+
+      <div id="grid" class="grid"></div>
+      <div id="tablewrap" class="tablewrap" hidden>
+        <div class="tscroll">
+          <table class="dt" aria-label="Liste des événements">
+            <thead><tr><th>Événement</th><th>Type</th><th>Date &amp; heure</th><th>Mode QR</th><th>Statut</th><th>Présents</th><th aria-label="Actions"></th></tr></thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="empty" class="empty" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        <h3>Aucun événement</h3>
+        <p>Aucun événement ne correspond à votre recherche.</p>
+      </div>
+    </main>
+  </div>
+</div>
+
+<!-- Palette ⌘K -->
+<div class="cmdk-scrim" id="cmdk" hidden onclick="if(event.target===this)Cmdk.close()">
+  <div class="cmdk" role="dialog" aria-modal="true" aria-label="Recherche">
+    <div class="cmdk__in">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input id="cmdk-input" type="text" placeholder="Rechercher un événement, une action…" autocomplete="off" aria-label="Recherche">
+      <kbd>Esc</kbd>
+    </div>
+    <div class="cmdk__list" id="cmdk-list"></div>
+  </div>
+</div>
+
+<!-- Menu contextuel (⋯) -->
+<div class="menu" id="rowmenu" hidden role="menu" aria-label="Actions de l'événement"></div>
+
+<!-- Modal : reporter -->
+<div class="scrim" id="m-report" hidden onclick="if(event.target===this)closeModal('m-report')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="rep-t">
+    <div class="modal__hd">
+      <div class="modal__ic ic-warn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg></div>
+      <h2 id="rep-t">Reporter l'événement</h2>
+      <button class="modal__x" onclick="closeModal('m-report')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <form onsubmit="return confirmReport(event)">
+      <div class="modal__body">
+        <p style="margin:0"><strong id="rep-name">—</strong><br>Date actuelle : <span id="rep-old">—</span>. Choisissez le nouveau créneau. Le mode QR et le statut restent inchangés ; les invités seront notifiés.</p>
+        <div class="field">
+          <label for="rep-date">Nouvelle date <span style="color:var(--error)">*</span></label>
+          <input class="control" id="rep-date" type="date" required>
+        </div>
+        <div class="grid2">
+          <div class="field"><label for="rep-start">Heure de début <span style="color:var(--error)">*</span></label><input class="control" id="rep-start" type="time" value="09:00" required></div>
+          <div class="field"><label for="rep-end">Heure de fin <span style="color:var(--error)">*</span></label><input class="control" id="rep-end" type="time" value="12:00" required></div>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost" onclick="closeModal('m-report')">Annuler</button>
+        <button type="submit" class="btn btn--primary"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reporter l'événement</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal : annuler -->
+<div class="scrim" id="m-cancel" hidden onclick="if(event.target===this)closeModal('m-cancel')">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="can-t">
+    <div class="modal__hd">
+      <div class="modal__ic ic-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg></div>
+      <h2 id="can-t">Annuler l'événement</h2>
+      <button class="modal__x" onclick="closeModal('m-cancel')" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+    </div>
+    <form onsubmit="return confirmCancel(event)">
+      <div class="modal__body">
+        <p style="margin:0"><strong id="can-name">—</strong> passera au statut <strong>Annulé</strong>. Il reste visible dans la liste mais n'est plus scannable ni émargeable.</p>
+        <div class="warnbox" id="can-warn" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg><span id="can-warn-txt"></span></div>
+        <div class="field">
+          <label for="can-motif">Motif de l'annulation <span class="opt">(facultatif)</span></label>
+          <textarea class="control" id="can-motif" placeholder="Ex. Report d'agenda, indisponibilité de la salle…"></textarea>
+        </div>
+      </div>
+      <div class="modal__foot">
+        <button type="button" class="btn btn--ghost" onclick="closeModal('m-cancel')">Revenir</button>
+        <button type="submit" class="btn btn--danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 8l8 8M16 8l-8 8"/><circle cx="12" cy="12" r="9"/></svg>Confirmer l'annulation</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+const EVENTS=[
+ {id:1,title:"Atelier Cybersécurité",type:"Atelier",d:19,m:"JUIL",dateISO:"2026-07-19",date:"19 juil. 2026",time:"14:00 – 16:00",lieu:"Salle Ébène, Cocody",status:"live",mode:"tournant",count:24,href:"evenement-detail.html",flag:null},
+ {id:2,title:"Comité de Direction Q3",type:"Réunion",d:24,m:"JUIL",dateISO:"2026-07-24",date:"24 juil. 2026",time:"14:00 – 17:00",lieu:"Siège ACS, Plateau",status:"soon",mode:"statique",count:0,href:"evenement-detail.html",flag:"reported",reportedFrom:"22 juil. 2026 · 09:00"},
+ {id:3,title:"Formation RGPD / Loi 2013-450",type:"Formation",d:25,m:"JUIL",dateISO:"2026-07-25",date:"25 juil. 2026",time:"10:00 – 13:00",lieu:"Salle Baobab",status:"soon",mode:"tournant",count:0,href:"evenement-detail.html",flag:null},
+ {id:4,title:"Séminaire Transformation Digitale",type:"Conférence",d:2,m:"AOÛT",dateISO:"2026-08-02",date:"2 août 2026",time:"08:30 – 17:00",lieu:"Hôtel Ivoire",status:"soon",mode:"statique",count:0,href:"evenement-detail.html",flag:"cancelled",motif:"Indisponibilité de l'intervenant principal"},
+ {id:5,title:"Petit-déjeuner Partenaires",type:"Rencontre",d:12,m:"JUIL",dateISO:"2026-07-12",date:"12 juil. 2026",time:"08:00 – 10:00",lieu:"Café des Affaires",status:"done",mode:"statique",count:38,href:"evenement-detail.html",flag:null},
+ {id:6,title:"Assemblée Générale 2026",type:"Réunion",d:5,m:"JUIL",dateISO:"2026-07-05",date:"5 juil. 2026",time:"15:00 – 18:00",lieu:"Palais des Congrès",status:"done",mode:"tournant",count:142,href:"evenement-detail.html",flag:null},
+ {id:7,title:"Journée Sécurité Industrielle",type:"Conférence",d:28,m:"JUIN",dateISO:"2026-06-28",date:"28 juin 2026",time:"09:00 – 16:00",lieu:"Zone Industrielle Yopougon",status:"done",mode:"statique",count:67,href:"evenement-detail.html",flag:null},
+ {id:8,title:"Webinaire Cloud Souverain",type:"Conférence",d:20,m:"JUIN",dateISO:"2026-06-20",date:"20 juin 2026",time:"11:00 – 12:30",lieu:"En ligne",status:"done",mode:"statique",count:203,href:"evenement-detail.html",flag:null}
+];
+const STATUS={live:{cls:'tag--live',lbl:'En cours'},soon:{cls:'tag--soon',lbl:'À venir'},done:{cls:'tag--done',lbl:'Clôturé'},cancelled:{cls:'tag--cancelled',lbl:'Annulé'},reported:{cls:'tag--reported',lbl:'Reporté'}};
+const MONTHS_ABBR=['janv.','févr.','mars','avr.','mai','juin','juil.','août','sept.','oct.','nov.','déc.'];
+const MONTHS_UP=['JANV','FÉVR','MARS','AVR','MAI','JUIN','JUIL','AOÛT','SEPT','OCT','NOV','DÉC'];
+const TYPES={
+ 'Atelier':{k:'atelier',ic:'M14.7 6.3a4 4 0 0 1 .3 5.2L20 16l-2 2-4.5-5a4 4 0 0 1-5.2-.3 4 4 0 0 1 0-5.6l2.8 2.8 1.4-1.4L9.7 5.9a4 4 0 0 1 5 .4Z'},
+ 'Réunion':{k:'reunion',ic:'M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75'},
+ 'Rencontre':{k:'rencontre',ic:'M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z'},
+ 'Formation':{k:'formation',ic:'M22 10 12 5 2 10l10 5 10-5ZM6 12v5c0 1 2.7 2.5 6 2.5s6-1.5 6-2.5v-5'},
+ 'Conférence':{k:'conference',ic:'M3 11h3l4-4v10l-4-4H3zM16 8a5 5 0 0 1 0 8M19 5a9 9 0 0 1 0 14'}
+};
+let status='all', view='grid';
+
+function typeMeta(t){return TYPES[t]||{k:'reunion',ic:TYPES['Réunion'].ic};}
+function typeTag(t){const m=typeMeta(t);return `<span class="tag tag--type type-${m.k}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9">${m.ic.startsWith('M')?`<path d="${m.ic}"/>`:m.ic}</svg>${t}</span>`;}
+function modeTag(mode){
+  const ic = mode==='tournant'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 2v6M12 22a10 10 0 1 1 6.9-17.2"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h7v7"/></svg>';
+  return `<span class="tag tag--mode">${ic}QR ${mode}</span>`;
+}
+function data(){
+  const q=(document.getElementById('filter').value||'').toLowerCase().trim();
+  return EVENTS.filter(e=>{
+    let sm;
+    if(status==='all') sm=true;
+    else if(status==='cancelled') sm=e.flag==='cancelled';
+    else if(status==='reported') sm=e.flag==='reported';
+    else sm=e.status===status;
+    return sm && (!q||(e.title+e.lieu).toLowerCase().includes(q));
+  });
+}
+function statusTags(e){
+  if(e.flag==='cancelled') return `<span class="tag tag--cancelled">Annulé</span>`;
+  let h=`<span class="tag ${STATUS[e.status].cls}">${STATUS[e.status].lbl}</span>`;
+  if(e.flag==='reported') h+=`<span class="tag tag--reported"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reporté</span>`;
+  return h;
+}
+function reportNote(e){
+  if(e.flag!=='reported') return '';
+  return `<div class="ev__m reportnote"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Reporté depuis le ${e.reportedFrom}</div>`;
+}
+function menuBtn(e){
+  return `<button class="mini" title="Plus d'actions" aria-haspopup="menu" onclick="event.preventDefault();event.stopPropagation();Menu.open(${e.id},this)" aria-label="Plus d'actions pour ${e.title}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg></button>`;
+}
+function primaryAction(e){
+  // action rapide contextuelle : projeter/imprimer selon mode + statut
+  if(e.status==='done'||e.flag==='cancelled') return `<button class="mini" title="Voir le détail" onclick="event.preventDefault();event.stopPropagation();location.href='${e.href}'" aria-label="Voir le détail"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg></button>`;
+  const qrTitle = e.mode==='tournant'?'Projeter le QR':'Imprimer le QR';
+  const qrIc = e.mode==='tournant'
+    ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="4" width="20" height="13" rx="2"/><path d="M8 21h8M12 17v4"/></svg>'
+    : '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 9V2h12v7"/><rect x="6" y="13" width="12" height="8"/><path d="M6 17H2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5h-4"/></svg>';
+  const onclick = e.mode==='tournant' ? `window.open('../dashboard.html','_blank')` : `Toast.show('Affiche imprimable — à brancher')`;
+  return `<button class="mini" title="${qrTitle}" onclick="event.preventDefault();event.stopPropagation();${onclick}" aria-label="${qrTitle}">${qrIc}</button>`;
+}
+function render(){
+  const rows=data();
+  const g=document.getElementById('grid'),tw=document.getElementById('tablewrap'),em=document.getElementById('empty');
+  g.hidden=true;tw.hidden=true;em.hidden=true;
+  if(!rows.length){em.hidden=false;return;}
+  if(view==='grid'){
+    g.hidden=false;
+    g.innerHTML=rows.map(e=>`
+      <a class="ev ${e.flag==='cancelled'?'is-cancelled':''}" href="${e.href}" aria-label="${e.title}">
+        <div class="ev__top">
+          <div class="ev__date" style="background:var(--type-${typeMeta(e.type).k}-bg);color:var(--type-${typeMeta(e.type).k});border-color:transparent"><span class="d">${e.d}</span><span class="m">${e.m}</span></div>
+          <div class="ev__hd">
+            <div class="ev__t ${e.flag==='cancelled'?'is-cancelled':''}">${e.title}</div>
+            <div class="ev__m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>${e.time}</div>
+            <div class="ev__m"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>${e.lieu}</div>
+            ${reportNote(e)}
+          </div>
+        </div>
+        <div class="tags">${typeTag(e.type)}${statusTags(e)}${modeTag(e.mode)}</div>
+        <div class="ev__stat">
+          <div class="ev__count"><b>${e.count}</b><span>présent${e.count>1?'s':''}</span></div>
+          <div class="ev__actions">${primaryAction(e)}${menuBtn(e)}</div>
+        </div>
+      </a>`).join('');
+  } else {
+    tw.hidden=false;
+    document.getElementById('tbody').innerHTML=rows.map(e=>`
+      <tr onclick="location.href='${e.href}'">
+        <td><div class="evname ${e.flag==='cancelled'?'is-cancelled':''}">${e.title}</div><div class="evsub">${e.lieu}${e.flag==='reported'?` · <span class="reportnote">Reporté depuis le ${e.reportedFrom}</span>`:''}</div></td>
+        <td>${typeTag(e.type)}</td>
+        <td>${e.date}<div class="evsub">${e.time}</div></td>
+        <td>${modeTag(e.mode)}</td>
+        <td>${statusTags(e)}</td>
+        <td class="cnt">${e.count}</td>
+        <td><div class="ev__actions" style="display:flex;gap:6px">${primaryAction(e)}${menuBtn(e)}</div></td>
+      </tr>`).join('');
+  }
+}
+function setStatus(s,btn){status=s;document.querySelectorAll('.segbar button').forEach(b=>b.setAttribute('aria-pressed',b===btn));render();}
+function setView(v){view=v;document.getElementById('v-grid').setAttribute('aria-pressed',v==='grid');document.getElementById('v-list').setAttribute('aria-pressed',v==='list');render();}
+
+/* ===== Infra modales ===== */
+let lastFocus=null;
+function openModal(id){lastFocus=document.activeElement;document.getElementById(id).hidden=false;document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).hidden=true;if(![...document.querySelectorAll('.scrim')].some(s=>!s.hidden))document.body.style.overflow='';if(lastFocus&&lastFocus.focus)lastFocus.focus();}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){const open=[...document.querySelectorAll('.scrim')].filter(s=>!s.hidden).pop();if(open)closeModal(open.id);}});
+
+/* ===== Menu contextuel (⋯) ===== */
+const Menu={
+  id:null,
+  open(id,btn){
+    this.id=id;
+    const e=EVENTS.find(x=>x.id===id);
+    const m=document.getElementById('rowmenu');
+    const items=[];
+    items.push(`<button role="menuitem" onclick="Menu.go('detail')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>Voir le détail</button>`);
+    if(e.flag==='cancelled'){
+      items.push(`<div class="sep"></div>`);
+      items.push(`<button role="menuitem" onclick="Menu.go('restore')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>Rétablir l'événement</button>`);
+    }else{
+      items.push(`<button role="menuitem" onclick="Menu.go('report')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/><path d="M12 8v4l3 2"/></svg>Reporter…</button>`);
+      items.push(`<div class="sep"></div>`);
+      items.push(`<button role="menuitem" class="danger" onclick="Menu.go('cancel')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M8 8l8 8M16 8l-8 8"/></svg>Annuler l'événement…</button>`);
+    }
+    m.innerHTML=items.join('');
+    m.hidden=false;
+    const r=btn.getBoundingClientRect();
+    const mw=m.offsetWidth||214, mh=m.offsetHeight;
+    let left=Math.min(r.right-mw, window.innerWidth-mw-8);
+    left=Math.max(8,left);
+    let top=r.bottom+6;
+    if(top+mh>window.innerHeight-8) top=Math.max(8,r.top-mh-6);
+    m.style.left=left+'px';m.style.top=top+'px';
+    m.querySelector('button').focus();
+  },
+  close(){document.getElementById('rowmenu').hidden=true;},
+  go(action){
+    const id=this.id;this.close();
+    const e=EVENTS.find(x=>x.id===id);
+    if(action==='detail'){location.href=e.href;return;}
+    if(action==='report'){Report.open(id);return;}
+    if(action==='cancel'){Cancel.open(id);return;}
+    if(action==='restore'){e.flag=null; if(e.motif)delete e.motif; render();Toast.show('Événement rétabli');}
+  }
+};
+document.addEventListener('click',e=>{if(!e.target.closest('#rowmenu')&&!e.target.closest('[aria-haspopup="menu"]'))Menu.close();});
+window.addEventListener('scroll',()=>Menu.close(),true);
+window.addEventListener('resize',()=>Menu.close());
+
+/* ===== Reporter ===== */
+const Report={
+  id:null,
+  open(id){
+    this.id=id;const e=EVENTS.find(x=>x.id===id);
+    document.getElementById('rep-name').textContent=e.title;
+    document.getElementById('rep-old').textContent=`${e.date} · ${e.time}`;
+    document.getElementById('rep-date').value=e.dateISO;
+    const [s,en]=e.time.split(' – ');
+    document.getElementById('rep-start').value=s||'09:00';
+    document.getElementById('rep-end').value=en||'12:00';
+    openModal('m-report');setTimeout(()=>document.getElementById('rep-date').focus(),40);
+  }
+};
+function confirmReport(ev){
+  ev.preventDefault();
+  const e=EVENTS.find(x=>x.id===Report.id);
+  const di=document.getElementById('rep-date').value, s=document.getElementById('rep-start').value, en=document.getElementById('rep-end').value;
+  if(!di||!s||!en) return false;
+  if(en<=s){const f=document.getElementById('rep-end');f.setAttribute('aria-invalid','true');f.focus();return false;}
+  // conserve l'ancien créneau si premier report
+  if(e.flag!=='reported') e.reportedFrom=`${e.date} · ${e.time.split(' – ')[0]}`;
+  const [y,mo,d]=di.split('-').map(Number);
+  e.dateISO=di; e.d=d; e.m=MONTHS_UP[mo-1]; e.date=`${d} ${MONTHS_ABBR[mo-1]} ${y}`; e.time=`${s} – ${en}`;
+  e.flag='reported';
+  render();closeModal('m-report');Toast.show('Événement reporté — invités notifiés');
+  return false;
+}
+
+/* ===== Annuler ===== */
+const Cancel={
+  id:null,
+  open(id){
+    this.id=id;const e=EVENTS.find(x=>x.id===id);
+    document.getElementById('can-name').textContent=e.title;
+    const warn=document.getElementById('can-warn');
+    if(e.count>0){warn.hidden=false;document.getElementById('can-warn-txt').innerHTML=`<strong>${e.count} présence${e.count>1?'s':''} déjà enregistrée${e.count>1?'s':''}</strong> sur cet événement. L'annulation ne les supprime pas ; elles restent consultables dans le détail.`;}
+    else warn.hidden=true;
+    document.getElementById('can-motif').value='';
+    openModal('m-cancel');setTimeout(()=>document.getElementById('can-motif').focus(),40);
+  }
+};
+function confirmCancel(ev){
+  ev.preventDefault();
+  const e=EVENTS.find(x=>x.id===Cancel.id);
+  e.flag='cancelled';
+  const motif=document.getElementById('can-motif').value.trim();
+  if(motif)e.motif=motif;
+  render();closeModal('m-cancel');Toast.show('Événement annulé');
+  return false;
+}
+
+/* ===== Palette ⌘K ===== */
+const Cmdk={
+  sel:0, items:[],
+  actions:[
+    {t:'Créer un nouvel événement',d:'Action',ic:'plus',run:()=>location.href='creer-evenement.html'},
+    {t:'Voir les événements en cours',d:'Filtre',ic:'live',run:()=>{Cmdk.close();document.querySelector('.segbar button[data-s="live"]').click();}}
+  ],
+  open(){document.getElementById('cmdk').hidden=false;document.body.style.overflow='hidden';const i=document.getElementById('cmdk-input');i.value='';this.filter('');setTimeout(()=>i.focus(),30);document.addEventListener('keydown',this._key);},
+  close(){document.getElementById('cmdk').hidden=true;document.body.style.overflow='';document.removeEventListener('keydown',this._key);},
+  filter(q){
+    q=q.toLowerCase().trim();
+    const evs=EVENTS.filter(e=>!q||(e.title+e.lieu).toLowerCase().includes(q)).slice(0,7);
+    const acts=this.actions.filter(a=>!q||a.t.toLowerCase().includes(q));
+    this.items=[];let html='';
+    if(acts.length){html+='<div class="cmdk__grp">Actions</div>';acts.forEach(a=>{const i=this.items.length;this.items.push(a.run);
+      html+=`<div class="cmdk__it" role="option" data-i="${i}" onclick="Cmdk.run(${i})" onmousemove="Cmdk.hover(${i})"><div class="ic">${ICON(a.ic)}</div><div><div class="cmdk__it__t">${a.t}</div><div class="cmdk__it__d">${a.d}</div></div><span class="go">↵</span></div>`;});}
+    if(evs.length){html+='<div class="cmdk__grp">Événements</div>';evs.forEach(e=>{const i=this.items.length;this.items.push(()=>location.href=e.href);
+      html+=`<div class="cmdk__it" role="option" data-i="${i}" onclick="Cmdk.run(${i})" onmousemove="Cmdk.hover(${i})"><div class="ic">${ICON('cal')}</div><div><div class="cmdk__it__t">${e.title}</div><div class="cmdk__it__d">${e.date} · ${STATUS[e.status].lbl} · ${e.count} présents</div></div><span class="go">Ouvrir</span></div>`;});}
+    if(!this.items.length){html=`<div class="cmdk__empty">Aucun résultat pour « ${q} ».</div>`;}
+    document.getElementById('cmdk-list').innerHTML=html;this.sel=0;this.mark();
+  },
+  mark(){document.querySelectorAll('.cmdk__it').forEach((el,i)=>el.setAttribute('aria-selected',i===this.sel));const c=document.querySelector('.cmdk__it[aria-selected="true"]');if(c)c.scrollIntoView({block:'nearest'});},
+  hover(i){this.sel=i;this.mark();},
+  run(i){if(this.items[i])this.items[i]();},
+  _key(e){if(e.key==='Escape')Cmdk.close();if(e.key==='ArrowDown'){e.preventDefault();Cmdk.sel=Math.min(Cmdk.sel+1,Cmdk.items.length-1);Cmdk.mark();}if(e.key==='ArrowUp'){e.preventDefault();Cmdk.sel=Math.max(Cmdk.sel-1,0);Cmdk.mark();}if(e.key==='Enter'){e.preventDefault();Cmdk.run(Cmdk.sel);}}
+};
+function ICON(n){const m={
+  plus:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg>',
+  live:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>'
+};return m[n]||'';}
+document.getElementById('cmdk-input').addEventListener('input',e=>Cmdk.filter(e.target.value));
+
+const Toast={t:null,show(msg){const el=document.getElementById('toast');el.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>${msg}`;el.classList.add('show');clearTimeout(this.t);this.t=setTimeout(()=>el.classList.remove('show'),2600);}};
+function toggleTheme(){const cur=document.documentElement.getAttribute('data-theme');const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;document.documentElement.setAttribute('data-theme',dark?'light':'dark');}
+function toggleSide(){document.getElementById('side').classList.toggle('open');}
+window.addEventListener('keydown',e=>{if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==='k'){e.preventDefault();Cmdk.open();}});
+render();
+</script>
+</body>
+</html>

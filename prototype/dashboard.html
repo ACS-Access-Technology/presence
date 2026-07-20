@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mode présentation — QR tournant · Presence · ACS Groupe</title>
+<style>
+:root{
+  --bg:#f4f5f8; --surface:#ffffff; --surface-2:#f7f8fa;
+  --border:#e3e6ec; --text:#12141a; --muted:#565d6b; --faint:#8a91a0;
+  --accent:#1e2a78; --accent-hover:#162058; --accent-soft:#e9ecfa;
+  --brand-orange:#f07a13; --brand-orange-soft:#fdeddb;
+  --success:#0e9e86;
+  --radius:16px; --r-control:10px;
+  --sh-2:0 2px 4px rgba(18,20,26,.04),0 14px 30px -14px rgba(18,20,26,.18);
+  --sh-3:0 8px 16px -8px rgba(18,20,26,.12),0 30px 60px -28px rgba(18,20,26,.30);
+  --sans:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0b0d13; --surface:#161923; --surface-2:#1c202b; --border:#272c38;
+    --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+    --accent:#7c93f0; --accent-soft:#1b2450; --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+    --success:#37d6b8;
+    --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+  }
+}
+[data-theme="dark"]{
+  --bg:#0b0d13; --surface:#161923; --surface-2:#1c202b; --border:#272c38;
+  --text:#eef0f6; --muted:#a6adbc; --faint:#6d7484;
+  --accent:#7c93f0; --accent-soft:#1b2450; --brand-orange:#f79a45; --brand-orange-soft:#3a2711;
+  --success:#37d6b8;
+  --sh-3:0 10px 24px -10px rgba(0,0,0,.5),0 36px 70px -30px rgba(0,0,0,.8);
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:var(--sans);background:var(--bg);color:var(--text);
+  min-height:100vh;display:flex;flex-direction:column;
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+.topbar{display:flex;align-items:center;gap:14px;padding:18px 26px;border-bottom:1px solid var(--border);background:var(--surface)}
+.topbar img{height:52px;width:auto}
+.topbar .sp{flex:1}
+.badge{display:inline-flex;align-items:center;gap:7px;font-size:.82rem;font-weight:650;color:var(--success);background:color-mix(in srgb,var(--success) 14%,transparent);padding:6px 12px;border-radius:999px}
+.badge::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--success);box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 60%,transparent);animation:pulse 2s infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--success) 55%,transparent)}70%{box-shadow:0 0 0 10px transparent}100%{box-shadow:0 0 0 0 transparent}}
+.btn{display:inline-flex;align-items:center;gap:8px;font:inherit;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--surface);color:var(--text);border-radius:var(--r-control);padding:9px 15px;min-height:42px;text-decoration:none}
+.btn:hover{border-color:var(--accent);color:var(--accent)}
+.btn svg{width:18px;height:18px}
+
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:clamp(16px,4vh,50px) 20px;gap:clamp(10px,2vh,22px)}
+.evtitle{font-size:clamp(1.8rem,4.5vw,3.4rem);font-weight:850;letter-spacing:-.02em;margin:0;line-height:1.05}
+.evmeta{font-size:clamp(.95rem,1.6vw,1.25rem);color:var(--muted);margin:0}
+.cta-scan{font-size:clamp(1.1rem,2.4vw,1.7rem);font-weight:750;color:var(--accent);margin:0}
+
+/* Carte QR */
+.qrcard{position:relative;background:var(--surface);border-radius:24px;box-shadow:var(--sh-3);padding:clamp(18px,3vh,34px)}
+.qrbox{width:clamp(230px,38vh,420px);height:clamp(230px,38vh,420px);position:relative}
+#qr{width:100%;height:100%;display:block;image-rendering:pixelated;transition:opacity .35s}
+.qr-fade{opacity:0}
+
+/* Compte à rebours */
+.count{display:flex;flex-direction:column;align-items:center;gap:10px;width:min(420px,80vw)}
+.count__lbl{font-size:clamp(1rem,1.8vw,1.35rem);font-weight:650}
+.count__lbl b{color:var(--brand-orange);font-variant-numeric:tabular-nums}
+.bar{width:100%;height:12px;background:var(--brand-orange-soft);border-radius:999px;overflow:hidden}
+.bar__fill{height:100%;width:100%;background:var(--brand-orange);border-radius:999px;transition:width 1s linear}
+
+.footbar{display:flex;align-items:center;justify-content:space-between;padding:14px 26px;border-top:1px solid var(--border);background:var(--surface);color:var(--faint);font-size:.85rem}
+.footbar b{color:var(--muted)}
+
+.hint{position:fixed;left:14px;bottom:64px;font-size:.72rem;color:var(--faint);background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:6px 10px;max-width:260px;box-shadow:var(--sh-2)}
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <img src="assets/logo-acs-groupe.png" alt="ACS Groupe">
+    <span class="badge" aria-hidden="true">En direct</span>
+    <span class="sp"></span>
+    <button class="btn" onclick="toggleTheme()" aria-label="Basculer le thème">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+      Thème
+    </button>
+    <button class="btn" id="fsBtn" onclick="toggleFs()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      Plein écran
+    </button>
+  </header>
+
+  <main class="stage">
+    <div>
+      <h1 class="evtitle">Atelier Cybersécurité</h1>
+      <p class="evmeta">19 juil. 2026 · 14:00–16:00 · Salle Ébène</p>
+    </div>
+    <p class="cta-scan">Scannez ce code pour émarger</p>
+
+    <div class="qrcard">
+      <div class="qrbox"><canvas id="qr" width="420" height="420" role="img" aria-label="QR code d'émargement (change toutes les 15 secondes)"></canvas></div>
+    </div>
+
+    <div class="count">
+      <div class="count__lbl">Nouveau code dans <b><span id="secs">15</span> s</b></div>
+      <div class="bar"><div class="bar__fill" id="barFill"></div></div>
+    </div>
+  </main>
+
+  <footer class="footbar">
+    <span>Presence · <b>ACS Groupe</b></span>
+    <span>acs-groupe.ci</span>
+  </footer>
+
+  <p class="hint">Prototype : le QR est un motif de démonstration (non scannable). L'encodage réel sera généré côté serveur.</p>
+
+<script>
+/* ======= QR de démonstration (motif plausible, non encodé) ======= */
+const QR = {
+  canvas:null, ctx:null, modules:33,
+  init(){ this.canvas=document.getElementById('qr'); this.ctx=this.canvas.getContext('2d'); this.render(); },
+  // grille pseudo-aléatoire + 3 "yeux" de repérage, comme un vrai QR
+  render(){
+    const n=this.modules, size=this.canvas.width, cell=size/n, ctx=this.ctx;
+    const dark = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#12141a';
+    const light = getComputedStyle(document.body).getPropertyValue('--surface').trim() || '#fff';
+    ctx.fillStyle=light; ctx.fillRect(0,0,size,size);
+    ctx.fillStyle=dark;
+    const grid=[];
+    for(let y=0;y<n;y++){ grid[y]=[]; for(let x=0;x<n;x++){ grid[y][x]=Math.random()>0.5; } }
+    // yeux de repérage : coins haut-gauche, haut-droite, bas-gauche
+    const eye=(ox,oy)=>{ for(let y=-1;y<8;y++)for(let x=-1;x<8;x++){ const gx=ox+x,gy=oy+y; if(gx<0||gy<0||gx>=n||gy>=n)continue;
+        const border=(x>=0&&x<7&&y>=0&&y<7)&&(x===0||x===6||y===0||y===6);
+        const core=(x>=2&&x<=4&&y>=2&&y<=4);
+        grid[gy][gx]= (border||core) ? true : ((x>=-1&&x<8&&y>=-1&&y<8)&&!(x>=0&&x<7&&y>=0&&y<7) ? false : (border||core));
+        if(x>=0&&x<7&&y>=0&&y<7){ grid[gy][gx]= border||core; } else { grid[gy][gx]=false; }
+      }};
+    eye(0,0); eye(n-7,0); eye(0,n-7);
+    for(let y=0;y<n;y++)for(let x=0;x<n;x++){ if(grid[y][x]){ ctx.fillRect(Math.floor(x*cell),Math.floor(y*cell),Math.ceil(cell),Math.ceil(cell)); } }
+  },
+  rotate(){
+    const c=this.canvas;
+    c.classList.add('qr-fade');
+    setTimeout(()=>{ this.render(); c.classList.remove('qr-fade'); }, 350);
+  }
+};
+
+/* ======= Compte à rebours 15 s (rotation du token) ======= */
+const ROT=15; let secs=ROT;
+function tick(){
+  secs--;
+  if(secs<=0){ QR.rotate(); secs=ROT; }
+  document.getElementById('secs').textContent=secs;
+  document.getElementById('barFill').style.width=(secs/ROT*100)+'%';
+}
+
+/* ======= Plein écran / thème ======= */
+function toggleFs(){
+  if(!document.fullscreenElement){ document.documentElement.requestFullscreen?.(); }
+  else{ document.exitFullscreen?.(); }
+}
+function toggleTheme(){
+  const cur=document.documentElement.getAttribute('data-theme');
+  const dark = cur ? cur==='dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+  document.documentElement.setAttribute('data-theme', dark?'light':'dark');
+  QR.render();
+}
+
+window.addEventListener('DOMContentLoaded', ()=>{
+  QR.init();
+  document.getElementById('barFill').style.width='100%';
+  setInterval(tick, 1000);
+});
+</script>
+</body>
+</html>
