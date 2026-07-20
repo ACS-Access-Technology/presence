@@ -146,6 +146,38 @@ class EventDashboardTest extends TestCase
         $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
     }
 
+    public function test_export_xlsx_incorpore_la_signature_et_formate_le_telephone_en_texte(): void
+    {
+        $event = $this->liveEvent();
+        $attendance = $this->attend($event, 'awa@acs.ci', 'Awa', 'Koné');
+        $attendance->forceFill(['signature_path' => 'signatures/'.$event->id.'/test.png'])->save();
+        Storage::disk('local')->put('signatures/'.$event->id.'/test.png', base64_decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII='
+        ));
+
+        $path = $this->actingAs($this->user)
+            ->get(route('admin.events.attendances.export.xlsx', $event))
+            ->getFile()->getRealPath();
+
+        $zip = new \ZipArchive();
+        $zip->open($path);
+        $hasMedia = false;
+        for ($i = 0; $i < $zip->numFiles; $i++) {
+            if (str_starts_with($zip->getNameIndex($i), 'xl/media/')) {
+                $hasMedia = true;
+            }
+        }
+        $zip->close();
+        $this->assertTrue($hasMedia, 'La signature devrait être incorporée en image dans le XLSX.');
+
+        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+        $phoneCell = $spreadsheet->getActiveSheet()->getCell('D2');
+        $this->assertSame(
+            \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT,
+            $phoneCell->getStyle()->getNumberFormat()->getFormatCode(),
+        );
+    }
+
     public function test_marquer_et_annuler_un_depart(): void
     {
         $event = $this->liveEvent();

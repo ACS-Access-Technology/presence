@@ -71,22 +71,61 @@ class AttendanceController extends Controller
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
     }
 
-    /** Export XLSX — mêmes lignes/filtres que l'export CSV. */
+    /** Export XLSX — mêmes lignes/filtres que l'export CSV, signatures incluses. */
     public function exportXlsx(Request $request, Event $event): BinaryFileResponse
     {
-        $rows = $this->filteredRows($request, $event);
+        $rows = $this->withSignaturePaths($this->filteredRows($request, $event));
 
         return Excel::download(new AttendanceExport($rows), $this->exportFilename($event, 'xlsx'));
     }
 
-    /** Export PDF — mêmes lignes/filtres que l'export CSV. */
+    /** Export PDF — mêmes lignes/filtres que l'export CSV, signatures incluses. */
     public function exportPdf(Request $request, Event $event): Response
     {
-        $rows = $this->filteredRows($request, $event);
+        $rows = $this->withSignatureDataUris($this->filteredRows($request, $event));
 
         return Pdf::loadView('admin.events.pdf.attendances', ['event' => $event, 'rows' => $rows])
             ->setPaper('a4', 'landscape')
             ->download($this->exportFilename($event, 'pdf'));
+    }
+
+    /**
+     * Ajoute le chemin disque brut de la signature (usage export uniquement —
+     * jamais exposé via le flux JSON `feed`, qui reste sur signature_url/route).
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function withSignaturePaths(array $rows): array
+    {
+        $paths = Attendance::query()
+            ->whereIn('id', array_column($rows, 'id'))
+            ->pluck('signature_path', 'id');
+
+        return array_map(function (array $r) use ($paths): array {
+            $r['signature_path'] = $paths[$r['id']] ?? null;
+
+            return $r;
+        }, $rows);
+    }
+
+    /**
+     * Comme {@see withSignaturePaths}, mais encode directement l'image en data URI
+     * (dompdf ne peut pas passer par une route authentifiée pour charger un <img>).
+     *
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    private function withSignatureDataUris(array $rows): array
+    {
+        return array_map(function (array $r): array {
+            $path = $r['signature_path'] ?? null;
+            $r['signature_data_uri'] = ($path !== null && Storage::disk('local')->exists($path))
+                ? 'data:image/png;base64,'.base64_encode(Storage::disk('local')->get($path))
+                : null;
+
+            return $r;
+        }, $this->withSignaturePaths($rows));
     }
 
     /**

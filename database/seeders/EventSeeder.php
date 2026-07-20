@@ -12,6 +12,7 @@ use App\Services\Attendance\AttendanceInput;
 use App\Services\AttendanceService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 /**
@@ -73,6 +74,7 @@ class EventSeeder extends Seeder
             email: $email, lastName: $last, firstName: $first,
             phone: '+225 07 00 00 00 00', company: $company, direction: $direction, position: $position,
             latitude: 5.35, longitude: -4.01, accuracy: 12.0,
+            signaturePath: $this->fakeSignature($e->id),
         ));
         $a->forceFill(['checked_in_at' => Carbon::now()->subMinutes($minAgo)])->save();
         if ($departedMinAgo !== null) {
@@ -90,5 +92,28 @@ class EventSeeder extends Seeder
             isManual: true, manualConfirmed: true, recordedBy: $userId,
         ));
         $a->forceFill(['checked_in_at' => Carbon::now()->subMinutes($minAgo)])->save();
+    }
+
+    /** Génère une signature factice (scribble) — les vraies présences en ont toujours une (formulaire public l'exige). */
+    private function fakeSignature(int $eventId): string
+    {
+        $im = imagecreatetruecolor(300, 120);
+        $white = imagecolorallocate($im, 255, 255, 255);
+        $ink = imagecolorallocate($im, 30, 42, 120);
+        imagefill($im, 0, 0, $white);
+        $points = [20, 90, 60, 30, 100, 100, 140, 20, 180, 90, 220, 40, 260, 80];
+        imagesetthickness($im, 3);
+        for ($i = 0; $i < count($points) - 2; $i += 2) {
+            imageline($im, $points[$i], $points[$i + 1], $points[$i + 2], $points[$i + 3], $ink);
+        }
+        ob_start();
+        imagepng($im);
+        $binary = ob_get_clean();
+        imagedestroy($im);
+
+        $path = 'signatures/'.$eventId.'/'.Str::uuid()->toString().'.png';
+        Storage::disk('local')->put($path, $binary);
+
+        return $path;
     }
 }
