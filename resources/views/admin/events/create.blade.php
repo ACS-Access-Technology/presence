@@ -62,6 +62,13 @@
                         </div>
                         <p class="help">L'émargement n'est possible qu'entre ces horaires. En fin d'événement, un récapitulatif est envoyé par email aux participants.</p>
 
+                        <div id="seances-extra"></div>
+                        <button type="button" class="btn btn--ghost btn--sm" onclick="EventForm.addSeance()" style="margin-bottom:6px">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg>
+                            Ajouter une séance
+                        </button>
+                        <p class="help" id="seances-help" hidden>Sessions multiples : même titre/type/lieu, une présence et un QR propres à chaque séance.</p>
+
                         <div class="field" style="margin-top:6px">
                             <label for="lieu">Lieu <span class="opt">(facultatif)</span></label>
                             <input class="control" id="lieu" name="location" value="{{ old('location') }}" placeholder="Ex. Salle Ébène, Cocody">
@@ -187,5 +194,5 @@
             types: @json($types->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color])),
         };
     </script>
-    <script src="{{ asset('js/event-create.js') }}"></script>
+    <script src="{{ versioned_asset('js/event-create.js') }}"></script>
 @endpush

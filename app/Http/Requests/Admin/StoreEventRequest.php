@@ -28,6 +28,13 @@ class StoreEventRequest extends FormRequest
             'qr_mode' => ['required', new Enum(QrMode::class)],
             'invitees' => ['sometimes', 'array'],
             'invitees.*' => ['integer', 'exists:people,id'],
+            // Séances additionnelles (sessions multiples, ex. formation sur 3 jours).
+            // La séance "principale" (date/start/end ci-dessus) est toujours la 1ère ;
+            // chaque entrée ici crée un Event de plus, lié à la même série.
+            'extra_seances' => ['sometimes', 'array'],
+            'extra_seances.*.date' => ['required', 'date'],
+            'extra_seances.*.start' => ['required', 'date_format:H:i'],
+            'extra_seances.*.end' => ['required', 'date_format:H:i', 'after:extra_seances.*.start'],
         ];
     }
 

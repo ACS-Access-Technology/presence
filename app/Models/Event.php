@@ -36,7 +36,7 @@ class Event extends Model
         'title', 'event_type_id', 'starts_at', 'ends_at', 'location',
         'qr_mode', 'qr_secret', 'public_slug',
         'closed_at', 'report_email_sent_at', 'cancelled_at', 'cancellation_reason',
-        'created_by',
+        'created_by', 'event_series_id', 'series_position',
     ];
 
     /** @var list<string> */
@@ -61,6 +61,12 @@ class Event extends Model
     public function type(): BelongsTo
     {
         return $this->belongsTo(EventType::class, 'event_type_id');
+    }
+
+    /** @return BelongsTo<EventSeries, $this> */
+    public function series(): BelongsTo
+    {
+        return $this->belongsTo(EventSeries::class, 'event_series_id');
     }
 
     /** @return BelongsTo<User, $this> */

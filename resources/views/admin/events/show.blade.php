@@ -97,6 +97,19 @@
         </div>
     </div>
 
+    @if ($siblingSeances->isNotEmpty())
+        <div class="notice" style="margin-top:-4px;margin-bottom:18px">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            <span>
+                <strong>Séance {{ $event->series_position }}</strong> d'une série de {{ $siblingSeances->count() + 1 }}.
+                Autres séances :
+                @foreach ($siblingSeances as $s)
+                    <a class="linkbtn" href="{{ route('admin.events.show', $s) }}">{{ $s->starts_at->translatedFormat('j M Y') }} ({{ $s->attendances_count }} présent{{ $s->attendances_count > 1 ? 's' : '' }})</a>@if(!$loop->last), @endif
+                @endforeach
+            </span>
+        </div>
+    @endif
+
     <div class="tabs" role="tablist" aria-label="Sections de l'événement">
         <button class="tab" role="tab" id="tab-liste" aria-selected="true" onclick="Detail.tab('liste')">
             Liste de présence <span class="cnt" id="cnt-liste">{{ $stats['total'] }}</span>
@@ -265,6 +278,6 @@
         },
     };
 </script>
-<script src="{{ asset('js/event-detail.js') }}"></script>
-<script src="{{ asset('js/report.js') }}"></script>
+<script src="{{ versioned_asset('js/event-detail.js') }}"></script>
+<script src="{{ versioned_asset('js/report.js') }}"></script>
 @endpush

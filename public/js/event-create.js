@@ -56,6 +56,36 @@
     });
     sync();
 
+    /* ---------- Séances additionnelles (sessions multiples) ---------- */
+    var EventForm = {
+        count: 0,
+        addSeance: function () {
+            var i = this.count++;
+            var box = $('#seances-extra');
+            var row = document.createElement('div');
+            row.className = 'grid3';
+            row.id = 'seance-' + i;
+            row.style.marginTop = '10px';
+            row.innerHTML =
+                '<div class="field"><label>Date <span class="req">*</span></label>' +
+                '<input class="control" type="date" name="extra_seances[' + i + '][date]" value="' + esc($('#date').value) + '" required></div>' +
+                '<div class="field"><label>Heure de début <span class="req">*</span></label>' +
+                '<input class="control" type="time" name="extra_seances[' + i + '][start]" value="' + esc($('#start').value) + '" required></div>' +
+                '<div class="field" style="position:relative"><label>Heure de fin <span class="req">*</span></label>' +
+                '<input class="control" type="time" name="extra_seances[' + i + '][end]" value="' + esc($('#end').value) + '" required>' +
+                '<button type="button" class="mini mini--danger" style="position:absolute;top:0;right:0" title="Retirer cette séance" onclick="EventForm.removeSeance(' + i + ')">' +
+                '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>';
+            box.appendChild(row);
+            $('#seances-help').hidden = false;
+        },
+        removeSeance: function (i) {
+            var row = $('#seance-' + i);
+            if (row) row.remove();
+            if (!$('#seances-extra').children.length) $('#seances-help').hidden = true;
+        }
+    };
+    window.EventForm = EventForm;
+
     /* ---------- Combobox d'invitation ---------- */
     var Invites = {
         selected: [],

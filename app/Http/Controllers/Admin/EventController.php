@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreEventRequest;
 use App\Http\Requests\Admin\UpdateEventRequest;
 use App\Models\Event;
+use App\Models\EventSeries;
 use App\Models\EventType;
 use App\Services\EventPresenceService;
 use Illuminate\Http\RedirectResponse;
@@ -46,11 +47,19 @@ class EventController extends Controller
     {
         $event->load('type', 'report', 'documents', 'photos');
         $lastReschedule = $event->reschedules()->latest()->first();
+        $siblingSeances = $event->event_series_id !== null
+            ? Event::where('event_series_id', $event->event_series_id)
+                ->where('id', '!=', $event->id)
+                ->withCount('attendances')
+                ->orderBy('series_position')
+                ->get()
+            : collect();
 
         return view('admin.events.show', [
             'event' => $event,
             'types' => EventType::where('is_active', true)->orWhere('id', $event->event_type_id)->orderBy('position')->get(),
             'lastReschedule' => $lastReschedule,
+            'siblingSeances' => $siblingSeances,
             'rows' => $this->presence->rows($event),
             'stats' => $this->presence->stats($event),
             'report' => $event->report,
@@ -77,33 +86,55 @@ class EventController extends Controller
     public function store(StoreEventRequest $request): RedirectResponse
     {
         $data = $request->validated();
-        $startsAt = Carbon::parse($data['date'].' '.$data['start']);
-        $endsAt = Carbon::parse($data['date'].' '.$data['end']);
+        $extraSeances = $data['extra_seances'] ?? [];
 
-        $event = DB::transaction(function () use ($data, $startsAt, $endsAt, $request): Event {
-            $event = Event::create([
-                'title' => $data['title'],
-                'event_type_id' => $data['event_type_id'],
-                'starts_at' => $startsAt,
-                'ends_at' => $endsAt,
-                'location' => $data['location'] ?? null,
-                'qr_mode' => $data['qr_mode'],
-                'qr_secret' => Str::random(32),
-                'public_slug' => $this->uniqueSlug($data['title']),
-                'created_by' => $request->user()?->id,
-            ]);
-
-            foreach ($data['invitees'] ?? [] as $personId) {
-                $event->invitations()->create([
-                    'person_id' => $personId,
-                    'invited_by' => $request->user()?->id,
+        $firstEvent = DB::transaction(function () use ($data, $extraSeances, $request): Event {
+            $series = null;
+            if ($extraSeances !== []) {
+                $series = EventSeries::create([
+                    'title' => $data['title'],
+                    'event_type_id' => $data['event_type_id'],
+                    'location' => $data['location'] ?? null,
+                    'created_by' => $request->user()?->id,
                 ]);
             }
 
-            return $event;
+            $seances = [['date' => $data['date'], 'start' => $data['start'], 'end' => $data['end']], ...$extraSeances];
+            $events = [];
+
+            foreach ($seances as $position => $seance) {
+                $events[] = Event::create([
+                    'title' => $data['title'],
+                    'event_type_id' => $data['event_type_id'],
+                    'starts_at' => Carbon::parse($seance['date'].' '.$seance['start']),
+                    'ends_at' => Carbon::parse($seance['date'].' '.$seance['end']),
+                    'location' => $data['location'] ?? null,
+                    'qr_mode' => $data['qr_mode'],
+                    'qr_secret' => Str::random(32),
+                    'public_slug' => $this->uniqueSlug($data['title']),
+                    'created_by' => $request->user()?->id,
+                    'event_series_id' => $series?->id,
+                    'series_position' => $series !== null ? $position + 1 : null,
+                ]);
+            }
+
+            foreach ($data['invitees'] ?? [] as $personId) {
+                foreach ($events as $event) {
+                    $event->invitations()->create([
+                        'person_id' => $personId,
+                        'invited_by' => $request->user()?->id,
+                    ]);
+                }
+            }
+
+            return $events[0];
         });
 
-        return redirect()->route('admin.events.show', $event)->with('status', 'Événement créé.');
+        $message = $extraSeances !== []
+            ? 'Série créée : '.(count($extraSeances) + 1).' séances.'
+            : 'Événement créé.';
+
+        return redirect()->route('admin.events.show', $firstEvent)->with('status', $message);
     }
 
     /** Corrige titre / type / lieu (ex. faute de frappe) — n'affecte ni les horaires ni le mode QR. */
