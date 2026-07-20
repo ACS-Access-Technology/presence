@@ -47,13 +47,13 @@
             </form>
         </nav>
         <div class="side__foot">
-            <div class="user">
+            <a class="user" href="{{ route('admin.profile.edit') }}" style="text-decoration:none;color:inherit">
                 <div class="av">{{ \Illuminate\Support\Str::of($user->name)->explode(' ')->map(fn($w)=>mb_substr($w,0,1))->take(2)->implode('') }}</div>
                 <div>
                     <div class="user__n">{{ $user->name }}</div>
                     <div class="user__r">{{ $user->role->label() }} · ACS</div>
                 </div>
-            </div>
+            </a>
         </div>
     </aside>
 

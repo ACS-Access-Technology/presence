@@ -464,6 +464,12 @@ body{min-height:100vh}
 @media (max-width:940px){.layout{grid-template-columns:1fr}.aside-preview{position:static;order:-1}}
 @media (max-width:560px){.modes{grid-template-columns:1fr}.grid2,.grid3{grid-template-columns:1fr}}
 
+/* ===== Modal infos participant ===== */
+.info-pair{padding:10px 0;border-bottom:1px solid var(--border)}
+.info-pair:last-child{border-bottom:none}
+.info-pair__k{display:block;font-size:.74rem;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--faint)}
+.info-pair__v{display:block;font-weight:650;margin-top:2px}
+
 /* ===== Toast ===== */
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(80px);background:var(--text);color:var(--surface);padding:12px 18px;border-radius:12px;font-size:.88rem;font-weight:600;box-shadow:var(--sh-3);z-index:90;opacity:0;transition:.25s;display:flex;align-items:center;gap:9px}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}

@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\EventTypeController;
 use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\PersonSearchController;
 use App\Http\Controllers\Admin\PortfolioController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Auth\LoginController;
@@ -63,6 +64,10 @@ Route::post('/deconnexion', [LoginController::class, 'destroy'])
 */
 Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+    // Compte personnel (self-service, tout rôle) : changement de mot de passe.
+    Route::get('/mon-compte', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/mon-compte/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
     // Annuaire des participants (recherche, historique, stats).
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');

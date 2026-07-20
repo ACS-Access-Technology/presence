@@ -20,6 +20,22 @@
         <div class="modal__foot"><button class="btn btn--ghost" onclick="Detail.close()">Fermer</button></div>
     </div>
 
+    {{-- Infos participant --}}
+    <div class="modal" id="m-info" role="dialog" aria-modal="true" aria-labelledby="info-name" hidden>
+        <div class="modal__hd">
+            <span class="av" id="info-av" style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:.85rem;flex:0 0 auto"></span>
+            <h3 id="info-name">—</h3>
+            <button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+        </div>
+        <div class="modal__body">
+            <div id="info-fields"></div>
+        </div>
+        <div class="modal__foot">
+            <button type="button" class="btn btn--ghost" id="info-sig-btn" hidden>Voir la signature</button>
+            <button type="button" class="btn btn--ghost" onclick="Detail.close()">Fermer</button>
+        </div>
+    </div>
+
     {{-- Départ --}}
     <div class="modal" id="m-depart" role="dialog" aria-modal="true" aria-labelledby="dp-t" hidden>
         <div class="modal__hd"><h3 id="dp-t">Marquer un départ</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>

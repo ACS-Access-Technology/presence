@@ -77,7 +77,7 @@
 
             return '<tr class="' + (r.left ? 'is-left' : '') + '">'
                 + '<td><div class="person"><span class="av" style="background:' + esc(r.color) + '">' + esc(r.initials) + '</span>'
-                + '<div><div class="person__n">' + esc(r.name) + badges + '</div>'
+                + '<div><button type="button" class="linkbtn person__n" style="text-decoration:none" onclick="Detail.info(' + r.id + ')">' + esc(r.name) + '</button>' + badges
                 + '<div class="person__e">' + esc(r.email || '') + '</div></div></div></td>'
                 + '<td>' + esc(r.company || '—') + '</td>'
                 + '<td class="mut">' + esc(r.direction || '—') + '</td>'
@@ -204,9 +204,28 @@
         },
         cmdkRun: function (i) { var fn = this._cmdkItems[i]; if (fn) fn(); },
 
+        info: function (id) {
+            var r = this.rows.find(function (x) { return x.id === id; });
+            if (!r) return;
+            $('#info-av').textContent = r.initials; $('#info-av').style.background = r.color;
+            $('#info-name').textContent = r.name;
+            var fields = [
+                ['Email', r.email], ['Téléphone', r.phone], ['Entreprise', r.company],
+                ['Direction', r.direction], ['Service', r.service], ['Poste', r.position],
+                ['Arrivée', r.time], ['Départ', r.left],
+            ];
+            $('#info-fields').innerHTML = fields.map(function (f) {
+                return '<div class="info-pair"><span class="info-pair__k">' + esc(f[0]) + '</span><span class="info-pair__v">' + esc(f[1] || '—') + '</span></div>';
+            }).join('');
+            var sigBtn = $('#info-sig-btn');
+            if (r.signature_url) { sigBtn.hidden = false; sigBtn.onclick = function () { Detail.signature(r.id); }; }
+            else { sigBtn.hidden = true; }
+            this.open('m-info');
+        },
+
         open: function (id) {
             $('#scrim').hidden = false;
-            ['m-sig', 'm-depart', 'm-manual', 'm-edit', 'm-reschedule', 'm-cancel'].forEach(function (m) {
+            ['m-sig', 'm-depart', 'm-manual', 'm-edit', 'm-reschedule', 'm-cancel', 'm-info'].forEach(function (m) {
                 var el = $('#' + m); if (el) el.hidden = m !== id;
             });
             document.body.style.overflow = 'hidden';

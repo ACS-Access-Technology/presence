@@ -109,7 +109,7 @@ suit/recherche/exporte, et un email récap est envoyé automatiquement en fin d'
 | T12 | Export CSV | P0 | fullstack | UTF-8, colonnes claires, filtré par événement |
 | T13 | Mentions protection des données (droit ivoirien) — **conservation indéfinie** | P0 | fullstack/sécu | Mention page publique ; pas de purge (Q8) sous réserve flag légal (Q16) |
 | T13b | **Email récap automatique** en fin d'événement (cron cPanel + SMTP) | P0 | fullstack/devops | Envoi à tous les émargés ; SPF/DKIM ; file en base + cron ; contenu Q18 |
-| T14 | **Recherche loi ivoirienne n°2013-450 + implications techniques + conflit conservation indéfinie** | P0 | sécurité/rédacteur | Recherche réelle (ne rien inventer) ; obligations ARTCI ; remonter conflit conservation à l'utilisateur (Q16) |
+| ~~T14~~ | ~~Recherche loi ivoirienne n°2013-450~~ | — | — | **Retiré du scope (décision utilisateur, 2026-07-20).** Conservation indéfinie reste la politique produit sans revue légale formelle. |
 | T15 | Audit sécurité MVP (gate avant prod) | P0 | sécurité | OWASP, secrets, deps, token QR, géoloc, signatures, données perso |
 | T16 | Déploiement MVP Hostinger + observabilité | P0 | devops | HTTPS, sauvegardes, logs, cron (fermeture+emails), rollback |
 | T17 | Documentation (guide orga, guide visiteur, technique) | P0 | rédacteur | Documente le réel |
@@ -126,7 +126,7 @@ suit/recherche/exporte, et un email récap est envoyé automatiquement en fin d'
 | **J0 — Cadrage & archi verrouillés** | ✅ Questions Q1-Q8 tranchées, stack PHP/MySQL Hostinger actée, QR tournant confirmé | **Franchi** (2026-07-19) |
 | **J1 — Fondations** | Repo/structure PHP, modèle de données, auth + multi-tenant | Squelette déployable, tests qui tournent |
 | **J2 — MVP fonctionnel (démo)** | Parcours complet dans les **2 modes QR** (statique + tournant) → émarger (formulaire+géoloc+signature) → récurrent → liste → export | Démo bout-en-bout sur mobile réel |
-| **J3 — Gate sécurité MVP** | Audit `security-expert` + recherche loi 2013-450 + corrections | 0 finding critique/haut ouvert ; conformité documentée |
+| **J3 — Gate sécurité MVP** | Audit `security-expert` + corrections | 0 finding critique/haut ouvert |
 | **J4 — Mise en production MVP** | Déploiement Hostinger, HTTPS, purge cron, observabilité, doc | Prod stable, monitoring actif |
 | **J5 — V1** | Sessions multiples, dashboard stats, droits des personnes | Audit sécu V1 passé |
 
@@ -161,8 +161,6 @@ développement sensible.
   minimisation, isolation, moindre privilège.
 - **QR tournant** (T04) : revue de la génération/validation de token (pas de rejeu
   après expiration, horodatage serveur faisant foi).
-- **Recherche légale** (T14) : cadrage des obligations de la Loi n°2013-450 (ARTCI)
-  par recherche réelle — **aucune supposition**.
 - **Revue des dépendances** : à l'ajout de toute dépendance PHP (CVE, supply-chain).
 - **Gate MVP (J3)** : audit complet avant première mise en production Hostinger.
 - **Règle maison** : aucun agent ne valide son propre code comme « sûr » ; l'audit
@@ -179,16 +177,13 @@ développement sensible.
 - Q13 (entreprise réutilisée depuis `Personne` ou ressaisie ?) — fullstack → utilisateur.
 - Q14 (cloisonnement entre organisateurs internes) — utilisateur, avant de figer le dashboard.
 - Q15 (mécanisme anti-chevauchement : règle serveur vs checkout) — **senior-fullstack**.
-- Q16 (conformité conservation indéfinie vs Loi 2013-450) — **security-expert** (recherche réelle).
+- ~~Q16 (conformité conservation indéfinie vs Loi 2013-450)~~ — retirée du scope avec T14.
 - Q17 (statistiques/graphiques du dashboard) — **ux-designer** → utilisateur.
 - Q18 (contenu de l'email récapitulatif) — **ux-designer** → utilisateur.
 
 ## 9. Prochaine étape recommandée
 
 Lancer **en parallèle**, avant `senior-fullstack` :
-- `security-expert` → **recherche réelle** de la Loi n°2013-450 (ARTCI) et de ses
-  implications techniques (T14), **avec focus sur le conflit conservation indéfinie
-  (Q16)** à remonter à l'utilisateur le cas échéant.
 - `ux-designer` → parcours + wireframes de la **page publique** (formulaire dont
   Entité/Entreprise, géoloc obligatoire + gestion du refus, signature, cas
   récurrent) et du **dashboard** organisateur (stats/graphiques Q17, recherche
