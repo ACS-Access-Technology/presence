@@ -26,7 +26,7 @@ class EventController extends Controller
     public function index(): View
     {
         $events = Event::query()
-            ->with('type')
+            ->with(['type', 'reschedules' => fn ($q) => $q->latest()->limit(1)])
             ->withCount('attendances')
             ->orderByDesc('starts_at')
             ->get();
