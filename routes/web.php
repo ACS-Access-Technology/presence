@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Public\PublicAttendanceController;
 use Illuminate\Support\Facades\Route;
@@ -75,6 +76,9 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): v
 
     // Portfolio des activités documentées.
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
+
+    // Statistiques globales (toutes activités confondues).
+    Route::get('/statistiques', [StatisticsController::class, 'index'])->name('statistics');
 
     // Événements : liste + création + détail (liste de présence, stats).
     Route::get('/events', [EventController::class, 'index'])->name('events.index');
