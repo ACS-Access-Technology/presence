@@ -25,7 +25,9 @@ use Illuminate\Support\Facades\Route;
 | La page publique d'émargement (/e/{slug}) sera ajoutée avec le contrôleur
 | public une fois le socle validé. Racine → connexion (ou dashboard si connecté).
 */
-Route::get('/', static fn () => redirect()->route('login'));
+Route::get('/', static fn () => auth()->check()
+    ? redirect()->route('admin.dashboard')
+    : redirect()->route('login'));
 
 /*
 |--------------------------------------------------------------------------

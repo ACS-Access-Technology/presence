@@ -53,4 +53,22 @@ class AuthTest extends TestCase
     {
         $this->get('/admin')->assertRedirect(route('login'));
     }
+
+    public function test_racine_redirige_vers_connexion_si_invite(): void
+    {
+        $this->get('/')->assertRedirect(route('login'));
+    }
+
+    /**
+     * Régression : la racine redirigeait TOUJOURS vers /connexion, y compris
+     * déjà authentifié — le middleware `guest` de /connexion renvoyait alors
+     * vers `/`, provoquant une boucle de redirection infinie (ERR_TOO_MANY_REDIRECTS)
+     * pour tout utilisateur connecté visitant l'URL racine.
+     */
+    public function test_racine_redirige_vers_le_tableau_de_bord_si_deja_connecte(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user)->get('/')->assertRedirect(route('admin.dashboard'));
+    }
 }
