@@ -56,9 +56,12 @@ class EventQrController extends Controller
     {
         abort_if($event->qr_mode !== QrMode::Statique, 404);
 
+        $url = $this->attendanceUrl($event);
+
         return view('admin.events.qr-print', [
             'event' => $event,
-            'svg' => $this->images->svgDataUri($this->attendanceUrl($event), 420),
+            'svg' => $this->images->svgDataUri($url, 420),
+            'url' => $url,
         ]);
     }
 
