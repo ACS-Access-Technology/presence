@@ -14,12 +14,12 @@
         .bg{
             position:fixed;inset:-20px;z-index:0;
             background:url('{{ asset('images/qr-print-bg.jpg') }}') center/cover no-repeat;
-            filter:blur(22px) saturate(95%);
-            transform:scale(1.08);
+            filter:blur(34px) saturate(92%);
+            transform:scale(1.12);
         }
         .bg::after{
             content:"";position:absolute;inset:0;
-            background:linear-gradient(160deg,rgba(14,17,35,.82),rgba(30,42,120,.68) 55%,rgba(240,122,19,.35));
+            background:rgba(13,15,21,.38);
         }
 
         .sheet{
