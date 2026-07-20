@@ -76,6 +76,7 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): v
     Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
     Route::post('/events', [EventController::class, 'store'])->name('events.store');
     Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+    Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
 
     // Recherche du référentiel « Personnel ACS Groupe » (combobox d'invitation).
     Route::get('/people/search', [PersonSearchController::class, 'search'])->name('people.search');

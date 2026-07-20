@@ -76,6 +76,10 @@
                     Imprimer le QR
                 </a>
             @endif
+            <button type="button" class="btn btn--ghost" onclick="Detail.open('m-edit')">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                Modifier
+            </button>
             @unless ($event->isCancelled())
                 <button type="button" class="btn btn--ghost" onclick="Detail.open('m-reschedule')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>

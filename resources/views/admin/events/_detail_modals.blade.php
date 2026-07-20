@@ -52,6 +52,36 @@
         </form>
     </div>
 
+    {{-- Modifier (titre / type / lieu) --}}
+    <div class="modal" id="m-edit" role="dialog" aria-modal="true" aria-labelledby="ed-t" hidden>
+        <div class="modal__hd"><h3 id="ed-t">Modifier l'événement</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <form method="POST" action="{{ route('admin.events.update', $event) }}">
+            @csrf
+            @method('PATCH')
+            <div class="modal__body">
+                <p>Corrige le titre, le type ou le lieu (ex. faute de frappe). Les horaires se changent via « Reporter », le mode QR est verrouillé dès la première présence.</p>
+                <div class="field {{ $errors->has('title') ? 'invalid' : '' }}">
+                    <label for="ed-title">Titre <span class="req">*</span></label>
+                    <input class="control" id="ed-title" name="title" value="{{ old('title', $event->title) }}" required>
+                    <div class="err-msg">{{ $errors->first('title') }}</div>
+                </div>
+                <div class="field">
+                    <label>Type d'événement <span class="req">*</span></label>
+                    <div class="typepick" role="radiogroup" aria-label="Type d'événement">
+                        @foreach ($types as $type)
+                            <label class="typeopt" style="--tc:{{ $type->color }}">
+                                <input type="radio" name="event_type_id" value="{{ $type->id }}" @checked(old('event_type_id', $event->event_type_id) == $type->id)>
+                                <span class="typeopt__c">{{ $type->name }}</span>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <div class="field"><label for="ed-lieu">Lieu <span class="opt">(facultatif)</span></label><input class="control" id="ed-lieu" name="location" value="{{ old('location', $event->location) }}"></div>
+            </div>
+            <div class="modal__foot"><button type="button" class="btn btn--ghost" onclick="Detail.close()">Annuler</button><button type="submit" class="btn btn--primary">Enregistrer</button></div>
+        </form>
+    </div>
+
     {{-- Reporter l'événement --}}
     <div class="modal" id="m-reschedule" role="dialog" aria-modal="true" aria-labelledby="rs-t" hidden>
         <div class="modal__hd"><h3 id="rs-t">Reporter l'événement</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>

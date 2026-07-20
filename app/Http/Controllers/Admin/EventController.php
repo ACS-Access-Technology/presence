@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreEventRequest;
+use App\Http\Requests\Admin\UpdateEventRequest;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Services\EventPresenceService;
@@ -48,6 +49,7 @@ class EventController extends Controller
 
         return view('admin.events.show', [
             'event' => $event,
+            'types' => EventType::where('is_active', true)->orWhere('id', $event->event_type_id)->orderBy('position')->get(),
             'lastReschedule' => $lastReschedule,
             'rows' => $this->presence->rows($event),
             'stats' => $this->presence->stats($event),
@@ -102,6 +104,14 @@ class EventController extends Controller
         });
 
         return redirect()->route('admin.events.show', $event)->with('status', 'Événement créé.');
+    }
+
+    /** Corrige titre / type / lieu (ex. faute de frappe) — n'affecte ni les horaires ni le mode QR. */
+    public function update(UpdateEventRequest $request, Event $event): RedirectResponse
+    {
+        $event->update($request->validated());
+
+        return back()->with('status', 'Événement modifié.');
     }
 
     /** Slug public unique, dérivé du titre (retry avec suffixe aléatoire en cas de collision). */

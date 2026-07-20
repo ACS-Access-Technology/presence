@@ -92,4 +92,48 @@ class EventLifecycleTest extends TestCase
             'date' => Carbon::now()->addDay()->format('Y-m-d'), 'start' => '16:00', 'end' => '14:00',
         ])->assertSessionHasErrors('end');
     }
+
+    public function test_modifie_titre_type_et_lieu(): void
+    {
+        $event = $this->event();
+        $autreType = EventType::create(['name' => 'Réunion', 'color' => '#2563eb', 'position' => 1]);
+
+        $this->actingAs($this->user)->patch(route('admin.events.update', $event), [
+            'title' => 'Atelier Cybersécurité (corrigé)',
+            'event_type_id' => $autreType->id,
+            'location' => 'Salle Ébène',
+        ])->assertRedirect();
+
+        $event->refresh();
+        $this->assertSame('Atelier Cybersécurité (corrigé)', $event->title);
+        $this->assertSame($autreType->id, $event->event_type_id);
+        $this->assertSame('Salle Ébène', $event->location);
+    }
+
+    public function test_modification_n_affecte_ni_horaires_ni_mode_qr(): void
+    {
+        $event = $this->event();
+        $originalStart = $event->starts_at;
+        $originalMode = $event->qr_mode;
+
+        $this->actingAs($this->user)->patch(route('admin.events.update', $event), [
+            'title' => 'Nouveau titre',
+            'event_type_id' => $this->type->id,
+        ]);
+
+        $event->refresh();
+        $this->assertTrue($originalStart->equalTo($event->starts_at));
+        $this->assertSame($originalMode, $event->qr_mode);
+    }
+
+    public function test_modification_refuse_un_titre_vide(): void
+    {
+        $event = $this->event();
+
+        $this->actingAs($this->user)->patch(route('admin.events.update', $event), [
+            'title' => '', 'event_type_id' => $this->type->id,
+        ])->assertSessionHasErrors('title');
+
+        $this->assertSame('Atelier', $event->refresh()->title);
+    }
 }

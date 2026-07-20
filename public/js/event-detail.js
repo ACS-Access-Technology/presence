@@ -206,7 +206,7 @@
 
         open: function (id) {
             $('#scrim').hidden = false;
-            ['m-sig', 'm-depart', 'm-manual', 'm-reschedule', 'm-cancel'].forEach(function (m) {
+            ['m-sig', 'm-depart', 'm-manual', 'm-edit', 'm-reschedule', 'm-cancel'].forEach(function (m) {
                 var el = $('#' + m); if (el) el.hidden = m !== id;
             });
             document.body.style.overflow = 'hidden';
