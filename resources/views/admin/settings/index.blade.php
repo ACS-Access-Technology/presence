@@ -130,5 +130,5 @@
         },
     };
 </script>
-<script src="{{ asset('js/settings.js') }}"></script>
+<script src="{{ versioned_asset('js/settings.js') }}"></script>
 @endpush

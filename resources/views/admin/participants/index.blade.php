@@ -50,5 +50,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/participants.js') }}"></script>
+<script src="{{ versioned_asset('js/participants.js') }}"></script>
 @endpush

@@ -135,5 +135,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/events-list.js') }}"></script>
+<script src="{{ versioned_asset('js/events-list.js') }}"></script>
 @endpush

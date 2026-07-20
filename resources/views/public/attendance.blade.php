@@ -213,5 +213,5 @@
         eventTitle: @json($event->title),
     };
 </script>
-<script src="{{ asset('js/participant.js') }}"></script>
+<script src="{{ versioned_asset('js/participant.js') }}"></script>
 @endpush

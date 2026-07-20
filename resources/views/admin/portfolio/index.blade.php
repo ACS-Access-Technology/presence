@@ -63,5 +63,5 @@
 @endsection
 
 @push('scripts')
-<script src="{{ asset('js/portfolio.js') }}"></script>
+<script src="{{ versioned_asset('js/portfolio.js') }}"></script>
 @endpush

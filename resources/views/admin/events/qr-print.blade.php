@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QR à imprimer — {{ $event->title }}</title>
-    <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
     <style>
         html,body{height:100%}
         body{

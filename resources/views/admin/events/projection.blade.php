@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Projection QR — {{ $event->title }}</title>
-    <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
     <style>
         body{min-height:100vh;display:grid;place-items:center;padding:24px}
         .proj{text-align:center;max-width:520px}

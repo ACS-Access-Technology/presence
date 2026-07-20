@@ -4,8 +4,8 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion · Presence · ACS Groupe</title>
-    <link rel="stylesheet" href="{{ asset('css/tokens.css') }}">
-    <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
+    <link rel="stylesheet" href="{{ versioned_asset('css/auth.css') }}">
 </head>
 <body>
 
