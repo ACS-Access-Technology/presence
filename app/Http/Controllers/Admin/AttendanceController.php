@@ -10,6 +10,7 @@ use App\Http\Requests\Admin\StoreManualAttendanceRequest;
 use App\Models\Attendance;
 use App\Models\Event;
 use App\Services\Attendance\AttendanceInput;
+use App\Services\Attendance\SignatureStorage;
 use App\Services\AttendanceService;
 use App\Services\EventPresenceService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -192,6 +193,8 @@ class AttendanceController extends Controller
             ? (string) $request->string('email')
             : 'manuel-'.Str::random(16).'@presence.local';
 
+        $signaturePath = SignatureStorage::store($event->id, (string) $request->string('signature'));
+
         $attendance = $this->attendances->register($event, new AttendanceInput(
             email: $email,
             lastName: (string) $request->string('last_name'),
@@ -201,10 +204,17 @@ class AttendanceController extends Controller
             direction: (string) $request->string('direction'),
             service: $request->filled('service') ? (string) $request->string('service') : null,
             position: (string) $request->string('position'),
+            signaturePath: $signaturePath,
             isManual: true,
             manualConfirmed: true,
             recordedBy: $request->user()->id,
         ));
+
+        // Soumission répétée (idempotence) : la présence existait déjà → on retire
+        // le fichier signature fraîchement écrit pour ne pas laisser d'orphelin.
+        if (! $attendance->wasRecentlyCreated) {
+            Storage::disk('local')->delete($signaturePath);
+        }
 
         return response()->json(['reference' => $attendance->reference], 201);
     }

@@ -21,6 +21,8 @@ class EventDashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
     private User $user;
 
     private EventType $type;
@@ -201,6 +203,7 @@ class EventDashboardTest extends TestCase
         $this->actingAs($this->user)->postJson(route('admin.events.attendances.manual', $event), [
             'last_name' => 'Bamba', 'first_name' => 'Aya', 'company' => 'MTN CI',
             'direction' => 'Commercial', 'position' => 'KAM', 'manual_confirmed' => '1',
+            'signature' => 'data:image/png;base64,'.self::TINY_PNG_B64,
         ])->assertStatus(201);
 
         $this->assertDatabaseHas('attendances', ['event_id' => $event->id, 'is_manual' => true, 'last_name' => 'Bamba']);
@@ -213,7 +216,18 @@ class EventDashboardTest extends TestCase
         $this->actingAs($this->user)->postJson(route('admin.events.attendances.manual', $event), [
             'last_name' => 'Bamba', 'first_name' => 'Aya', 'company' => 'MTN',
             'direction' => 'Com', 'position' => 'KAM',
+            'signature' => 'data:image/png;base64,'.self::TINY_PNG_B64,
         ])->assertStatus(422)->assertJsonValidationErrors('manual_confirmed');
+    }
+
+    public function test_presence_manuelle_exige_signature(): void
+    {
+        $event = $this->liveEvent();
+
+        $this->actingAs($this->user)->postJson(route('admin.events.attendances.manual', $event), [
+            'last_name' => 'Bamba', 'first_name' => 'Aya', 'company' => 'MTN',
+            'direction' => 'Com', 'position' => 'KAM', 'manual_confirmed' => '1',
+        ])->assertStatus(422)->assertJsonValidationErrors('signature');
     }
 
     public function test_signature_privee_accessible_authentifie(): void

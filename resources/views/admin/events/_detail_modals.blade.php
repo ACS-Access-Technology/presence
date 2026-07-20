@@ -58,9 +58,19 @@
                     <div class="field"><label for="m-service">Service <span class="opt">(facultatif)</span></label><input class="control" id="m-service" name="service"></div>
                     <div class="field"><label for="m-position">Poste ou Fonction <span class="req">*</span></label><input class="control" id="m-position" name="position" required></div>
                 </div>
-                <label style="display:flex;gap:10px;align-items:flex-start;font-size:.86rem;color:var(--muted);margin-top:6px">
+                <div class="section-label">Signature du visiteur <span class="req">*</span></div>
+                <div class="sigwrap">
+                    <canvas id="man-sigpad" role="img" aria-label="Zone de signature manuscrite. Faites signer le visiteur avec le doigt."></canvas>
+                    <div class="sig-ph" id="man-sigPh">Faites signer ici</div>
+                </div>
+                <div class="sig-actions">
+                    <span class="help">Tendez l'appareil au visiteur pour qu'il signe dans le cadre.</span>
+                    <button type="button" class="btn btn--ghost" id="man-sigClear">Effacer</button>
+                </div>
+
+                <label style="display:flex;gap:10px;align-items:flex-start;font-size:.86rem;color:var(--muted);margin-top:14px">
                     <input type="checkbox" id="m-confirm" name="manual_confirmed" style="width:20px;height:20px;accent-color:var(--accent);margin-top:1px">
-                    <span>Je confirme manuellement la présence de cette personne (sans géolocalisation ni signature).</span>
+                    <span>Je confirme avoir vérifié l'identité de cette personne.</span>
                 </label>
                 <p class="mut" id="manual-error" style="color:var(--error);font-size:.82rem;margin-top:8px" hidden></p>
             </div>

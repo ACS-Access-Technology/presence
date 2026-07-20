@@ -9,6 +9,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Public\StoreAttendanceRequest;
 use App\Models\Event;
 use App\Services\Attendance\AttendanceInput;
+use App\Services\Attendance\SignatureStorage;
 use App\Services\AttendanceService;
 use App\Services\QrTokenService;
 use Illuminate\Http\JsonResponse;
@@ -16,7 +17,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -141,7 +141,7 @@ class PublicAttendanceController extends Controller
             ], 409);
         }
 
-        $signaturePath = $this->storeSignature($event, (string) $request->string('signature'));
+        $signaturePath = SignatureStorage::store($event->id, (string) $request->string('signature'));
 
         $input = new AttendanceInput(
             email: (string) $request->string('email'),
@@ -173,23 +173,6 @@ class PublicAttendanceController extends Controller
             'checked_in_at' => $attendance->checked_in_at->translatedFormat('j M Y · H:i'),
             'departed_previous' => $overlap?->event->title,
         ]);
-    }
-
-    /** Décode et stocke la signature PNG sur le disque privé. */
-    private function storeSignature(Event $event, string $dataUri): string
-    {
-        $base64 = substr($dataUri, strlen('data:image/png;base64,'));
-        $binary = base64_decode($base64, true);
-
-        // La validation (starts_with) garantit le préfixe ; on protège le décodage.
-        if ($binary === false) {
-            abort(422, 'Signature illisible.');
-        }
-
-        $path = 'signatures/'.$event->id.'/'.Str::uuid()->toString().'.png';
-        Storage::disk('local')->put($path, $binary);
-
-        return $path;
     }
 
     /** Fenêtre horaire lisible d'un événement, ex. « aujourd'hui · 13:30 → 15:30 ». */

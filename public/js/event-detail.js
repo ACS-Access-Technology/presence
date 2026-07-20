@@ -137,15 +137,22 @@
             this.open('m-sig');
         },
 
-        manual: function (open) { if (open) { this.open('m-manual'); setTimeout(function () { $('#m-last').focus(); }, 40); } else this.close(); },
+        manual: function (open) {
+            if (open) {
+                this.open('m-manual');
+                setTimeout(function () { $('#m-last').focus(); if (!ManSig.canvas) ManSig.init(); else ManSig.resize(); }, 40);
+            } else this.close();
+        },
         submitManual: function (e) {
             e.preventDefault();
             var form = $('#manual-form'), err = $('#manual-error');
             err.hidden = true;
+            if (!ManSig.hasInk) { err.textContent = 'La signature du visiteur est obligatoire.'; err.hidden = false; return; }
             var fd = new FormData(form);
             if (!$('#m-confirm').checked) fd.delete('manual_confirmed'); else fd.set('manual_confirmed', '1');
+            fd.set('signature', ManSig.dataUrl());
             post(CFG.urls.manual, fd).then(function (res) {
-                if (res.status === 201) { Detail.close(); form.reset(); toast('Présence ajoutée'); Detail.poll(); }
+                if (res.status === 201) { Detail.close(); form.reset(); ManSig.clear(); toast('Présence ajoutée'); Detail.poll(); }
                 else if (res.status === 422) {
                     var msgs = res.data.errors ? Object.values(res.data.errors)[0][0] : (res.data.message || 'Vérifiez les champs.');
                     err.textContent = msgs; err.hidden = false;
@@ -242,6 +249,47 @@
         }
     };
 
+    /* ------------------------- Signature (saisie manuelle) ------------------------- */
+    var ManSig = {
+        canvas: null, ctx: null, drawing: false, hasInk: false, last: null,
+        init: function () {
+            this.canvas = $('#man-sigpad'); this.ctx = this.canvas.getContext('2d');
+            this.resize();
+            var c = this.canvas;
+            c.addEventListener('pointerdown', function (e) { ManSig.start(e); });
+            c.addEventListener('pointermove', function (e) { ManSig.move(e); });
+            c.addEventListener('pointerup', function () { ManSig.end(); });
+            c.addEventListener('pointerleave', function () { ManSig.end(); });
+        },
+        resize: function () {
+            var r = this.canvas.getBoundingClientRect();
+            var dpr = window.devicePixelRatio || 1;
+            this.canvas.width = r.width * dpr; this.canvas.height = r.height * dpr;
+            this.ctx.scale(dpr, dpr);
+            this.ctx.lineWidth = 2.5; this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
+            this.ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#12141a';
+        },
+        pos: function (e) {
+            var r = this.canvas.getBoundingClientRect();
+            return { x: e.clientX - r.left, y: e.clientY - r.top };
+        },
+        start: function (e) { this.canvas.setPointerCapture(e.pointerId); this.drawing = true; this.last = this.pos(e); },
+        move: function (e) {
+            if (!this.drawing) return;
+            e.preventDefault();
+            var p = this.pos(e), l = this.last, mx = (l.x + p.x) / 2, my = (l.y + p.y) / 2;
+            this.ctx.beginPath(); this.ctx.moveTo(l.x, l.y); this.ctx.quadraticCurveTo(l.x, l.y, mx, my); this.ctx.stroke();
+            this.last = p;
+            if (!this.hasInk) { this.hasInk = true; $('#man-sigPh').style.opacity = '0'; }
+        },
+        end: function () { this.drawing = false; },
+        clear: function () {
+            this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.hasInk = false; $('#man-sigPh').style.opacity = '1';
+        },
+        dataUrl: function () { return this.canvas.toDataURL('image/png'); }
+    };
+
     function post(url, body) {
         return fetch(url, {
             method: 'POST',
@@ -259,6 +307,7 @@
         Detail.render();
         $('#dp-confirm').addEventListener('click', function () { Detail.confirmDepart(); });
         $('#manual-form').addEventListener('submit', function (e) { Detail.submitManual(e); });
+        $('#man-sigClear').addEventListener('click', function () { ManSig.clear(); });
         document.addEventListener('keydown', function (e) {
             if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') { e.preventDefault(); Detail.cmdk($('#cmdk').hidden); }
             if (e.key === 'Escape') { Detail.cmdk(false); Detail.close(); }

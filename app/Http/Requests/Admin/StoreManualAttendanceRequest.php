@@ -4,14 +4,18 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Admin;
 
+use App\Http\Requests\Concerns\ValidatesSignature;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * Saisie manuelle d'une présence par un organisateur (visiteur sans smartphone).
- * Ni géoloc ni signature tactile : remplacées par une confirmation manuelle explicite.
+ * Pas de géolocalisation, mais la signature manuscrite reste obligatoire : le
+ * visiteur signe sur l'appareil de l'organisateur avant validation.
  */
 class StoreManualAttendanceRequest extends FormRequest
 {
+    use ValidatesSignature;
+
     public function authorize(): bool
     {
         return true;
@@ -32,6 +36,7 @@ class StoreManualAttendanceRequest extends FormRequest
             'service' => ['nullable', 'string', 'max:191'],
             'position' => ['required', 'string', 'max:191'],
             'manual_confirmed' => ['accepted'],
+            'signature' => $this->signatureRules(),
         ];
     }
 
@@ -39,6 +44,7 @@ class StoreManualAttendanceRequest extends FormRequest
     {
         return [
             'manual_confirmed.accepted' => 'Vous devez confirmer manuellement la présence.',
+            'signature.required' => 'La signature du visiteur est obligatoire.',
         ];
     }
 }

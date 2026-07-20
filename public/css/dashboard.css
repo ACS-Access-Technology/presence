@@ -469,6 +469,13 @@ body{min-height:100vh}
 .export-group .btn{border-radius:0;border:none;border-right:1px solid var(--border-strong)}
 .export-group .btn:last-child{border-right:none}
 
+/* ===== Signature (saisie manuelle) ===== */
+.sigwrap{position:relative;border:1px solid var(--border-strong);border-radius:var(--radius);background:var(--surface);box-shadow:inset 0 1px 2px rgba(18,20,26,.04);overflow:hidden}
+#man-sigpad{display:block;width:100%;height:160px;touch-action:none;cursor:crosshair}
+.sig-ph{position:absolute;inset:0;display:grid;place-items:center;color:var(--faint);font-size:.9rem;pointer-events:none;transition:opacity .2s}
+.sig-actions{display:flex;justify-content:space-between;align-items:center;margin-top:8px}
+.sig-actions .help{margin:0;font-size:.82rem;color:var(--muted)}
+
 /* ===== Modal infos participant ===== */
 .info-pair{padding:10px 0;border-bottom:1px solid var(--border)}
 .info-pair:last-child{border-bottom:none}

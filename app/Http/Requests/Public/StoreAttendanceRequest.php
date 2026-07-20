@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\Public;
 
+use App\Http\Requests\Concerns\ValidatesSignature;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -17,6 +18,8 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class StoreAttendanceRequest extends FormRequest
 {
+    use ValidatesSignature;
+
     public function authorize(): bool
     {
         return true;
@@ -43,15 +46,7 @@ class StoreAttendanceRequest extends FormRequest
             'accuracy' => ['nullable', 'numeric', 'min:0'],
 
             // Signature manuscrite obligatoire : data URI PNG, taille bornée.
-            // Closure plutôt que starts_with (dont le paramètre contient une virgule).
-            'signature' => [
-                'required', 'string', 'max:2000000',
-                function (string $attribute, mixed $value, \Closure $fail): void {
-                    if (! is_string($value) || ! str_starts_with($value, 'data:image/png;base64,')) {
-                        $fail('Signature invalide.');
-                    }
-                },
-            ],
+            'signature' => $this->signatureRules(),
 
             // Preuve de scan (ticket signé émis à l'ouverture de la page).
             'ticket' => ['required', 'string'],
