@@ -1,15 +1,17 @@
 /* Presence — liste d'événements : recherche + filtre statut + bascule grille/tableau. */
 (function () {
     'use strict';
+    var CFG = window.EVENTS_LIST || { userId: null };
     var EvList = {
-        term: '', currentStatus: 'all', currentView: 'grid',
+        term: '', currentStatus: 'all', currentView: 'grid', mineOnly: false,
         filter: function () {
             this.term = (document.getElementById('evsearch').value || '').trim().toLowerCase();
             var rows = document.querySelectorAll('.ev, .evrow'), visible = 0;
             rows.forEach(function (r) {
                 var okStatus = EvList.currentStatus === 'all' || r.dataset.status === EvList.currentStatus;
                 var okTerm = EvList.term === '' || (r.dataset.search || '').indexOf(EvList.term) !== -1;
-                var show = okStatus && okTerm;
+                var okOwner = !EvList.mineOnly || String(r.dataset.owner) === String(CFG.userId);
+                var show = okStatus && okTerm && okOwner;
                 r.hidden = !show;
                 if (show) visible++;
             });
@@ -18,6 +20,11 @@
         setStatus: function (s, btn) {
             this.currentStatus = s;
             document.querySelectorAll('.segbar button').forEach(function (b) { b.setAttribute('aria-pressed', String(b === btn)); });
+            this.filter();
+        },
+        toggleMine: function (btn) {
+            this.mineOnly = !this.mineOnly;
+            btn.setAttribute('aria-pressed', String(this.mineOnly));
             this.filter();
         },
         setView: function (v) {

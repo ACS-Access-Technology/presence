@@ -69,6 +69,18 @@ class EventDashboardTest extends TestCase
             ->assertOk()->assertSee('Atelier Cybersécurité');
     }
 
+    public function test_liste_expose_le_createur_pour_le_filtre_mes_evenements(): void
+    {
+        $event = $this->liveEvent();
+        $event->update(['created_by' => $this->user->id]);
+
+        $response = $this->actingAs($this->user)->get(route('admin.events.index'));
+
+        $response->assertOk()
+            ->assertSee('data-owner="'.$this->user->id.'"', false)
+            ->assertSee('window.EVENTS_LIST = { userId: '.$this->user->id, false);
+    }
+
     public function test_detail_affiche_la_structure_et_injecte_les_presences(): void
     {
         $event = $this->liveEvent();

@@ -41,6 +41,10 @@
             <button aria-pressed="false" data-s="clos" onclick="EvList.setStatus('clos',this)">Clos</button>
             <button aria-pressed="false" data-s="annule" onclick="EvList.setStatus('annule',this)">Annulés</button>
         </div>
+        <button type="button" class="chip" aria-pressed="false" id="ev-mine" onclick="EvList.toggleMine(this)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="width:14px;height:14px;vertical-align:-2px"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-7 8-7s8 3 8 7"/></svg>
+            Mes événements
+        </button>
         <div class="viewtgl" role="group" aria-label="Affichage">
             <button id="ev-v-grid" aria-pressed="true" onclick="EvList.setView('grid')" aria-label="Vue cartes"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button>
             <button id="ev-v-list" aria-pressed="false" onclick="EvList.setView('list')" aria-label="Vue tableau"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
@@ -59,7 +63,7 @@
                 $lastResched = $event->reschedules->first();
                 $tint = 'background:color-mix(in srgb, '.$event->type->color.' 14%, transparent);color:'.$event->type->color;
             @endphp
-            <a class="ev {{ $st === 'annule' ? 'is-cancelled' : '' }}" href="{{ route('admin.events.show', $event) }}" data-status="{{ $st }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}">
+            <a class="ev {{ $st === 'annule' ? 'is-cancelled' : '' }}" href="{{ route('admin.events.show', $event) }}" data-status="{{ $st }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}" data-owner="{{ $event->created_by }}">
                 <div class="ev__top">
                     <div class="ev__date" style="{{ $tint }}"><span class="d">{{ $event->starts_at->day }}</span><span class="m">{{ mb_strtoupper($months[$event->starts_at->month - 1]) }}</span></div>
                     <div class="ev__hd">
@@ -112,7 +116,7 @@
                 <tbody id="evbody">
                     @forelse ($events as $event)
                         @php($st = $event->status()->value)
-                        <tr class="evrow" data-status="{{ $st }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}">
+                        <tr class="evrow" data-status="{{ $st }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}" data-owner="{{ $event->created_by }}">
                             <td>
                                 <a class="rowlink" href="{{ route('admin.events.show', $event) }}">{{ $event->title }}</a>
                                 @if($event->location)<div class="person__e">{{ $event->location }}</div>@endif
@@ -135,5 +139,6 @@
 @endsection
 
 @push('scripts')
+<script>window.EVENTS_LIST = { userId: {{ auth()->id() }} };</script>
 <script src="{{ versioned_asset('js/events-list.js') }}"></script>
 @endpush

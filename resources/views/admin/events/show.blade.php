@@ -137,8 +137,8 @@
             </label>
             <div class="chips" role="group" aria-label="Filtrer">
                 <button class="chip" aria-pressed="true" data-f="all" onclick="Detail.chip('all',this)">Tous</button>
-                <button class="chip" aria-pressed="false" data-f="new" onclick="Detail.chip('new',this)">Nouveaux</button>
-                <button class="chip" aria-pressed="false" data-f="rec" onclick="Detail.chip('rec',this)">Récurrents</button>
+                <button class="chip" aria-pressed="false" data-f="new" onclick="Detail.chip('new',this)" title="Première présence connue pour cette adresse email">Nouveaux</button>
+                <button class="chip" aria-pressed="false" data-f="rec" onclick="Detail.chip('rec',this)" title="A déjà émargé à un événement antérieur avec cette adresse email — pas forcément le même contexte professionnel">Récurrents</button>
             </div>
             @if($event->isOpenForCheckIn())
                 <button class="btn btn--ghost btn--sm" onclick="Detail.manual(true)">
@@ -189,7 +189,7 @@
             <div class="kpi"><span class="ic" style="background:var(--success-soft);color:var(--success)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6M16 11l2 2 4-4"/></svg></span><div><div class="kpi__val" id="kpi-total">{{ $stats['total'] }}</div><div class="kpi__lbl">Présents</div></div></div>
             <div class="kpi"><span class="ic" style="background:var(--info-soft);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21V7l9-4 9 4v14"/><path d="M9 21v-6h6v6"/></svg></span><div><div class="kpi__val">{{ $stats['companies'] }}</div><div class="kpi__lbl">Entreprises</div></div></div>
             <div class="kpi"><span class="ic" style="background:var(--brand-orange-soft);color:var(--brand-orange)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg></span><div><div class="kpi__val">{{ $stats['newcomers'] }}</div><div class="kpi__lbl">Nouveaux</div></div></div>
-            <div class="kpi"><span class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span><div><div class="kpi__val">{{ $stats['recurrent'] }}</div><div class="kpi__lbl">Récurrents</div></div></div>
+            <div class="kpi" title="A déjà émargé à un événement antérieur avec cette adresse email — pas forcément le même contexte professionnel"><span class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></span><div><div class="kpi__val">{{ $stats['recurrent'] }}</div><div class="kpi__lbl">Récurrents</div></div></div>
         </div>
 
         <div class="grid2" style="gap:18px">
