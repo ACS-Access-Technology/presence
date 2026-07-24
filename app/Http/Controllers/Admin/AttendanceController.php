@@ -21,6 +21,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\View\View;
 use Maatwebsite\Excel\Facades\Excel;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -42,6 +43,18 @@ class AttendanceController extends Controller
         return response()->json([
             'rows' => $this->presence->rows($event),
             'stats' => $this->presence->stats($event),
+        ]);
+    }
+
+    /**
+     * Grille de badges imprimables (A4, découpe manuelle) pour les présents.
+     * Impression via le navigateur — aucun matériel dédié requis.
+     */
+    public function badges(Event $event): View
+    {
+        return view('admin.events.badges-print', [
+            'event' => $event,
+            'rows' => $this->presence->rows($event),
         ]);
     }
 

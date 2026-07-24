@@ -177,6 +177,15 @@ class EventDashboardTest extends TestCase
         $this->assertStringContainsString('application/pdf', $response->headers->get('Content-Type'));
     }
 
+    public function test_grille_de_badges_imprimable(): void
+    {
+        $event = $this->liveEvent();
+        $this->attend($event, 'awa@acs.ci', 'Awa', 'Koné');
+
+        $this->actingAs($this->user)->get(route('admin.events.attendances.badges', $event))
+            ->assertOk()->assertSee('Awa Koné')->assertSee('1 badge');
+    }
+
     public function test_export_xlsx_incorpore_la_signature_et_formate_le_telephone_en_texte(): void
     {
         $event = $this->liveEvent();

@@ -69,6 +69,10 @@
                 <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('xlsx')" title="Export filtré selon la liste affichée">Excel</button>
                 <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('pdf')" title="Export filtré selon la liste affichée">PDF</button>
             </div>
+            <a class="btn btn--ghost" href="{{ route('admin.events.attendances.badges', $event) }}" target="_blank" rel="noopener" title="Grille de badges à imprimer (navigateur, aucun matériel dédié)">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h5"/><circle cx="9" cy="16" r="1.5"/></svg>
+                Badges
+            </a>
             @if($event->qr_mode === QrMode::Tournant)
                 <a class="btn btn--primary" href="{{ route('admin.events.projection', $event) }}" target="_blank" rel="noopener">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
