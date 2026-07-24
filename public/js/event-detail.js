@@ -328,6 +328,8 @@
                 navigator.geolocation.getCurrentPosition(function (pos) {
                     $('#ed-geo-lat').value = pos.coords.latitude.toFixed(7);
                     $('#ed-geo-lon').value = pos.coords.longitude.toFixed(7);
+                    var radius = $('#ed-geo-radius');
+                    if (radius.value.trim() === '') radius.value = '150';
                     status.textContent = 'Position récupérée (précision ' + Math.round(pos.coords.accuracy) + ' m).';
                     geoBtn.disabled = false;
                 }, function () {

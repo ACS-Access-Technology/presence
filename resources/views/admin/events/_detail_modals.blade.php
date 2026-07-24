@@ -120,7 +120,7 @@
                         </div>
                         <div class="field {{ $errors->has('geofence_radius_m') ? 'invalid' : '' }}">
                             <label for="ed-geo-radius">Rayon (m)</label>
-                            <input class="control" id="ed-geo-radius" name="geofence_radius_m" type="number" step="1" min="10" max="5000" value="{{ old('geofence_radius_m', $event->geofence_radius_m) }}">
+                            <input class="control" id="ed-geo-radius" name="geofence_radius_m" type="number" step="1" min="10" max="5000" placeholder="150" value="{{ old('geofence_radius_m', $event->geofence_radius_m) }}">
                             <div class="err-msg">{{ $errors->first('geofence_radius_m') }}</div>
                         </div>
                     </div>

@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Connexion · Presence · ACS Groupe</title>
+    <script>(function(){var t=localStorage.getItem('presence-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
     <link rel="stylesheet" href="{{ versioned_asset('css/auth.css') }}">
 </head>
@@ -97,7 +98,9 @@
     function toggleTheme() {
         var cur = document.documentElement.getAttribute('data-theme');
         var dark = cur ? cur === 'dark' : matchMedia('(prefers-color-scheme:dark)').matches;
-        document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+        var next = dark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('presence-theme', next);
     }
 </script>
 </body>

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Tableau de bord') · Presence · ACS Groupe</title>
+    <script>(function(){var t=localStorage.getItem('presence-theme');if(t)document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
     <link rel="stylesheet" href="{{ versioned_asset('css/dashboard.css') }}">
     @stack('head')
@@ -73,6 +74,9 @@
             @endif
             <span class="sp"></span>
             @yield('topbar-actions')
+            <button class="iconbtn" type="button" onclick="toggleTheme()" aria-label="Basculer le thème">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z"/></svg>
+            </button>
         </header>
 
         <main class="content">
@@ -82,6 +86,15 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+<script>
+    function toggleTheme() {
+        var cur = document.documentElement.getAttribute('data-theme');
+        var dark = cur ? cur === 'dark' : matchMedia('(prefers-color-scheme:dark)').matches;
+        var next = dark ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem('presence-theme', next);
+    }
+</script>
 @stack('scripts')
 </body>
 </html>
