@@ -103,10 +103,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): v
             Route::get('/{attendance}/signature', [AttendanceController::class, 'signature'])->name('signature');
         });
 
-    // Cycle de vie d'un événement : annulation (réversible) et report.
+    // Cycle de vie d'un événement : annulation (réversible), report et mode QR.
     Route::post('/events/{event}/cancel', [EventLifecycleController::class, 'cancel'])->name('events.cancel');
     Route::post('/events/{event}/uncancel', [EventLifecycleController::class, 'uncancel'])->name('events.uncancel');
     Route::post('/events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
+    Route::patch('/events/{event}/qr-mode', [EventLifecycleController::class, 'changeQrMode'])->name('events.qr-mode');
 
     // Compte-rendu d'un événement (texte + documents + photos).
     Route::prefix('events/{event}/report')->name('events.report.')

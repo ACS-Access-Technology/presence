@@ -8,6 +8,7 @@ use App\Enums\QrMode;
 use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Person;
 use App\Models\User;
 use App\Services\Attendance\AttendanceInput;
 use App\Services\AttendanceService;
@@ -15,6 +16,8 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use Tests\TestCase;
 
 class EventDashboardTest extends TestCase
@@ -79,6 +82,20 @@ class EventDashboardTest extends TestCase
             ->assertSee('Liste de présence')
             ->assertSee('window.EVENT', false)
             ->assertSee('awa@acs.ci');
+    }
+
+    public function test_detail_affiche_les_invites_pas_encore_arrives(): void
+    {
+        $event = $this->liveEvent();
+        $venu = Person::create(['email' => 'venu@acs.ci', 'last_name' => 'Diallo', 'first_name' => 'Fatou']);
+        $absent = Person::create(['email' => 'absent@acs.ci', 'last_name' => 'Bamba', 'first_name' => 'Issa', 'company' => 'ACS']);
+        $event->invitations()->create(['person_id' => $venu->id]);
+        $event->invitations()->create(['person_id' => $absent->id]);
+        $this->attend($event, 'venu@acs.ci', 'Fatou', 'Diallo');
+
+        $response = $this->actingAs($this->user)->get(route('admin.events.show', $event));
+
+        $response->assertOk()->assertSee('1 invité')->assertSee('Issa Bamba');
     }
 
     public function test_feed_json(): void
@@ -161,7 +178,7 @@ class EventDashboardTest extends TestCase
             ->get(route('admin.events.attendances.export.xlsx', $event))
             ->getFile()->getRealPath();
 
-        $zip = new \ZipArchive();
+        $zip = new \ZipArchive;
         $zip->open($path);
         $hasMedia = false;
         for ($i = 0; $i < $zip->numFiles; $i++) {
@@ -172,10 +189,10 @@ class EventDashboardTest extends TestCase
         $zip->close();
         $this->assertTrue($hasMedia, 'La signature devrait être incorporée en image dans le XLSX.');
 
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+        $spreadsheet = IOFactory::load($path);
         $phoneCell = $spreadsheet->getActiveSheet()->getCell('D2');
         $this->assertSame(
-            \PhpOffice\PhpSpreadsheet\Style\NumberFormat::FORMAT_TEXT,
+            NumberFormat::FORMAT_TEXT,
             $phoneCell->getStyle()->getNumberFormat()->getFormatCode(),
         );
     }

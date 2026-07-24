@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\QrMode;
 use App\Http\Controllers\Controller;
 use App\Models\Event;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rules\Enum;
 
 /**
- * Cycle de vie d'un événement : annulation (réversible) et report (changement de
- * créneau avec trace de l'ancien horaire).
+ * Cycle de vie d'un événement : annulation (réversible), report (changement de
+ * créneau avec trace de l'ancien horaire) et mode QR (modifiable jusqu'à la
+ * première présence, verrouillé ensuite — cf. Event::isQrModeLocked()).
  */
 class EventLifecycleController extends Controller
 {
@@ -75,5 +78,25 @@ class EventLifecycleController extends Controller
         });
 
         return back()->with('status', 'Événement reporté.');
+    }
+
+    /**
+     * Change le mode QR (statique ↔ tournant) avant la première présence. Le
+     * `qr_secret` de l'événement reste inchangé : seule la façon de le diffuser
+     * change, pas la racine HMAC.
+     */
+    public function changeQrMode(Request $request, Event $event): RedirectResponse
+    {
+        if ($event->isQrModeLocked()) {
+            return back()->with('status', 'Mode QR verrouillé : une présence existe déjà pour cet événement.');
+        }
+
+        $data = $request->validate([
+            'qr_mode' => ['required', new Enum(QrMode::class)],
+        ]);
+
+        $event->update(['qr_mode' => $data['qr_mode']]);
+
+        return back()->with('status', 'Mode QR modifié.');
     }
 }

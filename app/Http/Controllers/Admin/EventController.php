@@ -62,6 +62,7 @@ class EventController extends Controller
             'siblingSeances' => $siblingSeances,
             'rows' => $this->presence->rows($event),
             'stats' => $this->presence->stats($event),
+            'pendingInvitees' => $this->presence->pendingInvitees($event),
             'report' => $event->report,
             'documents' => $event->documents
                 ->map(fn ($d) => [

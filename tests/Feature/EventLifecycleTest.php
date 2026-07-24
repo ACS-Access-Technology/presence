@@ -6,8 +6,10 @@ namespace Tests\Feature;
 
 use App\Enums\EventStatus;
 use App\Enums\QrMode;
+use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Person;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -124,6 +126,33 @@ class EventLifecycleTest extends TestCase
         $event->refresh();
         $this->assertTrue($originalStart->equalTo($event->starts_at));
         $this->assertSame($originalMode, $event->qr_mode);
+    }
+
+    public function test_change_le_mode_qr_avant_premiere_presence(): void
+    {
+        $event = $this->event();
+        $this->assertSame('statique', $event->qr_mode->value);
+
+        $this->actingAs($this->user)->patch(route('admin.events.qr-mode', $event), ['qr_mode' => 'tournant'])
+            ->assertRedirect();
+
+        $this->assertSame('tournant', $event->refresh()->qr_mode->value);
+    }
+
+    public function test_refuse_de_changer_le_mode_qr_apres_une_presence(): void
+    {
+        $event = $this->event(Carbon::now()->subHour(), Carbon::now()->addHour());
+        $person = Person::create(['email' => 'awa@acs.ci', 'last_name' => 'Koné', 'first_name' => 'Awa']);
+        Attendance::create([
+            'event_id' => $event->id, 'person_id' => $person->id, 'reference' => 'PRS001',
+            'last_name' => 'Koné', 'first_name' => 'Awa', 'phone' => '0', 'company' => 'ACS', 'direction' => 'SI', 'position' => 'QA',
+            'checked_in_at' => Carbon::now(),
+        ]);
+
+        $this->actingAs($this->user)->patch(route('admin.events.qr-mode', $event), ['qr_mode' => 'tournant'])
+            ->assertRedirect();
+
+        $this->assertSame('statique', $event->refresh()->qr_mode->value);
     }
 
     public function test_modification_refuse_un_titre_vide(): void

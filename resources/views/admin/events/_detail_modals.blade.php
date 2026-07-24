@@ -135,6 +135,23 @@
         </form>
     </div>
 
+    {{-- Changer le mode QR (uniquement avant la première présence) --}}
+    <div class="modal" id="m-qrmode" role="dialog" aria-modal="true" aria-labelledby="qr-t" hidden>
+        <div class="modal__hd"><h3 id="qr-t">Changer le mode QR</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <form method="POST" action="{{ route('admin.events.qr-mode', $event) }}">
+            @csrf
+            @method('PATCH')
+            <div class="modal__body">
+                <p>Possible tant qu'aucune présence n'a été enregistrée. Le secret QR de l'événement ne change pas — seule la façon de le diffuser change.</p>
+                <div class="field">
+                    <label><input type="radio" name="qr_mode" value="statique" @checked($event->qr_mode->value === 'statique')> Statique — QR fixe imprimable</label><br>
+                    <label><input type="radio" name="qr_mode" value="tournant" @checked($event->qr_mode->value === 'tournant')> Tournant — QR renouvelé toutes les 15 s, projeté</label>
+                </div>
+            </div>
+            <div class="modal__foot"><button type="button" class="btn btn--ghost" onclick="Detail.close()">Annuler</button><button type="submit" class="btn btn--primary">Enregistrer</button></div>
+        </form>
+    </div>
+
     {{-- Reporter l'événement --}}
     <div class="modal" id="m-reschedule" role="dialog" aria-modal="true" aria-labelledby="rs-t" hidden>
         <div class="modal__hd"><h3 id="rs-t">Reporter l'événement</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>

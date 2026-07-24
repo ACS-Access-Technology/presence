@@ -54,6 +54,28 @@ final class EventPresenceService
         ])->all();
     }
 
+    /**
+     * Invité·e·s qui n'ont pas encore émargé — une invitation N'EST PAS une
+     * présence (cf. migration `event_invitations`), donc sans ceci l'organisateur
+     * n'a aucun moyen de voir qui manque encore à l'appel.
+     *
+     * @return list<array{name: string, company: ?string}>
+     */
+    public function pendingInvitees(Event $event): array
+    {
+        $checkedInPersonIds = $event->attendances()->pluck('person_id');
+
+        return $event->invitations()
+            ->with('person')
+            ->whereNotIn('person_id', $checkedInPersonIds)
+            ->get()
+            ->map(fn ($invitation) => [
+                'name' => $invitation->person->fullName(),
+                'company' => $invitation->person->company,
+            ])
+            ->all();
+    }
+
     /** @return array<string, mixed> */
     public function stats(Event $event): array
     {

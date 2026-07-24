@@ -80,6 +80,14 @@
                     Imprimer le QR
                 </a>
             @endif
+            @if($event->isQrModeLocked())
+                <span class="tag" title="Une présence existe déjà : le mode QR ne peut plus changer.">Mode QR verrouillé</span>
+            @else
+                <button type="button" class="btn btn--ghost" onclick="Detail.open('m-qrmode')" title="Possible tant qu'aucune présence n'est enregistrée">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+                    Changer le mode QR
+                </button>
+            @endif
             <button type="button" class="btn btn--ghost" onclick="Detail.open('m-edit')">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                 Modifier
@@ -139,6 +147,17 @@
                 </button>
             @endif
         </div>
+
+        @if (count($pendingInvitees) > 0)
+            <div class="notice" style="margin-bottom:14px">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/></svg>
+                <span>
+                    <strong>{{ count($pendingInvitees) }} invité{{ count($pendingInvitees) > 1 ? 's' : '' }}</strong> pas encore arrivé{{ count($pendingInvitees) > 1 ? 's' : '' }} :
+                    {{ collect($pendingInvitees)->pluck('name')->join(', ', ' et ') }}.
+                    Inviter n'enregistre pas la présence — ces personnes doivent encore scanner le QR.
+                </span>
+            </div>
+        @endif
 
         <div class="tablewrap">
             <div class="tscroll">

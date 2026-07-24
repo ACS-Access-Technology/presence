@@ -114,7 +114,17 @@ class PublicAttendanceController extends Controller
         ]);
     }
 
-    /** Enregistre la présence (idempotent, anti-chevauchement, ticket vérifié). */
+    /**
+     * Enregistre la présence (idempotent, anti-chevauchement, ticket vérifié).
+     *
+     * Sorties possibles côté client (`participant.js` doit toutes les gérer) :
+     * - 200 : présence enregistrée (ou déjà existante — idempotent).
+     * - 403 : hors du périmètre anti-fraude configuré sur l'événement.
+     * - 409 : chevauchement détecté, en attente de `confirm_departure`.
+     * - 419 : ticket de scan absent/expiré/déjà trop utilisé — rescanner le QR.
+     * - 422 : validation FormRequest (champs requis) ou fenêtre d'émargement fermée.
+     * - 429 : trop de tentatives (throttle IP+événement).
+     */
     public function store(StoreAttendanceRequest $request, Event $event): JsonResponse
     {
         if (! $event->isOpenForCheckIn()) {
