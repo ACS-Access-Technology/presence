@@ -82,6 +82,12 @@ class Event extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    /** @return HasMany<EventFeedback, $this> */
+    public function feedbacks(): HasMany
+    {
+        return $this->hasMany(EventFeedback::class);
+    }
+
     /** @return HasMany<Attendance, $this> */
     public function attendances(): HasMany
     {

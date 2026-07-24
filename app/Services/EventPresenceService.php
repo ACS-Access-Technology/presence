@@ -106,6 +106,25 @@ final class EventPresenceService
             ->all();
     }
 
+    /**
+     * Agrégat des avis post-événement.
+     *
+     * @return array{count: int, average: ?float, comments: list<array{rating: int, comment: string}>}
+     */
+    public function feedbackStats(Event $event): array
+    {
+        $feedbacks = $event->feedbacks()->latest()->get();
+
+        return [
+            'count' => $feedbacks->count(),
+            'average' => $feedbacks->isEmpty() ? null : round($feedbacks->avg('rating'), 1),
+            'comments' => $feedbacks->whereNotNull('comment')
+                ->map(fn ($f) => ['rating' => $f->rating, 'comment' => $f->comment])
+                ->values()
+                ->all(),
+        ];
+    }
+
     /** Couleur d'avatar déterministe dérivée du nom. */
     private function avatarColor(string $name): string
     {

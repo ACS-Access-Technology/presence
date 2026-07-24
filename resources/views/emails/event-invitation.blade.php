@@ -9,20 +9,21 @@
                     {{ $orgName }} · Presence
                 </td></tr>
                 <tr><td style="padding:28px">
-                    <h1 style="font-size:1.25rem;margin:0 0 6px">Présence confirmée</h1>
+                    <h1 style="font-size:1.25rem;margin:0 0 6px">Vous êtes invité·e</h1>
                     <p style="color:#565d6b;margin:0 0 18px">Bonjour {{ $firstName }},</p>
                     <p style="margin:0 0 16px;line-height:1.6">
-                        Votre présence à <strong>{{ $eventTitle }}</strong> ({{ $eventDate }}@if($location) · {{ $location }}@endif) a bien été enregistrée. Merci de votre participation.
+                        Vous êtes attendu·e à <strong>{{ $eventTitle }}</strong> le {{ $eventDate }}@if($location) · {{ $location }}@endif.
                     </p>
-                    <p style="display:inline-block;background:#f7f8fa;border:1px solid #e3e6ec;border-radius:10px;padding:9px 14px;font-size:.9rem;margin:0 0 18px">
-                        Référence : <strong>{{ $reference }}</strong>
+                    <p style="margin:0 0 20px;line-height:1.6;color:#565d6b;font-size:.92rem">
+                        Le jour J, présentez-vous sur place et scannez le QR code affiché pour émarger — cette invitation ne vaut pas présence.
                     </p>
-                    <p style="margin:0">
-                        <a href="{{ $feedbackUrl }}" style="color:#1E2A78;font-weight:600;text-decoration:none">Donnez votre avis sur cette activité →</a>
-                    </p>
+                    <a href="{{ $attendanceUrl }}" style="display:inline-block;background:#1E2A78;color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:600;font-size:.92rem">
+                        Voir la page de l'événement
+                    </a>
+                    <p style="margin:18px 0 0;color:#8a91a0;font-size:.8rem">Un fichier .ics est joint pour ajouter cet événement à votre agenda.</p>
                 </td></tr>
                 <tr><td style="padding:16px 28px;border-top:1px solid #e3e6ec;color:#8a91a0;font-size:.78rem">
-                    Cet email de confirmation est envoyé automatiquement par {{ $orgName }}. Merci de ne pas y répondre.
+                    Cet email est envoyé automatiquement par {{ $orgName }}. Merci de ne pas y répondre.
                 </td></tr>
             </table>
         </td></tr>

@@ -209,6 +209,23 @@
                 </div>
             @endforeach
         </div>
+
+        <div class="tablewrap" style="padding:16px;margin-top:18px">
+            <h3 style="margin:0 0 12px;font-size:1rem">
+                Avis des participants
+                @if($feedbackStats['average'] !== null)
+                    <span class="tag tag--soon" style="margin-left:6px">{{ $feedbackStats['average'] }}/5 · {{ $feedbackStats['count'] }} avis</span>
+                @endif
+            </h3>
+            @forelse ($feedbackStats['comments'] as $c)
+                <div style="padding:10px 0;border-top:1px solid var(--border)">
+                    <span class="tag tag--type" style="--tc:#e0620d;color:var(--tc);background:color-mix(in srgb, var(--tc) 14%, transparent)">{{ $c['rating'] }}/5</span>
+                    <p style="margin:6px 0 0;font-size:.88rem">{{ $c['comment'] }}</p>
+                </div>
+            @empty
+                <p class="mut" style="font-size:.85rem">Aucun avis pour le moment.</p>
+            @endforelse
+        </div>
     </section>
 
     {{-- ===== Onglet compte-rendu ===== --}}

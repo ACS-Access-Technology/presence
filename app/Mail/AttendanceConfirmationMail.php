@@ -7,11 +7,11 @@ namespace App\Mail;
 use App\Models\Attendance;
 use App\Models\Setting;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Contracts\Queue\ShouldQueue;
 
 /**
  * Email de confirmation SIMPLE envoyé automatiquement à la clôture d'un événement
@@ -41,6 +41,7 @@ class AttendanceConfirmationMail extends Mailable implements ShouldQueue
                 'eventDate' => $this->attendance->event->starts_at->translatedFormat('j F Y à H:i'),
                 'location' => $this->attendance->event->location,
                 'reference' => $this->attendance->reference,
+                'feedbackUrl' => route('public.feedback.show', ['attendance' => $this->attendance->reference]),
                 'orgName' => Setting::branding()['org_name'],
             ],
         );

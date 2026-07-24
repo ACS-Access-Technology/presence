@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Public\FeedbackController;
 use App\Http\Controllers\Public\PublicAttendanceController;
 use Illuminate\Support\Facades\Route;
 
@@ -41,6 +42,17 @@ Route::prefix('e')->name('public.attendance.')->group(function (): void {
     Route::get('/{event:public_slug}', [PublicAttendanceController::class, 'show'])->name('show');
     Route::post('/{event:public_slug}/recognize', [PublicAttendanceController::class, 'recognize'])->name('recognize');
     Route::post('/{event:public_slug}', [PublicAttendanceController::class, 'store'])->name('store');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Avis post-événement (sans compte)
+|--------------------------------------------------------------------------
+| /avis/{reference} : lien envoyé dans l'email de confirmation de présence.
+*/
+Route::prefix('avis')->name('public.feedback.')->group(function (): void {
+    Route::get('/{attendance:reference}', [FeedbackController::class, 'show'])->name('show');
+    Route::post('/{attendance:reference}', [FeedbackController::class, 'store'])->name('store');
 });
 
 /*

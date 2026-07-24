@@ -6,6 +6,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -74,6 +75,12 @@ class Attendance extends Model
     public function recorder(): BelongsTo
     {
         return $this->belongsTo(User::class, 'recorded_by');
+    }
+
+    /** @return HasOne<EventFeedback, $this> */
+    public function feedback(): HasOne
+    {
+        return $this->hasOne(EventFeedback::class);
     }
 
     /** Personne encore présente (aucun départ enregistré). */

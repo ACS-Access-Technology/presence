@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tests\Feature;
 
 use App\Enums\PersonSource;
+use App\Mail\EventInvitationMail;
 use App\Models\Event;
 use App\Models\EventSeries;
 use App\Models\EventType;
 use App\Models\Person;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class EventCreateTest extends TestCase
@@ -37,6 +39,7 @@ class EventCreateTest extends TestCase
 
     public function test_cree_un_evenement_avec_invites(): void
     {
+        Mail::fake();
         $person = Person::create([
             'email' => 'awa.kone@acsgroupe.ci', 'last_name' => 'Koné', 'first_name' => 'Awa',
             'is_staff' => true, 'source' => PersonSource::Import,
@@ -63,7 +66,11 @@ class EventCreateTest extends TestCase
         $this->assertNotEmpty($event->public_slug);
         $this->assertSame($this->user->id, $event->created_by);
         $this->assertSame(1, $event->invitations()->count());
-        $this->assertSame($person->id, $event->invitations()->first()->person_id);
+        $invitation = $event->invitations()->first();
+        $this->assertSame($person->id, $invitation->person_id);
+        $this->assertNotNull($invitation->notified_at);
+
+        Mail::assertQueued(EventInvitationMail::class, fn (EventInvitationMail $mail): bool => $mail->invitation->is($invitation));
     }
 
     public function test_genere_un_slug_unique_en_cas_de_titres_identiques(): void

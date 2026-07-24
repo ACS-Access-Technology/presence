@@ -83,6 +83,15 @@ body{padding:24px 12px 64px;min-height:100vh}
 .errscreen .btn{margin-top:6px}
 .errscreen .stack{display:flex;flex-direction:column;gap:10px;margin-top:10px}
 
+/* Avis post-événement */
+.mut{color:var(--muted)}
+.ratepick{display:flex;gap:8px}
+.rateopt{flex:1}
+.rateopt input{position:absolute;opacity:0;width:0;height:0}
+.rateopt span{display:flex;align-items:center;justify-content:center;height:52px;border:1px solid var(--border-strong);border-radius:var(--radius);font-weight:700;font-size:1.05rem;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.rateopt input:checked + span{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.rateopt input:focus-visible + span{outline:none;box-shadow:var(--focus)}
+
 /* Skeleton de chargement */
 .sk{background:linear-gradient(90deg,var(--surface-2) 25%,var(--surface-3) 37%,var(--surface-2) 63%);background-size:400% 100%;animation:shim 1.4s ease infinite;border-radius:10px}
 @keyframes shim{0%{background-position:100% 0}100%{background-position:-100% 0}}

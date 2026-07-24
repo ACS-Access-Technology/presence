@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreEventRequest;
 use App\Http\Requests\Admin\UpdateEventRequest;
+use App\Mail\EventInvitationMail;
 use App\Models\Event;
 use App\Models\EventSeries;
 use App\Models\EventType;
@@ -14,6 +15,7 @@ use App\Services\EventPresenceService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -63,6 +65,7 @@ class EventController extends Controller
             'rows' => $this->presence->rows($event),
             'stats' => $this->presence->stats($event),
             'pendingInvitees' => $this->presence->pendingInvitees($event),
+            'feedbackStats' => $this->presence->feedbackStats($event),
             'report' => $event->report,
             'documents' => $event->documents
                 ->map(fn ($d) => [
@@ -124,10 +127,15 @@ class EventController extends Controller
 
             foreach ($data['invitees'] ?? [] as $personId) {
                 foreach ($events as $event) {
-                    $event->invitations()->create([
+                    $invitation = $event->invitations()->create([
                         'person_id' => $personId,
                         'invited_by' => $request->user()?->id,
                     ]);
+
+                    // Une invitation par séance (pas de fusion multi-jours) : chaque
+                    // email porte la bonne date/heure de SA séance dans son .ics.
+                    Mail::to($invitation->person->email)->queue(new EventInvitationMail($invitation));
+                    $invitation->update(['notified_at' => Carbon::now()]);
                 }
             }
 
