@@ -72,7 +72,34 @@
                         <div class="field" style="margin-top:6px">
                             <label for="lieu">Lieu <span class="opt">(facultatif)</span></label>
                             <input class="control" id="lieu" name="location" value="{{ old('location') }}" placeholder="Ex. Salle Ébène, Cocody">
-                            <div class="help">Indicatif pour les participants. La présence sur place est confirmée par la géolocalisation.</div>
+                            <div class="help">Indicatif pour les participants.</div>
+                        </div>
+
+                        <div class="field" style="margin-top:6px">
+                            <label>Périmètre anti-fraude <span class="opt">(facultatif)</span></label>
+                            <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué autour de ce point. Laissez vide pour ne rien imposer (indicatif seulement).</div>
+                            <div class="grid3" style="margin-top:6px">
+                                <div class="field {{ $errors->has('geofence_latitude') ? 'invalid' : '' }}">
+                                    <label for="geo-lat">Latitude</label>
+                                    <input class="control" id="geo-lat" name="geofence_latitude" type="number" step="any" min="-90" max="90" value="{{ old('geofence_latitude') }}">
+                                    <div class="err-msg">{{ $errors->first('geofence_latitude') }}</div>
+                                </div>
+                                <div class="field {{ $errors->has('geofence_longitude') ? 'invalid' : '' }}">
+                                    <label for="geo-lon">Longitude</label>
+                                    <input class="control" id="geo-lon" name="geofence_longitude" type="number" step="any" min="-180" max="180" value="{{ old('geofence_longitude') }}">
+                                    <div class="err-msg">{{ $errors->first('geofence_longitude') }}</div>
+                                </div>
+                                <div class="field {{ $errors->has('geofence_radius_m') ? 'invalid' : '' }}">
+                                    <label for="geo-radius">Rayon (m)</label>
+                                    <input class="control" id="geo-radius" name="geofence_radius_m" type="number" step="1" min="10" max="5000" value="{{ old('geofence_radius_m', 150) }}">
+                                    <div class="err-msg">{{ $errors->first('geofence_radius_m') }}</div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn--ghost btn--sm" id="geo-use-current" style="margin-top:6px">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+                                Utiliser ma position actuelle
+                            </button>
+                            <div class="help" id="geo-status"></div>
                         </div>
                     </div>
                 </div>
@@ -97,7 +124,7 @@
                                         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Aucun écran ni vidéoprojecteur nécessaire.</li>
                                         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Idéal pour accueil, stand, petite salle.</li>
                                     </ul>
-                                    <div class="mode__note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Photographiable : la fraude est limitée par la géolocalisation obligatoire et la fenêtre horaire.</div>
+                                    <div class="mode__note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Photographiable : renseignez un périmètre anti-fraude ci-dessus pour bloquer l'émargement à distance.</div>
                                 </div>
                             </label>
                             <label class="mode">

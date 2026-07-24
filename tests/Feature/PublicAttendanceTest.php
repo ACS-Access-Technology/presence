@@ -8,8 +8,8 @@ use App\Enums\QrMode;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Person;
-use App\Services\AttendanceService;
 use App\Services\Attendance\AttendanceInput;
+use App\Services\AttendanceService;
 use App\Services\QrTokenService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
@@ -21,6 +21,8 @@ class PublicAttendanceTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
+
     private EventType $type;
 
     protected function setUp(): void
@@ -30,9 +32,9 @@ class PublicAttendanceTest extends TestCase
         $this->type = EventType::create(['name' => 'Atelier', 'color' => '#7c3aed', 'position' => 0]);
     }
 
-    private function makeEvent(QrMode $mode = QrMode::Statique, ?Carbon $start = null, ?Carbon $end = null): Event
+    private function makeEvent(QrMode $mode = QrMode::Statique, ?Carbon $start = null, ?Carbon $end = null, array $overrides = []): Event
     {
-        return Event::create([
+        return Event::create(array_merge([
             'title' => 'Atelier Cybersécurité',
             'event_type_id' => $this->type->id,
             'starts_at' => $start ?? Carbon::now()->subHour(),
@@ -40,7 +42,7 @@ class PublicAttendanceTest extends TestCase
             'qr_mode' => $mode->value,
             'qr_secret' => Str::random(32),
             'public_slug' => 'atelier-'.Str::random(6),
-        ]);
+        ], $overrides));
     }
 
     private function ticket(Event $event): string
@@ -62,7 +64,7 @@ class PublicAttendanceTest extends TestCase
             'latitude' => 5.35,
             'longitude' => -4.01,
             'accuracy' => 12.5,
-            'signature' => 'data:image/png;base64,'.base64_encode('fakepngdata'),
+            'signature' => 'data:image/png;base64,'.self::TINY_PNG_B64,
             'ticket' => $this->ticket($event),
             'consent' => '1',
         ], $overrides);
@@ -158,7 +160,7 @@ class PublicAttendanceTest extends TestCase
         $event = $this->makeEvent();
         $ticket = $this->ticket($event);
 
-        for ($i = 0; $i < 15; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $this->postJson('/e/'.$event->public_slug.'/recognize', ['email' => 'x'.$i.'@acs.ci', 'ticket' => $ticket])
                 ->assertOk();
         }
@@ -216,6 +218,33 @@ class PublicAttendanceTest extends TestCase
 
         $this->postJson('/e/'.$event->public_slug, $this->payload($event, ['signature' => '']))
             ->assertStatus(422)->assertJsonValidationErrors(['signature']);
+    }
+
+    public function test_store_refuse_hors_perimetre_anti_fraude(): void
+    {
+        $event = $this->makeEvent(overrides: [
+            'geofence_latitude' => 5.35,
+            'geofence_longitude' => -4.01,
+            'geofence_radius_m' => 150,
+        ]);
+
+        // ~11 km plus loin (0.1° de latitude) : largement hors du rayon de 150 m.
+        $this->postJson('/e/'.$event->public_slug, $this->payload($event, ['latitude' => 5.45]))
+            ->assertStatus(403);
+        $this->assertDatabaseCount('attendances', 0);
+    }
+
+    public function test_store_accepte_dans_le_perimetre_anti_fraude(): void
+    {
+        $event = $this->makeEvent(overrides: [
+            'geofence_latitude' => 5.35,
+            'geofence_longitude' => -4.01,
+            'geofence_radius_m' => 150,
+        ]);
+
+        // Même point que le périmètre : à distance ~0, donc dans le rayon.
+        $this->postJson('/e/'.$event->public_slug, $this->payload($event))->assertOk();
+        $this->assertDatabaseCount('attendances', 1);
     }
 
     public function test_store_demande_confirmation_en_cas_de_chevauchement(): void

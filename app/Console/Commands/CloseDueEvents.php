@@ -9,6 +9,7 @@ use App\Models\Attendance;
 use App\Models\Event;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 
@@ -21,7 +22,7 @@ class CloseDueEvents extends Command
 {
     protected $signature = 'events:close-due';
 
-    protected $description = "Clôture les événements terminés et envoie les emails de confirmation.";
+    protected $description = 'Clôture les événements terminés et envoie les emails de confirmation.';
 
     public function handle(): int
     {
@@ -35,7 +36,24 @@ class CloseDueEvents extends Command
         $queued = 0;
 
         foreach ($due as $event) {
-            $event->update(['closed_at' => Carbon::now()]);
+            // `withoutOverlapping()` empêche déjà deux exécutions concurrentes de la
+            // commande, mais un verrou explicite protège aussi contre une exécution
+            // manuelle qui chevaucherait le scheduler (double clôture / double email).
+            $justClosed = DB::transaction(function () use ($event): bool {
+                $locked = Event::whereKey($event->id)->lockForUpdate()->first();
+                if ($locked === null || $locked->closed_at !== null) {
+                    return false;
+                }
+
+                $locked->update(['closed_at' => Carbon::now()]);
+
+                return true;
+            });
+
+            if (! $justClosed) {
+                continue;
+            }
+
             $closed++;
 
             $event->attendances()

@@ -174,4 +174,23 @@
             if (pop) { pop.hidden = true; searchInput.setAttribute('aria-expanded', 'false'); }
         }
     });
+
+    var geoBtn = $('#geo-use-current');
+    if (geoBtn) {
+        geoBtn.addEventListener('click', function () {
+            var status = $('#geo-status');
+            if (!navigator.geolocation) { status.textContent = 'Géolocalisation non disponible sur ce navigateur.'; return; }
+            geoBtn.disabled = true;
+            status.textContent = 'Localisation en cours…';
+            navigator.geolocation.getCurrentPosition(function (pos) {
+                $('#geo-lat').value = pos.coords.latitude.toFixed(7);
+                $('#geo-lon').value = pos.coords.longitude.toFixed(7);
+                status.textContent = 'Position récupérée (précision ' + Math.round(pos.coords.accuracy) + ' m).';
+                geoBtn.disabled = false;
+            }, function () {
+                status.textContent = "Position indisponible. Vérifiez l'autorisation de localisation du navigateur.";
+                geoBtn.disabled = false;
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        });
+    }
 })();

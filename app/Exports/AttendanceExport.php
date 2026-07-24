@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Exports;
 
+use App\Support\SpreadsheetSafety;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Concerns\FromArray;
 use Maatwebsite\Excel\Concerns\WithColumnFormatting;
@@ -46,13 +47,13 @@ final class AttendanceExport implements FromArray, WithColumnFormatting, WithEve
     /** @return list<mixed> */
     public function map($row): array
     {
-        return [
+        return SpreadsheetSafety::sanitizeRow([
             $row['last_name'], $row['first_name'], $row['email'], $row['phone'], $row['company'],
             $row['direction'], $row['service'], $row['position'], $row['time'], $row['left'] ?? '',
             $row['manual'] ? 'Manuelle' : 'QR',
             $row['recurrent'] ? 'Récurrent' : 'Nouveau',
             '', // colonne Signature : image insérée via AfterSheet, pas de texte
-        ];
+        ]);
     }
 
     /**
@@ -84,7 +85,7 @@ final class AttendanceExport implements FromArray, WithColumnFormatting, WithEve
 
                     $sheet->getRowDimension($rowNumber)->setRowHeight(40);
 
-                    $drawing = new Drawing();
+                    $drawing = new Drawing;
                     $drawing->setPath(Storage::disk('local')->path($path));
                     $drawing->setHeight(36);
                     $drawing->setOffsetX(4);

@@ -192,6 +192,7 @@
                 if (res.status === 200) { Flow.confirmed(res.data); return; }
                 if (res.status === 409 && res.data.overlap) { State.departConfirmed = false; Overlap.show(res.data.overlap); return; }
                 if (res.status === 419) { alert('Votre session de scan a expiré. Rescannez le QR affiché pour continuer.'); return; }
+                if (res.status === 403) { alert(res.data.message || 'Vous devez être sur place pour émarger.'); btn.disabled = false; return; }
                 if (res.status === 422) { Flow.expand(); Flow.markErrors(); btn.disabled = false; return; }
                 alert('Une erreur est survenue. Veuillez réessayer.');
                 btn.disabled = false;

@@ -13,6 +13,7 @@ use App\Services\Attendance\AttendanceInput;
 use App\Services\Attendance\SignatureStorage;
 use App\Services\AttendanceService;
 use App\Services\EventPresenceService;
+use App\Support\SpreadsheetSafety;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -61,12 +62,12 @@ class AttendanceController extends Controller
             ], ';');
 
             foreach ($rows as $r) {
-                fputcsv($out, [
+                fputcsv($out, SpreadsheetSafety::sanitizeRow([
                     $r['last_name'], $r['first_name'], $r['email'], $r['phone'], $r['company'],
                     $r['direction'], $r['service'], $r['position'], $r['time'], $r['left'] ?? '',
                     $r['manual'] ? 'Manuelle' : 'QR',
                     $r['recurrent'] ? 'Récurrent' : 'Nouveau',
-                ], ';');
+                ]), ';');
             }
             fclose($out);
         }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
@@ -228,7 +229,11 @@ class AttendanceController extends Controller
         return Storage::disk('local')->response(
             $attendance->signature_path,
             null,
-            ['Content-Type' => 'image/png', 'Cache-Control' => 'private, max-age=3600'],
+            [
+                'Content-Type' => 'image/png',
+                'Cache-Control' => 'private, max-age=3600',
+                'X-Content-Type-Options' => 'nosniff',
+            ],
         );
     }
 }

@@ -25,6 +25,11 @@ class UpdateEventRequest extends FormRequest
             'title' => ['required', 'string', 'max:150'],
             'event_type_id' => ['required', 'integer', 'exists:event_types,id'],
             'location' => ['nullable', 'string', 'max:190'],
+
+            // Périmètre anti-fraude (facultatif) : les trois champs vont ensemble.
+            'geofence_latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_with:geofence_longitude,geofence_radius_m'],
+            'geofence_longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_with:geofence_latitude,geofence_radius_m'],
+            'geofence_radius_m' => ['nullable', 'integer', 'min:10', 'max:5000', 'required_with:geofence_latitude,geofence_longitude'],
         ];
     }
 

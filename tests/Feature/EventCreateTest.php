@@ -6,6 +6,7 @@ namespace Tests\Feature;
 
 use App\Enums\PersonSource;
 use App\Models\Event;
+use App\Models\EventSeries;
 use App\Models\EventType;
 use App\Models\Person;
 use App\Models\User;
@@ -83,6 +84,36 @@ class EventCreateTest extends TestCase
         $this->assertSame($slugs->count(), $slugs->unique()->count());
     }
 
+    public function test_cree_un_evenement_avec_perimetre_anti_fraude(): void
+    {
+        $this->actingAs($this->user)->post(route('admin.events.store'), [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35',
+            'geofence_longitude' => '-4.01',
+            'geofence_radius_m' => '150',
+        ]);
+
+        $event = Event::firstOrFail();
+        $this->assertSame(5.35, $event->geofence_latitude);
+        $this->assertSame(-4.01, $event->geofence_longitude);
+        $this->assertSame(150, $event->geofence_radius_m);
+        $this->assertTrue($event->hasGeofence());
+    }
+
+    public function test_rejette_un_perimetre_partiellement_renseigne(): void
+    {
+        $this->actingAs($this->user)->post(route('admin.events.store'), [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35',
+        ])->assertSessionHasErrors(['geofence_longitude', 'geofence_radius_m']);
+
+        $this->assertSame(0, Event::count());
+    }
+
     public function test_rejette_une_fin_avant_le_debut(): void
     {
         $this->actingAs($this->user)->post(route('admin.events.store'), [
@@ -131,7 +162,7 @@ class EventCreateTest extends TestCase
         $event = Event::firstOrFail();
         $this->assertNull($event->event_series_id);
         $this->assertNull($event->series_position);
-        $this->assertSame(0, \App\Models\EventSeries::count());
+        $this->assertSame(0, EventSeries::count());
     }
 
     public function test_invitations_propagees_a_toutes_les_seances(): void

@@ -78,14 +78,14 @@
         </form>
     </div>
 
-    {{-- Modifier (titre / type / lieu) --}}
+    {{-- Modifier (titre / type / lieu / périmètre) --}}
     <div class="modal" id="m-edit" role="dialog" aria-modal="true" aria-labelledby="ed-t" hidden>
         <div class="modal__hd"><h3 id="ed-t">Modifier l'événement</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form method="POST" action="{{ route('admin.events.update', $event) }}">
             @csrf
             @method('PATCH')
             <div class="modal__body">
-                <p>Corrige le titre, le type ou le lieu (ex. faute de frappe). Les horaires se changent via « Reporter », le mode QR est verrouillé dès la première présence.</p>
+                <p>Corrige le titre, le type, le lieu ou le périmètre anti-fraude (ex. faute de frappe). Les horaires se changent via « Reporter », le mode QR est verrouillé dès la première présence.</p>
                 <div class="field {{ $errors->has('title') ? 'invalid' : '' }}">
                     <label for="ed-title">Titre <span class="req">*</span></label>
                     <input class="control" id="ed-title" name="title" value="{{ old('title', $event->title) }}" required>
@@ -103,6 +103,33 @@
                     </div>
                 </div>
                 <div class="field"><label for="ed-lieu">Lieu <span class="opt">(facultatif)</span></label><input class="control" id="ed-lieu" name="location" value="{{ old('location', $event->location) }}"></div>
+
+                <div class="field" style="margin-top:6px">
+                    <label>Périmètre anti-fraude <span class="opt">(facultatif)</span></label>
+                    <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué. Videz les trois champs pour désactiver.</div>
+                    <div class="grid3" style="margin-top:6px">
+                        <div class="field {{ $errors->has('geofence_latitude') ? 'invalid' : '' }}">
+                            <label for="ed-geo-lat">Latitude</label>
+                            <input class="control" id="ed-geo-lat" name="geofence_latitude" type="number" step="any" min="-90" max="90" value="{{ old('geofence_latitude', $event->geofence_latitude) }}">
+                            <div class="err-msg">{{ $errors->first('geofence_latitude') }}</div>
+                        </div>
+                        <div class="field {{ $errors->has('geofence_longitude') ? 'invalid' : '' }}">
+                            <label for="ed-geo-lon">Longitude</label>
+                            <input class="control" id="ed-geo-lon" name="geofence_longitude" type="number" step="any" min="-180" max="180" value="{{ old('geofence_longitude', $event->geofence_longitude) }}">
+                            <div class="err-msg">{{ $errors->first('geofence_longitude') }}</div>
+                        </div>
+                        <div class="field {{ $errors->has('geofence_radius_m') ? 'invalid' : '' }}">
+                            <label for="ed-geo-radius">Rayon (m)</label>
+                            <input class="control" id="ed-geo-radius" name="geofence_radius_m" type="number" step="1" min="10" max="5000" value="{{ old('geofence_radius_m', $event->geofence_radius_m) }}">
+                            <div class="err-msg">{{ $errors->first('geofence_radius_m') }}</div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn--ghost btn--sm" id="ed-geo-use-current" style="margin-top:6px">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><circle cx="12" cy="10" r="2.6"/></svg>
+                        Utiliser ma position actuelle
+                    </button>
+                    <div class="help" id="ed-geo-status"></div>
+                </div>
             </div>
             <div class="modal__foot"><button type="button" class="btn btn--ghost" onclick="Detail.close()">Annuler</button><button type="submit" class="btn btn--primary">Enregistrer</button></div>
         </form>

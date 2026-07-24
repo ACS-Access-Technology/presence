@@ -87,7 +87,7 @@ class PublicAttendanceController extends Controller
         }
 
         $throttleKey = 'attendance-recognize:'.$event->id.'|'.$request->ip();
-        if (RateLimiter::tooManyAttempts($throttleKey, 15)) {
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             return response()->json(['message' => 'Trop de tentatives. Réessayez dans une minute.'], 429);
         }
         RateLimiter::hit($throttleKey, 60);
@@ -121,10 +121,42 @@ class PublicAttendanceController extends Controller
             return response()->json(['message' => "L'émargement n'est pas ouvert."], 422);
         }
 
-        if (! $this->tokens->verifyScanTicket($event, (string) $request->string('ticket'))) {
+        // Limite le débit par IP+événement : un ticket seul ne suffit pas à brider
+        // un flood (il n'est lié à personne), donc on borne aussi la fréquence.
+        $throttleKey = 'attendance-store:'.$event->id.'|'.$request->ip();
+        if (RateLimiter::tooManyAttempts($throttleKey, 10)) {
+            return response()->json(['message' => 'Trop de tentatives. Réessayez dans une minute.'], 429);
+        }
+        RateLimiter::hit($throttleKey, 60);
+
+        $ticket = (string) $request->string('ticket');
+        if (! $this->tokens->verifyScanTicket($event, $ticket)) {
             return response()->json([
                 'message' => 'Votre session de scan a expiré. Rescannez le QR pour continuer.',
             ], 419);
+        }
+
+        // Un ticket de scan n'est pas lié à un acteur : sans ceci, il reste
+        // rejouable indéfiniment pendant ses 5 minutes de validité et permettrait
+        // à lui seul un flood de présences. Marge de 5 pour tolérer les retentatives
+        // réseau légitimes (formulaire soumis deux fois par erreur).
+        $ticketUsageKey = 'attendance-store-ticket:'.hash('sha256', $ticket);
+        if (RateLimiter::tooManyAttempts($ticketUsageKey, 5)) {
+            return response()->json([
+                'message' => 'Votre session de scan a expiré. Rescannez le QR pour continuer.',
+            ], 419);
+        }
+        RateLimiter::hit($ticketUsageKey, QrTokenService::SCAN_TICKET_TTL);
+
+        // Périmètre anti-fraude (facultatif, configuré par l'organisateur) : vérifié
+        // SERVEUR à partir de la position transmise (jamais confiance au client seul,
+        // mais sans périmètre configuré, isWithinGeofence() est toujours vraie).
+        $latitude = (float) $request->float('latitude');
+        $longitude = (float) $request->float('longitude');
+        if (! $event->isWithinGeofence($latitude, $longitude)) {
+            return response()->json([
+                'message' => "Vous semblez trop loin du lieu de l'événement pour émarger. Rapprochez-vous et réessayez.",
+            ], 403);
         }
 
         // Recalcul serveur du chevauchement (ne jamais faire confiance au client).
@@ -153,8 +185,8 @@ class PublicAttendanceController extends Controller
             service: $request->filled('service') ? (string) $request->string('service') : null,
             position: (string) $request->string('position'),
             signaturePath: $signaturePath,
-            latitude: (float) $request->float('latitude'),
-            longitude: (float) $request->float('longitude'),
+            latitude: $latitude,
+            longitude: $longitude,
             accuracy: $request->filled('accuracy') ? (float) $request->float('accuracy') : null,
         );
 

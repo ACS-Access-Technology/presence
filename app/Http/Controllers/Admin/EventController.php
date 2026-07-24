@@ -109,6 +109,9 @@ class EventController extends Controller
                     'starts_at' => Carbon::parse($seance['date'].' '.$seance['start']),
                     'ends_at' => Carbon::parse($seance['date'].' '.$seance['end']),
                     'location' => $data['location'] ?? null,
+                    'geofence_latitude' => $data['geofence_latitude'] ?? null,
+                    'geofence_longitude' => $data['geofence_longitude'] ?? null,
+                    'geofence_radius_m' => $data['geofence_radius_m'] ?? null,
                     'qr_mode' => $data['qr_mode'],
                     'qr_secret' => Str::random(32),
                     'public_slug' => $this->uniqueSlug($data['title']),
@@ -137,7 +140,7 @@ class EventController extends Controller
         return redirect()->route('admin.events.show', $firstEvent)->with('status', $message);
     }
 
-    /** Corrige titre / type / lieu (ex. faute de frappe) — n'affecte ni les horaires ni le mode QR. */
+    /** Corrige titre / type / lieu / périmètre anti-fraude — n'affecte ni les horaires ni le mode QR. */
     public function update(UpdateEventRequest $request, Event $event): RedirectResponse
     {
         $event->update($request->validated());
@@ -145,15 +148,19 @@ class EventController extends Controller
         return back()->with('status', 'Événement modifié.');
     }
 
-    /** Slug public unique, dérivé du titre (retry avec suffixe aléatoire en cas de collision). */
+    /**
+     * Slug public dérivé du titre + suffixe aléatoire systématique : la géoloc
+     * n'étant pas un vrai geofence, un slug prévisible (juste le titre) permettrait
+     * à un tiers de deviner l'URL d'un événement statique et d'émarger à distance
+     * sans jamais avoir scanné le QR. Le suffixe élève ce coût.
+     */
     private function uniqueSlug(string $title): string
     {
         $base = Str::slug($title) ?: 'evenement';
-        $slug = $base;
 
-        while (Event::where('public_slug', $slug)->exists()) {
-            $slug = $base.'-'.Str::lower(Str::random(4));
-        }
+        do {
+            $slug = $base.'-'.Str::lower(Str::random(6));
+        } while (Event::where('public_slug', $slug)->exists());
 
         return $slug;
     }
