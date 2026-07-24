@@ -103,8 +103,8 @@ jobs:
             chmod -R 775 storage bootstrap/cache
             echo "✓ Deploy terminé"
 
-            # NOTE : le cron du worker de file d'attente (emails) NE PEUT PAS
-            # être scriptée ici — `crontab` est absent du PATH SSH sur cet
-            # hébergement Hostinger (mutualisé). Le cron doit être créé une
-            # fois, à la main, via hPanel → Avancé → Cron Jobs. Voir
+            # NOTE : le cron du planificateur (clôture + emails, `schedule:run`)
+            # NE PEUT PAS être scriptée ici — `crontab` est absent du PATH SSH
+            # sur cet hébergement Hostinger (mutualisé). Le cron doit être créé
+            # une fois, à la main, via hPanel → Avancé → Cron Jobs. Voir
             # docs/gestion-projet/deploiement-hostinger.md.
