@@ -259,7 +259,8 @@
         var map = { last_name: p.last_name, first_name: p.first_name, phone: p.phone, company: p.company, direction: p.direction, service: p.service, position: p.position };
         Object.keys(map).forEach(function (id) { if (map[id]) $('#' + id).value = map[id]; });
     }
-    function api(url, payload) {
+    function api(url, payload, attempt) {
+        attempt = attempt || 0;
         var body = new FormData();
         Object.keys(payload).forEach(function (k) { if (payload[k] !== undefined && payload[k] !== null) body.append(k, payload[k]); });
         return fetch(url, {
@@ -269,7 +270,16 @@
         }).then(function (r) {
             return r.json().then(function (data) { return { status: r.status, ok: r.ok, data: data }; })
                 .catch(function () { return { status: r.status, ok: r.ok, data: {} }; });
-        }).catch(function () { return { status: 0, ok: false, data: {} }; });
+        }).catch(function () {
+            // Coupure réseau brève (wifi de salle instable) : quelques essais avant
+            // d'abandonner. Le ticket de scan expire à 5 min, donc pas de file
+            // d'attente longue durée — juste tolérer un accroc de quelques secondes.
+            if (attempt < 2) {
+                return new Promise(function (resolve) { setTimeout(resolve, 1500 * (attempt + 1)); })
+                    .then(function () { return api(url, payload, attempt + 1); });
+            }
+            return { status: 0, ok: false, data: {} };
+        });
     }
 
     /* ------------------------- Câblage ------------------------- */

@@ -1,5 +1,10 @@
 @extends('layouts.public')
 
+@push('head')
+    <link rel="manifest" href="{{ route('public.attendance.manifest', ['event' => $event->public_slug]) }}">
+    <meta name="theme-color" content="#1e2a78">
+@endpush
+
 @section('content')
     {{-- ÉCRAN : identification par email --}}
     <section class="screen" id="s-email">
@@ -214,4 +219,9 @@
     };
 </script>
 <script src="{{ versioned_asset('js/participant.js') }}"></script>
+<script>
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
+    }
+</script>
 @endpush

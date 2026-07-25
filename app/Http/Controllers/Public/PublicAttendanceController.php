@@ -62,6 +62,28 @@ class PublicAttendanceController extends Controller
     }
 
     /**
+     * Manifeste PWA propre à CET événement (start_url pointe sur sa propre page) :
+     * utile pour épingler un poste d'accueil/tablette dédié sur l'écran d'accueil
+     * sans chrome navigateur, sans app native.
+     */
+    public function manifest(Event $event): JsonResponse
+    {
+        return response()->json([
+            'name' => $event->title.' — Presence',
+            'short_name' => 'Presence',
+            'start_url' => route('public.attendance.show', ['event' => $event->public_slug]),
+            'scope' => route('public.attendance.show', ['event' => $event->public_slug]),
+            'display' => 'standalone',
+            'background_color' => '#eef0f4',
+            'theme_color' => '#1e2a78',
+            'lang' => 'fr',
+            'icons' => [
+                ['src' => asset('assets/logo-acs-groupe.png'), 'sizes' => '1600x1134', 'type' => 'image/png', 'purpose' => 'any'],
+            ],
+        ], 200, ['Content-Type' => 'application/manifest+json']);
+    }
+
+    /**
      * Reconnaissance d'un visiteur par email + détection de chevauchement.
      *
      * Protégé par le ticket de scan (émis uniquement par show(), donc requiert

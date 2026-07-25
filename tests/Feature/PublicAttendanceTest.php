@@ -77,6 +77,18 @@ class PublicAttendanceTest extends TestCase
         $this->get('/e/'.$event->public_slug)->assertOk()->assertSee('Votre email');
     }
 
+    public function test_manifest_pwa_pointe_sur_sa_propre_page(): void
+    {
+        $event = $this->makeEvent();
+
+        $response = $this->get('/e/'.$event->public_slug.'/manifest.json');
+
+        $response->assertOk();
+        $this->assertStringContainsString('application/manifest+json', $response->headers->get('Content-Type'));
+        $response->assertJsonPath('start_url', route('public.attendance.show', ['event' => $event->public_slug]));
+        $response->assertJsonPath('name', $event->title.' — Presence');
+    }
+
     public function test_show_hors_fenetre_est_bloque(): void
     {
         $event = $this->makeEvent(QrMode::Statique, Carbon::now()->addDay(), Carbon::now()->addDay()->addHours(2));

@@ -40,6 +40,7 @@ Route::get('/', static fn () => auth()->check()
 */
 Route::prefix('e')->name('public.attendance.')->group(function (): void {
     Route::get('/{event:public_slug}', [PublicAttendanceController::class, 'show'])->name('show');
+    Route::get('/{event:public_slug}/manifest.json', [PublicAttendanceController::class, 'manifest'])->name('manifest');
     Route::post('/{event:public_slug}/recognize', [PublicAttendanceController::class, 'recognize'])->name('recognize');
     Route::post('/{event:public_slug}', [PublicAttendanceController::class, 'store'])->name('store');
 });
