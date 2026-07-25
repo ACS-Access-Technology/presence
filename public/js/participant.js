@@ -119,7 +119,13 @@
             field.classList.remove('invalid'); input.removeAttribute('aria-invalid');
 
             api(CFG.urls.recognize, { email: email, ticket: CFG.ticket }).then(function (res) {
-                if (!res.ok) { field.classList.add('invalid'); return; }
+                if (!res.ok) {
+                    // Échec de /recognize (ticket expiré, événement fermé/supprimé,
+                    // réseau…) : rien à voir avec le format de l'email saisi, donc
+                    // on ne marque pas le champ invalide — message dédié à la place.
+                    alert((res.data && res.data.message) || 'Une erreur est survenue. Rechargez la page et réessayez.');
+                    return;
+                }
                 var data = res.data;
                 if (data.overlap) { Overlap.show(data.overlap); return; }
                 Flow.proceed(email, data, false);
