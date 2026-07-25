@@ -245,7 +245,17 @@
                 if (res.status === 409 && res.data.overlap) { State.departConfirmed = false; Overlap.show(res.data.overlap); return; }
                 if (res.status === 419) { alert('Votre session de scan a expiré. Rescannez le QR affiché pour continuer.'); return; }
                 if (res.status === 403) { alert(res.data.message || 'Vous devez être sur place pour émarger.'); btn.disabled = false; return; }
-                if (res.status === 422) { Flow.expand(); Flow.markErrors(); btn.disabled = false; return; }
+                if (res.status === 422) {
+                    // markErrors() ne couvre que les champs texte requis (nom,
+                    // téléphone…) : une erreur sur signature/consentement/géoloc/
+                    // ticket serait sinon totalement silencieuse pour le visiteur.
+                    var errors = (res.data && res.data.errors) || {};
+                    var unhandled = Object.keys(errors).filter(function (k) { return REQUIRED.indexOf(k) === -1; });
+                    if (unhandled.length) {
+                        alert(errors[unhandled[0]][0] || (res.data && res.data.message) || 'Certaines informations sont invalides. Réessayez.');
+                    }
+                    Flow.expand(); Flow.markErrors(); btn.disabled = false; return;
+                }
                 alert('Une erreur est survenue. Veuillez réessayer.');
                 btn.disabled = false;
             });

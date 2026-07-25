@@ -128,6 +128,7 @@
             var r = this.find(id); if (!r) return;
             post(r.undo_url).then(function (res) {
                 if (res.ok) { r.left = null; Detail.render(); toast('Départ annulé'); }
+                else { toast('Action impossible'); }
             });
         },
         signature: function (id) {

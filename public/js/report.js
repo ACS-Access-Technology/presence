@@ -106,11 +106,20 @@
         },
         removeDoc: function (id) {
             var d = this.docs.filter(function (x) { return x.id === id; })[0]; if (!d) return;
-            del(d.delete_url).then(function () { Report.docs = Report.docs.filter(function (x) { return x.id !== id; }); Report.renderDocs(); toast('Document supprimé'); });
+            del(d.delete_url).then(function (res) {
+                // del() se résout toujours (jamais de rejet), même en échec réseau
+                // ou serveur : sans ce contrôle, "Document supprimé" s'affichait
+                // et la ligne disparaissait localement même si rien n'était supprimé.
+                if (!res.ok) { toast((res.data && res.data.message) || 'Suppression impossible.'); return; }
+                Report.docs = Report.docs.filter(function (x) { return x.id !== id; }); Report.renderDocs(); toast('Document supprimé');
+            });
         },
         removePhoto: function (id) {
             var p = this.photos.filter(function (x) { return x.id === id; })[0]; if (!p) return;
-            del(p.delete_url).then(function () { Report.photos = Report.photos.filter(function (x) { return x.id !== id; }); Report.renderPhotos(); toast('Photo supprimée'); });
+            del(p.delete_url).then(function (res) {
+                if (!res.ok) { toast((res.data && res.data.message) || 'Suppression impossible.'); return; }
+                Report.photos = Report.photos.filter(function (x) { return x.id !== id; }); Report.renderPhotos(); toast('Photo supprimée');
+            });
         }
     };
 
