@@ -55,6 +55,7 @@ class ParticipantTest extends TestCase
         $this->actingAs(User::factory()->create())->get(route('admin.participants.index'))
             ->assertOk()
             ->assertSee('Awa Koné')
+            ->assertSee('participant-sheet', false)
             ->assertDontSee('Sans Fantôme');
     }
 
@@ -74,6 +75,7 @@ class ParticipantTest extends TestCase
             ->assertSee('Awa Koné')
             ->assertSee('Atelier A')
             ->assertSee('Atelier B')
+            ->assertSee('participant-detail', false)
             ->assertSee('Événements'); // libellé KPI
     }
 }

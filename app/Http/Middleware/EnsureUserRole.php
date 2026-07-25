@@ -11,8 +11,12 @@ use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * Restreint l'accès à un ou plusieurs rôles. Ex. `->middleware('role:admin')`
- * pour les Paramètres (types, comptes, branding), réservés aux administrateurs.
+ * Restreint l'accès à un ou plusieurs rôles. Ex.
+ * `->middleware('role:admin_filiale,super_admin')` pour les Paramètres, ou
+ * `->middleware('role:super_admin')` pour la gestion des filiales (Lot D).
+ *
+ * ⚠️ Filtre uniquement par RÔLE ; le cloisonnement par FILIALE est assuré
+ * séparément par {@see ApplyFilialeScope} (les deux sont complémentaires).
  */
 class EnsureUserRole
 {
@@ -31,7 +35,7 @@ class EnsureUserRole
         );
 
         if (! in_array($user->role, $allowed, true)) {
-            abort(403, "Accès réservé : rôle insuffisant.");
+            abort(403, 'Accès réservé : rôle insuffisant.');
         }
 
         return $next($request);

@@ -19,7 +19,7 @@ final class QrImageService
     public function svg(string $data, int $size = 320): string
     {
         return (new Builder(
-            writer: new SvgWriter(),
+            writer: new SvgWriter,
             data: $data,
             encoding: new Encoding('UTF-8'),
             errorCorrectionLevel: ErrorCorrectionLevel::Medium,

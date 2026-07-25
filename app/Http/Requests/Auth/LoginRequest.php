@@ -58,6 +58,20 @@ class LoginRequest extends FormRequest
             ]);
         }
 
+        // Filiale désactivée = ses comptes ne peuvent plus se connecter (Lot D).
+        // Le SuperAdmin (sans filiale) n'est jamais concerné. Message générique
+        // (on ne révèle pas la cause précise), même politique que le compte inactif.
+        $user = Auth::user();
+        if ($user !== null && ! $user->isSuperAdmin()
+            && $user->filiale !== null && ! $user->filiale->is_active) {
+            Auth::logout();
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'Ces identifiants ne correspondent à aucun compte actif.',
+            ]);
+        }
+
         RateLimiter::clear($this->throttleKey());
     }
 

@@ -104,9 +104,23 @@
                 </div>
                 <div class="field"><label for="ed-lieu">Lieu <span class="opt">(facultatif)</span></label><input class="control" id="ed-lieu" name="location" value="{{ old('location', $event->location) }}"></div>
 
+                <label style="display:flex;gap:10px;align-items:flex-start;margin-top:6px">
+                    <input type="hidden" name="grace_check_in_enabled" value="0">
+                    <input type="checkbox" name="grace_check_in_enabled" value="1" @checked(old('grace_check_in_enabled', $event->grace_check_in_enabled)) style="width:20px;height:20px;accent-color:var(--accent);margin-top:1px">
+                    <span>
+                        <strong>Laisser le QR fonctionnel 15 minutes après la clôture</strong>
+                        <span class="help" style="display:block;margin-top:2px">Le visiteur peut encore émarger jusqu'à 15 min après l'heure de fin officielle.</span>
+                    </span>
+                </label>
+
                 <div class="field" style="margin-top:6px">
-                    <label>Périmètre anti-fraude <span class="opt">(facultatif)</span></label>
-                    <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué. Videz les trois champs pour désactiver.</div>
+                    @if($event->qr_mode === App\Enums\QrMode::Statique)
+                        <label>Périmètre anti-fraude <span class="opt"><strong>obligatoire en QR statique</strong></span></label>
+                        <div class="help">Cet événement est en QR statique (photographiable) : le périmètre est <strong>exigé</strong> — la géolocalisation est la seule barrière contre un émargement à distance. Les trois champs vont ensemble.</div>
+                    @else
+                        <label>Périmètre anti-fraude <span class="opt">(facultatif)</span></label>
+                        <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué. Videz les trois champs pour désactiver.</div>
+                    @endif
                     <div class="grid3" style="margin-top:6px">
                         <div class="field {{ $errors->has('geofence_latitude') ? 'invalid' : '' }}">
                             <label for="ed-geo-lat">Latitude</label>
@@ -170,6 +184,61 @@
             <div class="modal__foot"><button type="button" class="btn btn--ghost" onclick="Detail.close()">Annuler</button><button type="submit" class="btn btn--primary">Reporter</button></div>
         </form>
     </div>
+
+    {{-- Transférer vers une filiale (SuperAdmin uniquement, T-ME-14) --}}
+    @if (! is_null($transferFiliales))
+    <div class="modal modal--lg" id="m-transfer" role="dialog" aria-modal="true" aria-labelledby="tr-t" hidden>
+        <div class="modal__hd"><h3 id="tr-t">Transférer vers une filiale</h3><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <form method="POST" action="{{ route('admin.events.transfer', $event) }}">
+            @csrf
+            <div class="modal__body">
+                <p>Déplace cet événement — <strong>et tout ce qui y est rattaché</strong> (présences, invitations, compte-rendu, documents, photos) — vers une autre filiale de la holding. Rien n'est perdu.</p>
+
+                @if ($transferFiliales === [])
+                    <div class="notice" style="margin-top:8px">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+                        <span>Aucune autre filiale n'existe. Créez une filiale avant de pouvoir transférer un événement.</span>
+                    </div>
+                @else
+                    <div class="field">
+                        <label for="tr-filiale">Filiale de destination <span class="req">*</span></label>
+                        <select class="control" id="tr-filiale" name="filiale_id" required>
+                            @foreach ($transferFiliales as $f)
+                                <option value="{{ $f['id'] }}">{{ $f['name'] }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label>Type d'événement dans la filiale cible <span class="req">*</span></label>
+                        <div class="help">Les types sont propres à chaque filiale : l'ancien type ne s'y applique pas. Choisissez le type correspondant dans la filiale de destination.</div>
+                        <div class="typepick" id="tr-type-wrap" role="radiogroup" aria-label="Type d'événement dans la filiale cible" style="margin-top:6px"></div>
+                    </div>
+
+                    @if ($event->event_series_id !== null)
+                        <div class="field">
+                            <label>Portée du transfert <span class="req">*</span></label>
+                            <div class="help">Cet événement fait partie d'une série.</div>
+                            <label style="display:block;margin-top:6px"><input type="radio" name="scope" value="seance" checked> Cette séance uniquement <span class="mut">(elle sera détachée de la série)</span></label>
+                            <label style="display:block"><input type="radio" name="scope" value="series"> Toute la série (toutes les séances)</label>
+                        </div>
+                    @else
+                        <input type="hidden" name="scope" value="seance">
+                    @endif
+
+                    @error('event_type_id')<div class="err-msg" style="display:block">{{ $message }}</div>@enderror
+                    @error('filiale_id')<div class="err-msg" style="display:block">{{ $message }}</div>@enderror
+                @endif
+            </div>
+            <div class="modal__foot">
+                <button type="button" class="btn btn--ghost" onclick="Detail.close()">Annuler</button>
+                @if ($transferFiliales !== [])
+                    <button type="submit" class="btn btn--primary" id="tr-submit">Transférer</button>
+                @endif
+            </div>
+        </form>
+    </div>
+    @endif
 
     {{-- Annuler l'événement --}}
     <div class="modal" id="m-cancel" role="dialog" aria-modal="true" aria-labelledby="cn-t" hidden>

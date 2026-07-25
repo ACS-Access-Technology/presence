@@ -5,9 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Projection QR — {{ $event->title }}</title>
     <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
+    @if ($branding->accentColor)
+        <style>
+            :root{
+                --accent: {{ $branding->accentColor }};
+                --accent-soft: color-mix(in srgb, {{ $branding->accentColor }} 12%, #fff);
+            }
+        </style>
+    @endif
     <style>
         body{min-height:100vh;display:grid;place-items:center;padding:24px}
         .proj{text-align:center;max-width:520px}
+        .proj__logo{height:44px;width:auto;margin:0 auto 16px;display:block;object-fit:contain}
         .proj h1{font-size:1.6rem;font-weight:800;margin:0 0 4px}
         .proj .meta{color:var(--muted);margin-bottom:22px}
         .qrbox{background:var(--surface);border:1px solid var(--border);border-radius:24px;box-shadow:var(--sh-3);padding:26px;display:inline-block}
@@ -21,6 +30,7 @@
     {{-- NOTE : habillage minimal fonctionnel ; l'écran de projection fidèle
          (dashboard.html) sera intégré ultérieurement. --}}
     <div class="proj">
+        <img class="proj__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
         <h1>{{ $event->title }}</h1>
         <div class="meta">{{ $event->starts_at->translatedFormat('j M Y · H:i') }}@if($event->location) · {{ $event->location }}@endif</div>
         <div class="qrbox"><img id="qr" alt="QR d'émargement"></div>

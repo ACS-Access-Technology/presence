@@ -47,6 +47,22 @@
         </div>
         <div class="pf-empty" id="p-noresult" hidden><h3>Aucun participant ne correspond</h3></div>
     @endif
+
+    <div class="participant-sheet" id="participant-sheet" hidden>
+        <button class="participant-sheet__backdrop" type="button" aria-label="Fermer la fiche"></button>
+        <section class="participant-sheet__panel" role="dialog" aria-modal="true" aria-labelledby="participant-sheet-title">
+            <div class="participant-sheet__head">
+                <span class="participant-sheet__handle" aria-hidden="true"></span>
+                <h2 id="participant-sheet-title">Fiche participant</h2>
+                <button class="participant-sheet__close" type="button" aria-label="Fermer la fiche">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6 6 18"/></svg>
+                </button>
+            </div>
+            <div class="participant-sheet__body" id="participant-sheet-body">
+                <div class="participant-sheet__loading">Chargement de la fiche…</div>
+            </div>
+        </section>
+    </div>
 @endsection
 
 @push('scripts')

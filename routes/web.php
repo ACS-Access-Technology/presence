@@ -8,7 +8,10 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
 use App\Http\Controllers\Admin\EventLifecycleController;
 use App\Http\Controllers\Admin\EventQrController;
+use App\Http\Controllers\Admin\EventTransferController;
 use App\Http\Controllers\Admin\EventTypeController;
+use App\Http\Controllers\Admin\FilialeContextController;
+use App\Http\Controllers\Admin\FilialeController;
 use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\PersonSearchController;
 use App\Http\Controllers\Admin\PortfolioController;
@@ -74,9 +77,14 @@ Route::post('/deconnexion', [LoginController::class, 'destroy'])
 |--------------------------------------------------------------------------
 | Tableau de bord (authentifié)
 |--------------------------------------------------------------------------
-| Les Paramètres (types, comptes, branding) seront réservés à `role:admin`.
+| Les Paramètres (types, comptes, branding) sont réservés aux administrateurs
+| (AdminFiliale, scopé sa filiale ; SuperAdmin, global).
+|
+| `filiale.scope` active le cloisonnement par filiale pour TOUTES les routes
+| admin (arbitrage Q-ME-3). C'est le seul point d'activation : le cron et la
+| page publique `/e/{slug}`, hors de ce groupe, ne sont jamais scopés (RME-2).
 */
-Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): void {
+Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')->name('admin.')->group(function (): void {
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
     // Compte personnel (self-service, tout rôle) : changement de mot de passe.
@@ -128,8 +136,11 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): v
         ->scopeBindings()->group(function (): void {
             Route::post('/', [ReportController::class, 'saveText'])->name('save');
             Route::post('/documents', [ReportController::class, 'uploadDocuments'])->name('documents.store');
+            // Service des médias depuis le disque PRIVÉ (jamais d'URL publique devinable).
+            Route::get('/documents/{document}', [ReportController::class, 'showDocument'])->name('documents.show');
             Route::delete('/documents/{document}', [ReportController::class, 'destroyDocument'])->name('documents.destroy');
             Route::post('/photos', [ReportController::class, 'uploadPhotos'])->name('photos.store');
+            Route::get('/photos/{photo}', [ReportController::class, 'showPhoto'])->name('photos.show');
             Route::delete('/photos/{photo}', [ReportController::class, 'destroyPhoto'])->name('photos.destroy');
         });
 
@@ -138,16 +149,39 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function (): v
     Route::get('/events/{event}/qr/current', [EventQrController::class, 'current'])->name('events.qr.current');
     Route::get('/events/{event}/qr/print', [EventQrController::class, 'print'])->name('events.qr.print');
 
-    // Paramètres (administrateurs uniquement).
-    Route::middleware('role:admin')->prefix('settings')->name('settings.')->group(function (): void {
+    // Paramètres (administrateurs : AdminFiliale scopé à sa filiale, SuperAdmin
+    // global/selon le contexte). Le cloisonnement par filiale des types, comptes
+    // et branding est désormais implémenté et testé (Lots D/F) :
+    //   - EventType : global scope de filiale → binding {type} 404 cross-filiale ;
+    //   - User : UserPolicy (manage/reassign) + scoping explicite → 403 IDOR,
+    //            rôle super_admin non attribuable (anti-escalade).
+    Route::middleware('role:admin_filiale,super_admin')->prefix('settings')->name('settings.')->group(function (): void {
         Route::get('/', [SettingsController::class, 'index'])->name('index');
         Route::post('/branding', [SettingsController::class, 'saveBranding'])->name('branding');
+
         Route::post('/types', [EventTypeController::class, 'store'])->name('types.store');
         Route::patch('/types/{type}', [EventTypeController::class, 'update'])->name('types.update');
         Route::delete('/types/{type}', [EventTypeController::class, 'destroy'])->name('types.destroy');
+
         Route::post('/accounts', [AccountController::class, 'store'])->name('accounts.store');
         Route::patch('/accounts/{account}', [AccountController::class, 'update'])->name('accounts.update');
         Route::post('/accounts/{account}/reset-password', [AccountController::class, 'resetPassword'])->name('accounts.reset');
         Route::delete('/accounts/{account}', [AccountController::class, 'destroy'])->name('accounts.destroy');
+    });
+
+    // Surfaces réservées au SuperAdmin : gestion des filiales de la holding,
+    // réassignation d'un compte entre filiales, sélecteur de contexte filiale.
+    Route::middleware('role:super_admin')->group(function (): void {
+        Route::get('/filiales', [FilialeController::class, 'index'])->name('filiales.index');
+        Route::post('/filiales', [FilialeController::class, 'store'])->name('filiales.store');
+        Route::patch('/filiales/{filiale}', [FilialeController::class, 'update'])->name('filiales.update');
+        Route::patch('/filiales/{filiale}/toggle', [FilialeController::class, 'toggle'])->name('filiales.toggle');
+
+        Route::post('/settings/accounts/{account}/reassign', [AccountController::class, 'reassign'])->name('settings.accounts.reassign');
+
+        // Transfert d'un événement (ou de sa série) vers une autre filiale (T-ME-14).
+        Route::post('/events/{event}/transfer', [EventTransferController::class, 'transfer'])->name('events.transfer');
+
+        Route::post('/contexte-filiale', [FilialeContextController::class, 'update'])->name('filiale-context.update');
     });
 });

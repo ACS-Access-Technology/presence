@@ -268,6 +268,41 @@ class EventDashboardTest extends TestCase
         ])->assertStatus(422)->assertJsonValidationErrors('signature');
     }
 
+    public function test_presence_manuelle_demande_confirmation_en_cas_de_chevauchement(): void
+    {
+        // Un organisateur ne doit pas pouvoir ajouter manuellement une personne déjà
+        // active sur un autre événement sans confirmer son départ (même garde que le
+        // flux public), sinon on crée une présence simultanée à deux activités.
+        $other = $this->liveEvent();
+        $current = Event::create([
+            'title' => 'Réunion Comité', 'event_type_id' => $this->type->id,
+            'starts_at' => Carbon::now()->subMinutes(30), 'ends_at' => Carbon::now()->addHours(2),
+            'location' => 'Salle Iroko', 'qr_mode' => QrMode::Tournant->value,
+            'qr_secret' => Str::random(32), 'public_slug' => 'reunion-comite',
+        ]);
+        $this->attend($other, 'k.ndri@acs.ci', 'Kouassi', "N'Dri");
+
+        $base = [
+            'email' => 'k.ndri@acs.ci', 'last_name' => "N'Dri", 'first_name' => 'Kouassi',
+            'company' => 'ACS', 'direction' => 'SI', 'position' => 'Admin', 'manual_confirmed' => '1',
+            'signature' => 'data:image/png;base64,'.self::TINY_PNG_B64,
+        ];
+
+        // Sans confirmation → 409, aucune présence créée sur l'événement courant.
+        $this->actingAs($this->user)
+            ->postJson(route('admin.events.attendances.manual', $current), $base)
+            ->assertStatus(409)
+            ->assertJsonPath('overlap.event_title', $other->title);
+        $this->assertDatabaseCount('attendances', 1);
+
+        // Avec confirmation → présence créée + départ enregistré sur l'autre.
+        $this->actingAs($this->user)
+            ->postJson(route('admin.events.attendances.manual', $current), $base + ['confirm_departure' => '1'])
+            ->assertStatus(201);
+        $this->assertDatabaseCount('attendances', 2);
+        $this->assertNotNull($other->attendances()->first()->departed_at);
+    }
+
     public function test_signature_privee_accessible_authentifie(): void
     {
         $event = $this->liveEvent();

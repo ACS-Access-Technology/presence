@@ -8,6 +8,7 @@ use App\Enums\QrMode;
 use App\Enums\UserRole;
 use App\Models\Event;
 use App\Models\EventType;
+use App\Models\Filiale;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -42,8 +43,11 @@ class SettingsTest extends TestCase
 
     public function test_admin_cree_un_type(): void
     {
+        // Un SuperAdmin (admin() = SuperAdmin depuis le multi-filiale, contexte
+        // « Toutes les filiales ») doit désigner la filiale cible du type
+        // (cadrage Q-ME-10 : types uniquement par filiale, pas de repli holding).
         $this->actingAs($this->admin())->postJson(route('admin.settings.types.store'), [
-            'name' => 'Séminaire', 'color' => '#123456',
+            'name' => 'Séminaire', 'color' => '#123456', 'filiale_id' => Filiale::defaultId(),
         ])->assertStatus(201)->assertJsonPath('name', 'Séminaire');
 
         $this->assertDatabaseHas('event_types', ['name' => 'Séminaire', 'color' => '#123456']);
@@ -52,7 +56,7 @@ class SettingsTest extends TestCase
     public function test_couleur_invalide_refusee(): void
     {
         $this->actingAs($this->admin())->postJson(route('admin.settings.types.store'), [
-            'name' => 'X', 'color' => 'rouge',
+            'name' => 'X', 'color' => 'rouge', 'filiale_id' => Filiale::defaultId(),
         ])->assertStatus(422)->assertJsonValidationErrors('color');
     }
 

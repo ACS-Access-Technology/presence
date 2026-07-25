@@ -46,6 +46,12 @@ utilisateurs internes d'ACS Groupe** peuvent créer et gérer des événements �
   compte interne ACS Groupe authentifié voit **l'intégralité** des événements et
   présences de l'organisation, quel que soit le créateur (accès partagé complet).
 
+> ⚠️ **Q14 DEVENUE CADUQUE (2026-07-25)** — l'évolution « holding multi-filiales »
+> impose l'**inverse** : cloisonnement par filiale, sauf pour le `SuperAdmin`. Voir
+> `cadrage-multi-entites.md` (§ 2) et `plan-suivi-multi-entites.md`. Ce paragraphe
+> reste tel quel pour trace historique mais **ne fait plus foi** sur le
+> cloisonnement.
+
 ## 3. Périmètre
 
 ### Dans le périmètre (décidé)

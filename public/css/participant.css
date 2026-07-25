@@ -32,6 +32,7 @@ body{padding:24px 12px 64px;min-height:100vh}
 
 /* Bandeau départ enregistré */
 .flash{display:flex;gap:10px;align-items:flex-start;background:var(--success-soft);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:.86rem}
+.flash[hidden]{display:none}
 .flash svg{width:20px;height:20px;color:var(--success);flex:0 0 auto;margin-top:1px}
 .flash b{color:var(--text)}
 
@@ -39,10 +40,12 @@ body{padding:24px 12px 64px;min-height:100vh}
 .ov-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-control);padding:13px 14px;margin:12px 0}
 .ov-card__t{font-weight:700;font-size:.95rem}
 .ov-card__row{display:flex;align-items:center;gap:8px;font-size:.82rem;color:var(--muted);margin-top:6px}
+.ov-card__row[hidden]{display:none}
 .ov-card__row svg{width:15px;height:15px;color:var(--faint);flex:0 0 auto}
 
 /* Reconnaissance récurrent */
 .recog{display:flex;gap:12px;align-items:center;background:var(--accent-soft);border-radius:var(--radius);padding:14px;margin-bottom:6px}
+.recog[hidden]{display:none}
 .avatar{flex:0 0 46px;height:46px;width:46px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:700;font-size:1.05rem}
 .recog__t{font-weight:750;font-size:1rem}
 .recog__d{font-size:.8rem;color:var(--muted)}
@@ -98,3 +101,18 @@ body{padding:24px 12px 64px;min-height:100vh}
 .loading{padding:40px 20px;text-align:center}
 .loading .sk{height:16px;margin:10px auto;max-width:80%}
 .loading .lbl{color:var(--muted);margin-top:18px;font-size:.9rem}
+
+@media (max-width:560px){
+  body{padding:0;min-height:100dvh}
+  .phone{min-height:100dvh;border:0;border-radius:0;box-shadow:none}
+  .appbar{padding:12px 18px}
+  .screen{padding:20px 18px}
+  .modal__x{min-width:44px;min-height:44px}
+}
+@media (max-width:360px){
+  .appbar{padding-inline:14px}
+  .appbar img{height:36px}
+  .screen{padding-inline:14px}
+  .sig-actions{align-items:flex-start;gap:8px}
+  .ratepick{gap:5px}
+}

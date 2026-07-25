@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>QR à imprimer — {{ $event->title }}</title>
     <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
+    @if ($branding->accentColor)
+        <style>
+            :root{
+                --accent: {{ $branding->accentColor }};
+                --accent-soft: color-mix(in srgb, {{ $branding->accentColor }} 12%, #fff);
+            }
+        </style>
+    @endif
     <style>
         html,body{height:100%}
         body{
@@ -37,6 +45,7 @@
             color:var(--brand-orange);margin-bottom:18px;
         }
         .sheet__brand::before,.sheet__brand::after{content:"";height:1px;width:24px;background:var(--border-strong)}
+        .sheet__logo{height:38px;width:auto;max-width:70%;margin:0 auto 16px;display:block;object-fit:contain}
 
         .sheet h1{font-size:1.35rem;font-weight:750;margin:0 0 8px;color:var(--text);line-height:1.25}
         .sheet .meta{
@@ -85,7 +94,10 @@
     <div class="bg noprint" aria-hidden="true"></div>
 
     <div class="sheet">
-        <div class="sheet__brand">ACS Groupe</div>
+        @if ($branding->hasCustomLogo)
+            <img class="sheet__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+        @endif
+        <div class="sheet__brand">{{ $branding->orgName }}</div>
         <h1>{{ $event->title }}</h1>
         <div class="meta">
             <span>

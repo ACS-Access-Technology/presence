@@ -12,6 +12,7 @@ use App\Models\EventType;
 use App\Models\Person;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -82,5 +83,20 @@ class FeedbackTest extends TestCase
 
         $this->post(route('public.feedback.store', ['attendance' => $attendance->reference]), ['rating' => 7])
             ->assertSessionHasErrors('rating');
+    }
+
+    public function test_limite_le_debit_pour_freiner_l_enumeration_de_references(): void
+    {
+        // La référence est une clé d'accès (identité + dépôt d'avis) : sans limite,
+        // elle est brute-forçable. On borne les consultations par IP.
+        RateLimiter::clear('feedback-show:127.0.0.1');
+        $attendance = $this->attendance();
+        $url = route('public.feedback.show', ['attendance' => $attendance->reference]);
+
+        for ($i = 0; $i < 30; $i++) {
+            $this->get($url);
+        }
+
+        $this->get($url)->assertStatus(429);
     }
 }

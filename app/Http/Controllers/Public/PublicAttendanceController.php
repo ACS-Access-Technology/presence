@@ -12,6 +12,7 @@ use App\Services\Attendance\AttendanceInput;
 use App\Services\Attendance\SignatureStorage;
 use App\Services\AttendanceService;
 use App\Services\QrTokenService;
+use App\Support\Branding;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -68,17 +69,24 @@ class PublicAttendanceController extends Controller
      */
     public function manifest(Event $event): JsonResponse
     {
+        // Branding résolu depuis la filiale de l'événement (jamais le logo holding
+        // en dur) : un poste d'accueil épinglé affiche l'identité de LA filiale.
+        $branding = Branding::forEvent($event);
+
         return response()->json([
-            'name' => $event->title.' — Presence',
+            'name' => $event->title.' — '.$branding->orgName,
             'short_name' => 'Presence',
             'start_url' => route('public.attendance.show', ['event' => $event->public_slug]),
             'scope' => route('public.attendance.show', ['event' => $event->public_slug]),
             'display' => 'standalone',
             'background_color' => '#eef0f4',
-            'theme_color' => '#1e2a78',
+            'theme_color' => $branding->accentColorOrDefault(),
             'lang' => 'fr',
             'icons' => [
-                ['src' => asset('assets/logo-acs-groupe.png'), 'sizes' => '1600x1134', 'type' => 'image/png', 'purpose' => 'any'],
+                // `sizes: any` : un logo de filiale a des dimensions inconnues ;
+                // déclarer une taille fixe (celle du logo holding) mentirait au
+                // navigateur. `any` laisse le PWA redimensionner sans contrainte.
+                ['src' => $branding->logoUrl, 'sizes' => 'any', 'type' => 'image/png', 'purpose' => 'any'],
             ],
         ], 200, ['Content-Type' => 'application/manifest+json']);
     }
@@ -222,7 +230,11 @@ class PublicAttendanceController extends Controller
             accuracy: $request->filled('accuracy') ? (float) $request->float('accuracy') : null,
         );
 
-        $attendance = $this->attendances->register($event, $input, $overlap);
+        // register() est la garde autoritaire sous verrou : si un chevauchement est
+        // apparu entre le pré-contrôle ci-dessus (non verrouillé) et l'insertion, il
+        // clôture automatiquement la présence précédente (une seule présence active à
+        // la fois). Le 409 ci-dessus couvre le cas nominal (demande de confirmation).
+        $attendance = $this->attendances->register($event, $input);
 
         // Soumission répétée (idempotence) : la présence existait déjà → on retire
         // le fichier signature fraîchement écrit pour ne pas laisser d'orphelin.

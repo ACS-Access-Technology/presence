@@ -56,6 +56,26 @@
     });
     sync();
 
+    /* ---------- Filtrage des types par filiale (SuperAdmin en « Toutes ») ----------
+       Les types sont cloisonnés par filiale : on ne montre que ceux de la filiale
+       choisie et on décoche un type devenu incohérent. Tant qu'aucune filiale n'est
+       choisie, aucun type n'est proposé. Le serveur revalide la cohérence. */
+    var filialeSel = $('#event-filiale');
+    if (filialeSel) {
+        var filterTypes = function () {
+            var fid = filialeSel.value;
+            document.querySelectorAll('.typepick .typeopt').forEach(function (opt) {
+                var match = fid !== '' && opt.getAttribute('data-filiale') === fid;
+                opt.style.display = match ? '' : 'none';
+                var input = opt.querySelector('input[name=event_type_id]');
+                if (input && !match && input.checked) input.checked = false;
+            });
+            sync();
+        };
+        filialeSel.addEventListener('change', filterTypes);
+        filterTypes();
+    }
+
     /* ---------- Séances additionnelles (sessions multiples) ---------- */
     var EventForm = {
         count: 0,

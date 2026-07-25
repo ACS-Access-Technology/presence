@@ -34,7 +34,19 @@ class EventCreateTest extends TestCase
     {
         $this->actingAs($this->user)->get(route('admin.events.create'))
             ->assertOk()
-            ->assertSee('Nouvel événement');
+            ->assertSee('id="create-sheet"', false)
+            ->assertSee('Nouvel événement')
+            ->assertSee('Créer l\'événement', false);
+    }
+
+    public function test_mode_overlay_affiche_le_formulaire_sans_panneau_imbrique(): void
+    {
+        $this->actingAs($this->user)
+            ->get(route('admin.events.create', ['overlay' => 1]))
+            ->assertOk()
+            ->assertSee('overlay-page', false)
+            ->assertDontSee('id="create-sheet"', false)
+            ->assertSee('Créer l\'événement', false);
     }
 
     public function test_cree_un_evenement_avec_invites(): void
@@ -81,6 +93,7 @@ class EventCreateTest extends TestCase
             'start' => '09:00',
             'end' => '11:00',
             'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35', 'geofence_longitude' => '-4.01', 'geofence_radius_m' => '150',
         ];
 
         $this->actingAs($this->user)->post(route('admin.events.store'), ['title' => 'Réunion Comité SI'] + $payload);
@@ -107,6 +120,63 @@ class EventCreateTest extends TestCase
         $this->assertSame(-4.01, $event->geofence_longitude);
         $this->assertSame(150, $event->geofence_radius_m);
         $this->assertTrue($event->hasGeofence());
+    }
+
+    public function test_refuse_un_evenement_statique_sans_perimetre(): void
+    {
+        // Un QR statique sans géofence n'a aucune protection anti-photo-à-distance :
+        // la validation doit l'exiger, avec un message explicite.
+        $response = $this->actingAs($this->user)->post(route('admin.events.store'), [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'statique',
+        ]);
+
+        $response->assertSessionHasErrors(['geofence_latitude', 'geofence_longitude', 'geofence_radius_m']);
+        $this->assertStringContainsString(
+            'QR statique',
+            session('errors')->first('geofence_latitude'),
+        );
+        $this->assertSame(0, Event::count());
+    }
+
+    public function test_accepte_un_evenement_tournant_sans_perimetre(): void
+    {
+        // En QR tournant, le token HMAC expire toutes les 15 s : une photo est
+        // inutile, le périmètre reste donc facultatif.
+        $this->actingAs($this->user)->post(route('admin.events.store'), [
+            'title' => 'Conférence', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'tournant',
+        ])->assertSessionHasNoErrors();
+
+        $event = Event::firstOrFail();
+        $this->assertSame('tournant', $event->qr_mode->value);
+        $this->assertFalse($event->hasGeofence());
+    }
+
+    public function test_persiste_le_delai_de_grace_a_la_creation(): void
+    {
+        $this->actingAs($this->user)->post(route('admin.events.store'), [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'tournant',
+            'grace_check_in_enabled' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertTrue(Event::firstOrFail()->grace_check_in_enabled);
+    }
+
+    public function test_delai_de_grace_desactive_par_defaut(): void
+    {
+        $this->actingAs($this->user)->post(route('admin.events.store'), [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'tournant',
+            'grace_check_in_enabled' => '0',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertFalse(Event::firstOrFail()->grace_check_in_enabled);
     }
 
     public function test_rejette_un_perimetre_partiellement_renseigne(): void
@@ -138,6 +208,7 @@ class EventCreateTest extends TestCase
             'title' => 'Formation Cybersécurité', 'event_type_id' => $this->type->id,
             'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '12:00',
             'location' => 'Salle Ébène', 'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35', 'geofence_longitude' => '-4.01', 'geofence_radius_m' => '150',
             'extra_seances' => [
                 ['date' => now()->addDays(2)->toDateString(), 'start' => '09:00', 'end' => '12:00'],
                 ['date' => now()->addDays(3)->toDateString(), 'start' => '09:00', 'end' => '12:00'],
@@ -164,6 +235,7 @@ class EventCreateTest extends TestCase
             'title' => 'Réunion simple', 'event_type_id' => $this->type->id,
             'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '10:00',
             'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35', 'geofence_longitude' => '-4.01', 'geofence_radius_m' => '150',
         ]);
 
         $event = Event::firstOrFail();
@@ -180,6 +252,7 @@ class EventCreateTest extends TestCase
             'title' => 'Formation', 'event_type_id' => $this->type->id,
             'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '12:00',
             'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35', 'geofence_longitude' => '-4.01', 'geofence_radius_m' => '150',
             'extra_seances' => [['date' => now()->addDays(2)->toDateString(), 'start' => '09:00', 'end' => '12:00']],
             'invitees' => [$person->id],
         ]);
@@ -195,6 +268,7 @@ class EventCreateTest extends TestCase
             'title' => 'Formation', 'event_type_id' => $this->type->id,
             'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '12:00',
             'qr_mode' => 'statique',
+            'geofence_latitude' => '5.35', 'geofence_longitude' => '-4.01', 'geofence_radius_m' => '150',
             'extra_seances' => [['date' => now()->addDays(2)->toDateString(), 'start' => '09:00', 'end' => '12:00']],
         ]);
 

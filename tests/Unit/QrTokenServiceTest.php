@@ -18,10 +18,10 @@ class QrTokenServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new QrTokenService();
+        $this->service = new QrTokenService;
 
         // Événement non persisté : on renseigne juste id + secret utilisés par le service.
-        $this->event = new Event();
+        $this->event = new Event;
         $this->event->id = 42;
         $this->event->qr_secret = 'secret-de-test-hmac';
     }
@@ -93,7 +93,7 @@ class QrTokenServiceTest extends TestCase
     {
         $ticket = $this->service->issueScanTicket($this->event);
 
-        $other = new Event();
+        $other = new Event;
         $other->id = 99;
         $other->qr_secret = 'secret-de-test-hmac'; // même secret, mais id différent
 

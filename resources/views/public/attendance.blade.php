@@ -2,7 +2,6 @@
 
 @push('head')
     <link rel="manifest" href="{{ route('public.attendance.manifest', ['event' => $event->public_slug]) }}">
-    <meta name="theme-color" content="#1e2a78">
 @endpush
 
 @section('content')
@@ -11,7 +10,7 @@
         <div class="section-label">Votre email</div>
         <div class="field" data-req data-type="email">
             <label for="email">Email <span class="req">*</span></label>
-            <input class="control" id="email" name="email" type="email" inputmode="email" autocomplete="email" placeholder="nom@entreprise.ci">
+            <input class="control" id="email" type="email" inputmode="email" autocomplete="off" data-lpignore="true" data-1p-ignore placeholder="nom@entreprise.ci">
             <div class="err-msg">Entrez un email valide, ex. nom@entreprise.ci</div>
         </div>
         <button type="button" class="btn btn--primary btn--block btn--lg" id="emailContinue">Continuer</button>
@@ -103,7 +102,7 @@
             <button type="button" class="btn btn--primary btn--block btn--lg" id="submit" disabled>Valider ma présence</button>
 
             <div class="foot">
-                <button type="button" class="linkbtn" data-modal="mentions">Vos données</button> · ACS Groupe
+                <button type="button" class="linkbtn" data-modal="mentions">Vos données</button> · {{ $branding->orgName }}
             </div>
         </form>
     </section>
@@ -221,7 +220,11 @@
 <script src="{{ versioned_asset('js/participant.js') }}"></script>
 <script>
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('{{ asset('sw.js') }}').catch(function () {});
+        // Scope restreint à /e/ : sans ça, la portée par défaut est la racine du
+        // site entier (répertoire du script), et ce service worker se retrouve à
+        // contrôler la navigation sur /connexion, /admin/*, etc. pour quiconque a
+        // déjà ouvert une seule page d'émargement dans ce navigateur.
+        navigator.serviceWorker.register('{{ asset('sw.js') }}', { scope: '{{ url('/e/') }}/' }).catch(function () {});
     }
 </script>
 @endpush

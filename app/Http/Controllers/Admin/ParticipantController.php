@@ -7,6 +7,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Person;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 
 /**
@@ -17,10 +19,18 @@ class ParticipantController extends Controller
 {
     public function index(): View
     {
+        // Historique STRICTEMENT scopé à la filiale (Q-ME-4) : bien que `Person`
+        // reste unifié au niveau holding (D-ME-1), on ne compte et ne liste que les
+        // personnes ayant émargé sur un événement VISIBLE dans le contexte courant.
+        // `whereHas('event')` s'appuie sur le global scope de {@see Event} : en
+        // contexte admin il filtre par filiale ; en « Toutes » (SuperAdmin) il
+        // laisse tout passer ; en fail-closed il ne renvoie rien.
+        $inScope = fn ($q) => $q->whereHas('event');
+
         $people = Person::query()
-            ->has('attendances')
-            ->withCount('attendances')
-            ->withMax('attendances', 'checked_in_at')
+            ->whereHas('attendances', $inScope)
+            ->withCount(['attendances' => $inScope])
+            ->withMax(['attendances' => $inScope], 'checked_in_at')
             ->orderByRaw('attendances_max_checked_in_at DESC')
             ->get()
             ->map(fn (Person $p): array => [
@@ -31,11 +41,11 @@ class ParticipantController extends Controller
                 'detail' => collect([$p->company, $p->direction])->filter()->implode(' · '),
                 'attendances' => $p->attendances_count,
                 'last' => $p->attendances_max_checked_in_at
-                    ? \Illuminate\Support\Carbon::parse($p->attendances_max_checked_in_at)->translatedFormat('j M Y')
+                    ? Carbon::parse($p->attendances_max_checked_in_at)->translatedFormat('j M Y')
                     : '—',
                 'is_staff' => $p->is_staff,
                 'url' => route('admin.participants.show', $p),
-                'search' => \Illuminate\Support\Str::lower($p->fullName().' '.$p->company.' '.$p->direction),
+                'search' => Str::lower($p->fullName().' '.$p->company.' '.$p->direction),
             ])->all();
 
         return view('admin.participants.index', ['people' => $people]);
@@ -43,10 +53,17 @@ class ParticipantController extends Controller
 
     public function show(Person $person): View
     {
+        // Historique limité aux événements visibles dans le contexte (Q-ME-4).
+        // `Person` n'a pas de global scope (référentiel holding), donc l'URL
+        // directe résout n'importe quelle personne : on renvoie 404 si elle n'a
+        // aucun émargement dans le périmètre courant (pas de fuite cross-filiale).
         $attendances = $person->attendances()
+            ->whereHas('event')
             ->with('event.type')
             ->orderByDesc('checked_in_at')
             ->get();
+
+        abort_if($attendances->isEmpty(), 404);
 
         $history = $attendances->map(fn (Attendance $a): array => [
             'event_title' => $a->event->title,

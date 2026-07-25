@@ -32,7 +32,8 @@ use Illuminate\Support\Carbon;
  * @property Carbon $checked_in_at
  * @property ?Carbon $departed_at
  * @property string $reference
- * @property ?Carbon $confirmation_email_sent_at
+ * @property ?Carbon $confirmation_email_queued_at Posé par le cron dès la mise en file (un essai a été lancé).
+ * @property ?Carbon $confirmation_email_sent_at Posé par le job d'envoi APRÈS le send() réussi (vérité « réellement parti »).
  */
 class Attendance extends Model
 {
@@ -42,7 +43,8 @@ class Attendance extends Model
         'last_name', 'first_name', 'phone', 'company', 'direction', 'service', 'position',
         'signature_path', 'latitude', 'longitude', 'accuracy',
         'is_manual', 'manual_confirmed', 'recorded_by',
-        'checked_in_at', 'departed_at', 'reference', 'confirmation_email_sent_at',
+        'checked_in_at', 'departed_at', 'reference',
+        'confirmation_email_queued_at', 'confirmation_email_sent_at',
     ];
 
     /**
@@ -55,6 +57,7 @@ class Attendance extends Model
             'manual_confirmed' => 'boolean',
             'checked_in_at' => 'datetime',
             'departed_at' => 'datetime',
+            'confirmation_email_queued_at' => 'datetime',
             'confirmation_email_sent_at' => 'datetime',
         ];
     }

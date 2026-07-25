@@ -10,7 +10,7 @@
         </div>
     </div>
 
-    <div class="kpis" style="grid-template-columns:repeat(3,1fr)">
+    <div class="kpis kpis--3">
         <div class="kpi"><span class="ic" style="background:var(--accent-soft);color:var(--accent)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></span><div><div class="kpi__val">{{ $kpis['activities'] }}</div><div class="kpi__lbl">Activités documentées</div></div></div>
         <div class="kpi"><span class="ic" style="background:var(--type-atelier-bg);color:var(--type-atelier)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg></span><div><div class="kpi__val">{{ $kpis['photos'] }}</div><div class="kpi__lbl">Photos</div></div></div>
         <div class="kpi"><span class="ic" style="background:var(--info-soft);color:var(--info)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg></span><div><div class="kpi__val">{{ $kpis['documents'] }}</div><div class="kpi__lbl">Documents</div></div></div>

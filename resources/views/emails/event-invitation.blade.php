@@ -5,7 +5,7 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f4;padding:24px 12px">
         <tr><td align="center">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e3e6ec">
-                <tr><td style="background:#1E2A78;padding:22px 28px;color:#fff;font-weight:800;font-size:1.1rem;letter-spacing:-.02em">
+                <tr><td style="background:{{ $accentColor }};padding:22px 28px;color:#fff;font-weight:800;font-size:1.1rem;letter-spacing:-.02em">
                     {{ $orgName }} · Presence
                 </td></tr>
                 <tr><td style="padding:28px">
@@ -14,12 +14,15 @@
                     <p style="margin:0 0 16px;line-height:1.6">
                         Vous êtes attendu·e à <strong>{{ $eventTitle }}</strong> le {{ $eventDate }}@if($location) · {{ $location }}@endif.
                     </p>
-                    <p style="margin:0 0 20px;line-height:1.6;color:#565d6b;font-size:.92rem">
-                        Le jour J, présentez-vous sur place et scannez le QR code affiché pour émarger — cette invitation ne vaut pas présence.
+                    {{-- Aucun lien d'émargement ici (voir DÉCISION PRODUIT dans
+                         EventInvitationMail) : l'émargement se fait UNIQUEMENT en
+                         scannant le QR présenté sur place le jour J. --}}
+                    <p style="margin:0 0 4px;line-height:1.6">
+                        Pour émarger, <strong>scannez le QR code présenté sur place</strong> le jour de l'événement, avec l'appareil photo de votre téléphone.
                     </p>
-                    <a href="{{ $attendanceUrl }}" style="display:inline-block;background:#1E2A78;color:#fff;text-decoration:none;padding:11px 20px;border-radius:10px;font-weight:600;font-size:.92rem">
-                        Voir la page de l'événement
-                    </a>
+                    <p style="margin:0 0 20px;line-height:1.6;color:#565d6b;font-size:.92rem">
+                        Cette invitation ne vaut pas présence.
+                    </p>
                     <p style="margin:18px 0 0;color:#8a91a0;font-size:.8rem">Un fichier .ics est joint pour ajouter cet événement à votre agenda.</p>
                 </td></tr>
                 <tr><td style="padding:16px 28px;border-top:1px solid #e3e6ec;color:#8a91a0;font-size:.78rem">

@@ -203,12 +203,37 @@ class AttendanceController extends Controller
 
         // Une Personne est identifiée par email ; sans email fourni, on génère une
         // clé interne synthétique pour respecter l'unicité (visiteur sans email).
-        $email = $request->filled('email')
+        $hasEmail = $request->filled('email');
+        $email = $hasEmail
             ? (string) $request->string('email')
             : 'manuel-'.Str::random(16).'@presence.local';
 
+        // Anti-chevauchement : même garde que le flux public. Un organisateur ne doit
+        // pas pouvoir inscrire manuellement une personne déjà active sur un autre
+        // événement sans confirmer explicitement son départ, sinon on crée une
+        // présence simultanée à deux activités. Seul un email réel peut correspondre
+        // à une fiche existante (l'email synthétique est unique à chaque saisie).
+        // Choix documenté : on réutilise le même protocole que le public
+        // (`confirm_departure` + réponse 409 { overlap }) pour que le front admin
+        // affiche la même demande de confirmation avant de renvoyer la saisie.
+        $person = $hasEmail ? $this->attendances->findPersonByEmail($email) : null;
+        $overlap = $person !== null ? $this->attendances->activeOverlap($person, $event) : null;
+
+        if ($overlap !== null && ! $request->boolean('confirm_departure')) {
+            // Pré-contrôle AVANT d'écrire la signature (pas d'orphelin sur disque).
+            return response()->json([
+                'overlap' => [
+                    'event_title' => $overlap->event->title,
+                    'when' => $this->formatWindow($overlap->event),
+                    'location' => $overlap->event->location,
+                ],
+            ], 409);
+        }
+
         $signaturePath = SignatureStorage::store($event->id, (string) $request->string('signature'));
 
+        // register() est la garde autoritaire sous verrou : en cas de course, il
+        // clôture automatiquement la présence conflictuelle (une seule active).
         $attendance = $this->attendances->register($event, new AttendanceInput(
             email: $email,
             lastName: (string) $request->string('last_name'),
@@ -231,6 +256,22 @@ class AttendanceController extends Controller
         }
 
         return response()->json(['reference' => $attendance->reference], 201);
+    }
+
+    /**
+     * Fenêtre horaire lisible d'un événement, ex. « aujourd'hui · 13:30 → 15:30 ».
+     *
+     * Dupliqué (volontairement) du contrôleur public : petit formateur pur, isolé
+     * ici pour ne pas coupler ce contrôleur admin au contrôleur public ni toucher
+     * au modèle Event (surface partagée avec d'autres travaux en cours).
+     */
+    private function formatWindow(Event $event): string
+    {
+        $day = $event->starts_at->isToday()
+            ? "aujourd'hui"
+            : $event->starts_at->translatedFormat('j M');
+
+        return $day.' · '.$event->starts_at->format('H:i').' → '.$event->ends_at->format('H:i');
     }
 
     /** Renvoie l'image de signature (disque privé, accès authentifié uniquement). */

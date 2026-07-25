@@ -60,7 +60,21 @@
                 <span class="tag tag--type" style="--tc:{{ $event->type->color }};color:var(--tc);background:color-mix(in srgb, var(--tc) 14%, transparent)">{{ $event->type->name }}</span>
             </p>
         </div>
-        <div style="margin-left:auto;display:flex;gap:9px;flex-wrap:wrap">
+    </div>
+
+    <div class="event-actions" aria-label="Actions de l'événement">
+        <div class="event-actions__main">
+            @if($event->qr_mode === QrMode::Tournant)
+                <a class="btn btn--primary event-actions__qr" href="{{ route('admin.events.projection', $event) }}" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                    Projeter le QR
+                </a>
+            @else
+                <a class="btn btn--primary event-actions__qr" href="{{ route('admin.events.qr.print', $event) }}" target="_blank" rel="noopener">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
+                    Imprimer le QR
+                </a>
+            @endif
             <div class="export-group" role="group" aria-label="Exporter la liste de présence">
                 <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('csv')" title="Export filtré selon la liste affichée">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 3v12m0 0 4-4m-4 4-4-4M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
@@ -69,23 +83,17 @@
                 <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('xlsx')" title="Export filtré selon la liste affichée">Excel</button>
                 <button type="button" class="btn btn--ghost" onclick="Detail.exportAs('pdf')" title="Export filtré selon la liste affichée">PDF</button>
             </div>
-            <a class="btn btn--ghost" href="{{ route('admin.events.attendances.badges', $event) }}" target="_blank" rel="noopener" title="Grille de badges à imprimer (navigateur, aucun matériel dédié)">
+            <a class="btn btn--ghost event-actions__badges" href="{{ route('admin.events.attendances.badges', $event) }}" target="_blank" rel="noopener" title="Grille de badges à imprimer (navigateur, aucun matériel dédié)">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M8 7h8M8 11h5"/><circle cx="9" cy="16" r="1.5"/></svg>
                 Badges
             </a>
-            @if($event->qr_mode === QrMode::Tournant)
-                <a class="btn btn--primary" href="{{ route('admin.events.projection', $event) }}" target="_blank" rel="noopener">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-                    Projeter le QR
-                </a>
-            @else
-                <a class="btn btn--primary" href="{{ route('admin.events.qr.print', $event) }}" target="_blank" rel="noopener">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 9V2h12v7M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v8H6z"/></svg>
-                    Imprimer le QR
-                </a>
-            @endif
+        </div>
+        <div class="event-actions__secondary">
             @if($event->isQrModeLocked())
-                <span class="tag" title="Une présence existe déjà : le mode QR ne peut plus changer.">Mode QR verrouillé</span>
+                <span class="event-actions__lock" title="Une présence existe déjà : le mode QR ne peut plus changer.">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="4" y="10" width="16" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg>
+                    Mode QR verrouillé
+                </span>
             @else
                 <button type="button" class="btn btn--ghost" onclick="Detail.open('m-qrmode')" title="Possible tant qu'aucune présence n'est enregistrée">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
@@ -96,12 +104,18 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 20h9M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
                 Modifier
             </button>
+            @if (! is_null($transferFiliales))
+                <button type="button" class="btn btn--ghost" onclick="Detail.open('m-transfer')" title="Déplacer cet événement vers une autre filiale de la holding">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M4 12h16M14 6l6 6-6 6"/><path d="M20 12H4M10 18l-6-6 6-6"/></svg>
+                    Transférer
+                </button>
+            @endif
             @unless ($event->isCancelled())
                 <button type="button" class="btn btn--ghost" onclick="Detail.open('m-reschedule')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
                     Reporter
                 </button>
-                <button type="button" class="btn btn--ghost" onclick="Detail.open('m-cancel')">
+                <button type="button" class="btn btn--ghost event-actions__cancel" onclick="Detail.open('m-cancel')">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M15 9l-6 6M9 9l6 6"/></svg>
                     Annuler
                 </button>
@@ -320,4 +334,8 @@
 </script>
 <script src="{{ versioned_asset('js/event-detail.js') }}"></script>
 <script src="{{ versioned_asset('js/report.js') }}"></script>
+@if (! is_null($transferFiliales) && $transferFiliales !== [])
+    <script>window.EVENT_TRANSFER = @json(['filiales' => $transferFiliales]);</script>
+    <script src="{{ versioned_asset('js/event-transfer.js') }}"></script>
+@endif
 @endpush

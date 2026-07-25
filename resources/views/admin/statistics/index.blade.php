@@ -22,8 +22,8 @@
             <h3 style="margin:0 0 14px;font-size:1rem">Présences par mois (12 derniers mois)</h3>
             @php($maxMonth = $byMonth->max() ?: 1)
             @foreach ($byMonth as $label => $count)
-                <div style="display:grid;grid-template-columns:70px 1fr auto;align-items:center;gap:10px;margin-bottom:8px">
-                    <span class="mut" style="font-size:.8rem">{{ $label }}</span>
+                <div class="chart-row" style="--chart-label:70px">
+                    <span class="mut chart-row__label" style="font-size:.8rem">{{ $label }}</span>
                     <span style="height:9px;border-radius:5px;background:var(--accent);width:{{ round($count / $maxMonth * 100) }}%;min-width:{{ $count > 0 ? 6 : 0 }}px"></span>
                     <b style="font-variant-numeric:tabular-nums">{{ $count }}</b>
                 </div>
@@ -34,8 +34,8 @@
             <h3 style="margin:0 0 14px;font-size:1rem">Présences par type d'événement</h3>
             @php($maxType = $byType->max() ?: 1)
             @forelse ($byType as $label => $count)
-                <div style="display:grid;grid-template-columns:130px 1fr auto;align-items:center;gap:10px;margin-bottom:8px">
-                    <span class="mut" style="font-size:.83rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $label }}</span>
+                <div class="chart-row" style="--chart-label:130px">
+                    <span class="mut chart-row__label">{{ $label }}</span>
                     <span style="height:9px;border-radius:5px;background:var(--brand-orange);width:{{ round($count / $maxType * 100) }}%;min-width:{{ $count > 0 ? 6 : 0 }}px"></span>
                     <b style="font-variant-numeric:tabular-nums">{{ $count }}</b>
                 </div>
@@ -50,8 +50,8 @@
             <h3 style="margin:0 0 14px;font-size:1rem">Top entreprises (toutes activités)</h3>
             @php($maxCompany = $topCompanies->max() ?: 1)
             @forelse ($topCompanies as $label => $count)
-                <div style="display:grid;grid-template-columns:160px 1fr auto;align-items:center;gap:10px;margin-bottom:8px">
-                    <span class="mut" style="font-size:.83rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">{{ $label }}</span>
+                <div class="chart-row" style="--chart-label:160px">
+                    <span class="mut chart-row__label">{{ $label }}</span>
                     <span style="height:9px;border-radius:5px;background:var(--info);width:{{ round($count / $maxCompany * 100) }}%;min-width:{{ $count > 0 ? 6 : 0 }}px"></span>
                     <b style="font-variant-numeric:tabular-nums">{{ $count }}</b>
                 </div>

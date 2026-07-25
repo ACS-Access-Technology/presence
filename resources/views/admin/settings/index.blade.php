@@ -47,7 +47,7 @@
             </div>
             <div class="tscroll">
                 <table class="dt" aria-label="Comptes organisateurs">
-                    <thead><tr><th>Membre</th><th>Rôle</th><th>Statut</th><th>Dernière connexion</th><th class="r-actions">Actions</th></tr></thead>
+                    <thead><tr><th>Membre</th><th>Rôle</th>@if($isSuper)<th>Filiale</th>@endif<th>Statut</th><th>Dernière connexion</th><th class="r-actions">Actions</th></tr></thead>
                     <tbody id="accounts-body"></tbody>
                 </table>
             </div>
@@ -118,15 +118,19 @@
     window.SETTINGS = {
         csrf: @json(csrf_token()),
         currentUserId: {{ auth()->id() }},
+        isSuper: @json($isSuper),
+        contextFilialeId: @json($contextFilialeId),
         palette: ['#7c3aed', '#2563eb', '#d6336c', '#0e9e86', '#e0620d', '#1e2a78', '#b8770f', '#0d9488'],
         types: @json($types),
         accounts: @json($accounts),
+        filiales: @json($filiales),
         urls: {
             typesStore: @json(route('admin.settings.types.store')),
             typeTpl: @json(route('admin.settings.types.update', ['type' => '__ID__'])),
             accountsStore: @json(route('admin.settings.accounts.store')),
             accountTpl: @json(route('admin.settings.accounts.update', ['account' => '__ID__'])),
             accountResetTpl: @json(route('admin.settings.accounts.reset', ['account' => '__ID__'])),
+            accountReassignTpl: @json(route('admin.settings.accounts.reassign', ['account' => '__ID__'])),
         },
     };
 </script>

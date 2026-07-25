@@ -5,6 +5,156 @@
 
 ---
 
+## 2026-07-25 — 11 anomalies d'audit corrigées, gate sécurité PASS
+
+Deux audits externes (client) ont livré 14 anomalies au total. Traitées en 2 vagues
+de `senior-fullstack` en parallèle (9 agents, fichiers disjoints par conception) :
+
+**Vague 1** : emails jamais envoyés si crash post-clôture (`report_email_queued_at`
+vs `*_sent_at`, posé par le job après succès réel) ; saisie manuelle contournant
+l'anti-chevauchement ; race condition entre scans concurrents (`lockForUpdate` sur
+`Person`) ; middleware `EnsureActiveSession` (compte/filiale désactivé coupe une
+session déjà ouverte) ; fichiers de compte-rendu privatisés (disque `local` +
+routes authentifiées scopées filiale).
+
+**Vague 2** : filiale de création explicite (plus de repli silencieux) ; sélecteur
+de filiale désactivée (refus + avertissement) ; transfert d'événement entre
+filiales (nouveau, table `audit_logs`) ; branding réellement appliqué partout
+(`app/Support/Branding.php`, résolution par `$event->filiale_id`, jamais par
+session) ; notification des invités au report (`EventRescheduledMail` + `.ics`
+mise à jour) ; lien QR direct retiré des emails (invitation ET report) — diffuser
+un lien statique par email contournerait l'anti-fraude « scan sur place ».
+
+**#6 (transfert) et #14 (notification report)** avaient été écartés par YAGNI plus
+tôt dans le projet — le client est revenu dessus, remis au périmètre sur sa demande
+explicite.
+
+**Gate `security-expert` final** sur les 11 changements + leurs interactions
+croisées (le vrai risque : chaque agent avait testé son périmètre isolément) :
+**PASS**. 3 findings mineurs (fail-closed branding sur `filiale_id` NULL,
+`filiale_id` désactivée assignable à un compte, course non verrouillée sur
+`upsertPerson`) corrigés dans la foulée. État final : **293/293 tests verts**,
+`pint` clean.
+
+### Prochaine étape
+Lot H (déploiement) : dry-run migration sur copie de prod, vérif cron post-déploiement.
+
+---
+
+## 2026-07-25 — Maquette UX livrée, 5 questions ouvertes tranchées
+
+`ux-designer` a livré 4 écrans (gestion filiales, comptes scopés + réassignation,
+sélecteur de contexte, paramétrage, message grâce QR) en artifact HTML navigable,
+en réutilisant les composants dashboard existants. Client a répondu aux 5 questions
+soulevées :
+
+- **Q-ME-6 tranchée** : sélecteur de contexte filiale persistant en topbar pour le
+  SuperAdmin (dashboard/événements/stats/portfolio/paramètres), défaut « Toutes les
+  filiales » (agrégat). AdminFiliale/Organisateur = badge figé, pas de bascule.
+  Vue « Toutes » doit ventiler par filiale, pas juste des totaux (T-ME-10).
+- **Fuseau horaire / format date** : restent **globaux pour toutes les filiales**,
+  jamais surchargeables par filiale (complète Q-ME-8 côté branding : toggle
+  « hériter du branding holding » par filiale, mais fuseau/format = global).
+- **Q-ME-10 tranchée** : types d'événements **uniquement par filiale**, pas de
+  socle partagé holding.
+- **Réassignation d'événement (T-ME-14) retirée du périmètre** : pas de besoin
+  réel identifié pour le moment (YAGNI). La réassignation de **compte** reste
+  couverte (T-ME-13, action « Réassigner » du SuperAdmin).
+- **Q-ME-4 tranchée** : annuaire participants scopé à la filiale, aucun historique
+  cross-filiale visible même pour une personne du référentiel `Person` unifié.
+
+Docs mis à jour : `cadrage-multi-entites.md` § 5.3/§7/§9, `plan-suivi-multi-entites.md`
+Lots C/D. Plus aucune question bloquante ou UX en suspens pour les lots C/D/F.
+
+### Prochaine étape
+`senior-fullstack` termine Lots A/B/E (en cours), puis enchaîne C/D/F avec la
+maquette UX comme référence.
+
+---
+
+## 2026-07-25 — Q-ME-1 et Q-ME-2 tranchées par le client
+
+Client a répondu aux 2 points bloquants du cadrage. Docs `cadrage-multi-entites.md`
+et `plan-suivi-multi-entites.md` mis à jour en conséquence (renommage complet
+« entité » → « filiale » dans les deux documents, terminologie de code à suivre :
+table `filiales`, modèle `Filiale`, colonne `filiale_id`, rôle `AdminFiliale`).
+
+- **Q-ME-1 tranchée** : nommage retenu = **« filiale »** (pas `business_unit`).
+  Table `filiales`, modèle `Filiale`, colonne `filiale_id`. Évite la collision
+  avec le champ visiteur existant « Entité/Entreprise » (`company`), qui reste
+  inchangé et n'a aucun rapport avec cette notion.
+- **Q-ME-2 tranchée** (arbitrage `chef-de-projet`, client a délégué) : `filiale_id`
+  **nullable**, `NULL` pour le `SuperAdmin` — pas de filiale « holding » fictive.
+  Raison : sémantiquement correct (le SuperAdmin n'est pas une filiale de plus),
+  évite qu'une fausse entrée pollue les listes/CRUD de filiales. Contrepartie
+  documentée (RME-7) : le scoping doit traiter explicitement `filiale_id IS NULL`
+  comme « aucun filtre », jamais comme un filtre qui ne renvoie rien (fail-open
+  vs fail-closed à bien tester, T-ME-05).
+
+**J-ME-0 est franchi.** Plus aucun point bloquant avant lancement UX/dev.
+
+### Prochaine étape
+Lancer `ux-designer` (gestion filiales, sélecteur éventuel Q-ME-6, paramétrage
+scopé, message visiteur de grâce Q-ME-11) puis `senior-fullstack` (arbitrage
+Q-ME-3, Lots A→F ; Lot E — QR post-clôture — lançable en parallèle).
+
+---
+
+## 2026-07-25 — Cadrage évolution « Holding multi-entités + QR post-clôture » (agent chef-de-projet)
+
+Nouvelle demande client (super admin ACS Groupe) cadrée. Deux docs créés :
+`cadrage-multi-entites.md` (décisions, modèle de données, autorisations, risques,
+questions ouvertes) et `plan-suivi-multi-entites.md` (8 lots A→H, jalons J-ME-0→5).
+`journal.md` et `cadrage.md` mis à jour.
+
+### Changement de décision produit majeur
+- **Q14 DEVENUE CADUQUE** : l'accès partagé « tout compte voit tout » est remplacé
+  par un **cloisonnement par entité** (sauf `SuperAdmin`). Pointeur ajouté dans
+  `cadrage.md` § 2 ; l'enum `UserRole`, la doc et CLAUDE.md devront suivre (T-ME-27).
+
+### Décisions client acquises (documentées, pas rediscutées)
+- **Rôles à 3 niveaux** : `SuperAdmin` > `AdminEntité` > `Organisateur`.
+- **`Person` reste unifié holding** (pas d'`entity_id`) — préserve l'anti-chevauchement
+  `activeOverlap` qui dépend d'une identité `Person` unique.
+- **Migration auto** d'une entité par défaut « ACS Groupe » + backfill de tout
+  l'existant → zéro action manuelle au déploiement.
+- **QR post-clôture** : fenêtre d'émargement étendue de **15 min** après clôture,
+  parcours visiteur inchangé.
+
+### Points de conception clés dégagés
+- **QrTokenService inchangé** : la grâce est une simple extension de la fenêtre
+  d'acceptation (`Event::checkInClosesAt()` = `ends_at + 15 min` si activée) ; les
+  tokens HMAC tournent sur l'horloge serveur, indépendants de la fenêtre événement.
+- **Un seul cron, pas de nouveau déclencheur** : `CloseDueEvents` sélectionne sur
+  la borne effective `checkInClosesAt()` → la clôture ET l'email récap sont reportés
+  de 15 min automatiquement (l'email ne part pas avant la fin de la grâce).
+- **Scoping** : le vrai risque est qu'un global scope Eloquent basé sur `auth()`
+  contamine le **cron** et la **page publique** (non authentifiés) → à restreindre
+  au groupe de routes `admin` + policies. Arbitrage laissé à `senior-fullstack` (Q-ME-3).
+- **Impacts structurels identifiés** : `event_types` (unicité `name` globale →
+  `(entity_id, name)`), `settings` (table globale clé/valeur → scopée par entité),
+  exports XLSX/PDF/CSV (fuite si non scopés), annuaire participants (historique
+  cross-entité).
+
+### Bloquants avant UX/dev (à faire trancher au client)
+- **Q-ME-1** — **nommage** de l'objet org : `entity` entre en collision avec le champ
+  visiteur « Entité/Entreprise » (`company`). Recommandation : `business_unit`/`filiale`.
+- **Q-ME-2** — le `SuperAdmin` a-t-il `entity_id = NULL` ou une entité « holding » ?
+
+### Prochaine étape
+Obtenir Q-ME-1 et Q-ME-2 du client, puis lancer `ux-designer` (gestion entités,
+paramétrage scopé, message visiteur de grâce) puis `senior-fullstack` (arbitrage
+Q-ME-3, Lots A→F ; Lot E — QR post-clôture — lançable en parallèle car découplé).
+
+### Rétro express
+- ✅ A marché : impact analysé sur le code réel (services, migrations, cron) avant
+  de proposer le modèle ; mécanisme de grâce sans nouveau cron ni changement HMAC.
+- ⚠️ A surveiller : isolation inter-entités (fuite via export/oubli de `where`) —
+  risque n°1, gate `security-expert` obligatoire.
+- 🔁 On change : Q14 (accès partagé) → cloisonnement par entité.
+
+---
+
 ## 2026-07-20 — Faille sécurité corrigée : fuite PII + écrasement d'identité (agent senior-fullstack)
 
 Revue sécurité automatique post-commit sur `PublicAttendanceController` : 2

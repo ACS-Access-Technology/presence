@@ -103,5 +103,18 @@
         localStorage.setItem('presence-theme', next);
     }
 </script>
+<script>
+    // Purge d'un bug antérieur : le service worker de la page publique
+    // d'émargement s'enregistrait sans `scope` et prenait par défaut le
+    // contrôle de tout le site (racine) au lieu de /e/ seulement — désinscrit
+    // ici pour les navigateurs déjà touchés (corrigé à la source par ailleurs).
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.getRegistrations().then(function (regs) {
+            regs.forEach(function (reg) {
+                if (reg.scope === location.origin + '/') { reg.unregister(); }
+            });
+        });
+    }
+</script>
 </body>
 </html>

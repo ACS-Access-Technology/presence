@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Models\Scopes\FilialeScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -22,10 +23,11 @@ class EventSeries extends Model
     /** @var list<string> */
     protected $fillable = ['title', 'event_type_id', 'location', 'created_by'];
 
-    /** @return BelongsTo<EventType, $this> */
+    /** @return BelongsTo<EventType, $this> Résolu hors global scope (voir {@see Event::type()}). */
     public function type(): BelongsTo
     {
-        return $this->belongsTo(EventType::class, 'event_type_id');
+        return $this->belongsTo(EventType::class, 'event_type_id')
+            ->withoutGlobalScope(FilialeScope::class);
     }
 
     /** @return HasMany<Event, $this> */

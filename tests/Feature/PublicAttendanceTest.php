@@ -86,7 +86,9 @@ class PublicAttendanceTest extends TestCase
         $response->assertOk();
         $this->assertStringContainsString('application/manifest+json', $response->headers->get('Content-Type'));
         $response->assertJsonPath('start_url', route('public.attendance.show', ['event' => $event->public_slug]));
-        $response->assertJsonPath('name', $event->title.' — Presence');
+        // Le manifeste porte désormais l'identité de la FILIALE de l'événement
+        // (repli holding « ACS Groupe » ici, aucun branding filiale configuré).
+        $response->assertJsonPath('name', $event->title.' — ACS Groupe');
     }
 
     public function test_show_hors_fenetre_est_bloque(): void

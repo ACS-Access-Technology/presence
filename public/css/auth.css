@@ -53,6 +53,7 @@ body{min-height:100vh;display:flex;flex-direction:column}
 .linkbtn:hover{text-decoration:underline}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;width:100%;font:inherit;font-weight:650;font-size:.98rem;cursor:pointer;border-radius:var(--r-control);padding:13px 18px;min-height:52px;border:1px solid transparent;background:var(--accent);color:var(--on-accent);box-shadow:0 10px 22px -12px rgba(30,42,120,.75);transition:background .15s,transform .08s;text-decoration:none}
+.btn[hidden]{display:none}
 .btn:hover{background:var(--accent-hover)}
 .btn:active{transform:translateY(1px)}
 .btn:focus-visible{outline:none;box-shadow:var(--focus)}
@@ -74,4 +75,10 @@ body{min-height:100vh;display:flex;flex-direction:column}
   .card__logo-m img{height:48px}
   .card__logo-m .pn{font-weight:800;font-size:1.1rem;letter-spacing:-.02em}
   .card__logo-m .pn span{color:var(--brand-orange)}
+}
+@media (max-width:420px){
+  .formside{padding:24px 18px}
+  .theme-tgl{top:12px;right:12px;min-width:44px;min-height:44px}
+  .row-between{align-items:flex-start;gap:12px;flex-wrap:wrap}
+  .pw-toggle{min-width:44px;min-height:44px}
 }

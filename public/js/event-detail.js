@@ -152,12 +152,34 @@
             var fd = new FormData(form);
             if (!$('#m-confirm').checked) fd.delete('manual_confirmed'); else fd.set('manual_confirmed', '1');
             fd.set('signature', ManSig.dataUrl());
+            var success = function () { Detail.close(); form.reset(); ManSig.clear(); toast('Présence ajoutée'); Detail.poll(); };
+            var fail = function (msg) { err.textContent = msg || 'Une erreur est survenue.'; err.hidden = false; };
+            var handle422 = function (res) {
+                fail(res.data.errors ? Object.values(res.data.errors)[0][0] : (res.data.message || 'Vérifiez les champs.'));
+            };
+
             post(CFG.urls.manual, fd).then(function (res) {
-                if (res.status === 201) { Detail.close(); form.reset(); ManSig.clear(); toast('Présence ajoutée'); Detail.poll(); }
-                else if (res.status === 422) {
-                    var msgs = res.data.errors ? Object.values(res.data.errors)[0][0] : (res.data.message || 'Vérifiez les champs.');
-                    err.textContent = msgs; err.hidden = false;
-                } else { err.textContent = 'Une erreur est survenue.'; err.hidden = false; }
+                if (res.status === 201) { success(); return; }
+                if (res.status === 422) { handle422(res); return; }
+                // Anti-chevauchement : la personne est déjà active sur un autre
+                // événement. On demande une confirmation explicite avant de la
+                // clôturer là-bas et de l'ajouter ici (même règle que le flux public).
+                if (res.status === 409 && res.data.overlap) {
+                    var ov = res.data.overlap;
+                    var ok = window.confirm(
+                        'Cette personne est déjà présente sur « ' + ov.event_title + ' » (' + ov.when + ').\n'
+                        + 'Confirmer son départ de cet événement et l\'ajouter ici ?'
+                    );
+                    if (!ok) return;
+                    fd.set('confirm_departure', '1');
+                    post(CFG.urls.manual, fd).then(function (res2) {
+                        if (res2.status === 201) { success(); return; }
+                        if (res2.status === 422) { handle422(res2); return; }
+                        fail();
+                    });
+                    return;
+                }
+                fail();
             });
         },
 

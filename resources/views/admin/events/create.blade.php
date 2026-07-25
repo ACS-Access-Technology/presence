@@ -24,6 +24,34 @@
                         <h2><span class="n">1</span> Informations</h2>
                         <p class="desc">Le titre et les horaires apparaîtront sur l'écran de projection et la page d'émargement.</p>
 
+                        @if ($mustChooseFiliale)
+                            {{-- SuperAdmin en « Toutes les filiales » : le rattachement doit
+                                 être explicite (pas de repli silencieux). Les types proposés
+                                 dépendent de ce choix (filtrés côté client). --}}
+                            <div class="field {{ $errors->has('filiale_id') ? 'invalid' : '' }}">
+                                <label for="event-filiale">Filiale <span class="req">*</span></label>
+                                <select class="control" id="event-filiale" name="filiale_id" required aria-invalid="{{ $errors->has('filiale_id') ? 'true' : 'false' }}">
+                                    <option value="" @selected(! old('filiale_id'))>— Choisissez une filiale —</option>
+                                    @foreach ($filiales as $f)
+                                        <option value="{{ $f['id'] }}" @selected(old('filiale_id') == $f['id'])>{{ $f['name'] }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="help">L'événement et son type y seront rattachés. Choisissez-la d'abord : les types proposés en dépendent.</div>
+                                <div class="err-msg">{{ $errors->first('filiale_id') }}</div>
+                            </div>
+                        @elseif (! empty($contextFilialeName))
+                            {{-- Contexte filiale fixé (compte scopé ou filiale sélectionnée en
+                                 topbar) : affiché en lecture seule, aucun choix caché. --}}
+                            <div class="field">
+                                <label>Filiale</label>
+                                <p class="control" style="display:flex;align-items:center;gap:8px;color:var(--muted)">
+                                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h6"/></svg>
+                                    {{ $contextFilialeName }}
+                                </p>
+                                <div class="help">Cet événement sera créé dans : <strong>{{ $contextFilialeName }}</strong>.</div>
+                            </div>
+                        @endif
+
                         <div class="field {{ $errors->has('title') ? 'invalid' : '' }}">
                             <label for="title">Titre de l'événement <span class="req">*</span></label>
                             <input class="control" id="title" name="title" value="{{ old('title') }}" placeholder="Ex. Atelier Cybersécurité" aria-invalid="{{ $errors->has('title') ? 'true' : 'false' }}" required>
@@ -34,8 +62,8 @@
                             <label>Type d'événement <span class="req">*</span></label>
                             <div class="typepick" role="radiogroup" aria-label="Type d'événement">
                                 @foreach ($types as $type)
-                                    <label class="typeopt" style="--tc:{{ $type->color }}">
-                                        <input type="radio" name="event_type_id" value="{{ $type->id }}" @checked(old('event_type_id') == $type->id || (!old('event_type_id') && $loop->first)) required>
+                                    <label class="typeopt" data-filiale="{{ $type->filiale_id }}" style="--tc:{{ $type->color }}">
+                                        <input type="radio" name="event_type_id" value="{{ $type->id }}" @checked(old('event_type_id') == $type->id || (! $mustChooseFiliale && ! old('event_type_id') && $loop->first)) required>
                                         <span class="typeopt__c">{{ $type->name }}</span>
                                     </label>
                                 @endforeach
@@ -62,6 +90,15 @@
                         </div>
                         <p class="help">L'émargement n'est possible qu'entre ces horaires. En fin d'événement, un récapitulatif est envoyé par email aux participants.</p>
 
+                        <label class="graceopt" style="display:flex;gap:10px;align-items:flex-start;margin-top:6px">
+                            <input type="hidden" name="grace_check_in_enabled" value="0">
+                            <input type="checkbox" name="grace_check_in_enabled" value="1" @checked(old('grace_check_in_enabled')) style="width:20px;height:20px;accent-color:var(--accent);margin-top:1px">
+                            <span>
+                                <strong>Laisser le QR fonctionnel 15 minutes après la clôture</strong>
+                                <span class="help" style="display:block;margin-top:2px">Un visiteur en retard peut encore émarger jusqu'à 15 min après l'heure de fin officielle. L'événement s'affiche « Clos » mais l'émargement reste ouvert le temps de ce délai.</span>
+                            </span>
+                        </label>
+
                         <div id="seances-extra"></div>
                         <button type="button" class="btn btn--ghost btn--sm" onclick="EventForm.addSeance()" style="margin-bottom:6px">
                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 5v14M5 12h14"/></svg>
@@ -76,8 +113,8 @@
                         </div>
 
                         <div class="field" style="margin-top:6px">
-                            <label>Périmètre anti-fraude <span class="opt">(facultatif)</span></label>
-                            <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué autour de ce point. Laissez vide pour ne rien imposer (indicatif seulement).</div>
+                            <label>Périmètre anti-fraude <span class="opt">(facultatif en QR tournant · <strong>obligatoire en QR statique</strong>)</span></label>
+                            <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué autour de ce point. En mode QR statique il est <strong>exigé</strong> (le QR fixe étant photographiable, la géolocalisation est la seule barrière contre un émargement à distance). En QR tournant, laissez vide pour ne rien imposer.</div>
                             <div class="grid3" style="margin-top:6px">
                                 <div class="field {{ $errors->has('geofence_latitude') ? 'invalid' : '' }}">
                                     <label for="geo-lat">Latitude</label>
@@ -124,7 +161,7 @@
                                         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Aucun écran ni vidéoprojecteur nécessaire.</li>
                                         <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>Idéal pour accueil, stand, petite salle.</li>
                                     </ul>
-                                    <div class="mode__note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Photographiable : renseignez un périmètre anti-fraude ci-dessus pour bloquer l'émargement à distance.</div>
+                                    <div class="mode__note"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>Photographiable : le périmètre anti-fraude ci-dessus est obligatoire pour bloquer l'émargement à distance.</div>
                                 </div>
                             </label>
                             <label class="mode">
@@ -215,10 +252,14 @@
 @endsection
 
 @push('scripts')
+    {{-- Pré-assignée : `@json` mal-parse une expression closure à virgules internes
+         (tronque après la 1re « , » de haut niveau). Un seul argument = compilation sûre. --}}
+    @php($jsTypes = $types->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color, 'filiale_id' => $t->filiale_id]))
     <script>
         window.EVENT_CREATE = {
             searchUrl: @json(route('admin.people.search')),
-            types: @json($types->map(fn ($t) => ['id' => $t->id, 'name' => $t->name, 'color' => $t->color])),
+            types: @json($jsTypes),
+            mustChooseFiliale: @json($mustChooseFiliale),
         };
     </script>
     <script src="{{ versioned_asset('js/event-create.js') }}"></script>

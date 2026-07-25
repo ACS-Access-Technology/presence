@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Event;
+use App\Models\EventType;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -52,7 +53,7 @@ class PortfolioController extends Controller
                 'photos' => (int) $events->sum('photos_count'),
                 'documents' => (int) $events->sum('documents_count'),
             ],
-            'types' => \App\Models\EventType::orderBy('position')->get(),
+            'types' => EventType::orderBy('position')->get(),
         ]);
     }
 

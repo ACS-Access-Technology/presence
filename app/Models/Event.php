@@ -6,6 +6,7 @@ namespace App\Models;
 
 use App\Enums\EventStatus;
 use App\Enums\QrMode;
+use App\Models\Scopes\FilialeScope;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -16,10 +17,12 @@ use Illuminate\Support\Carbon;
  * Événement ACS Groupe.
  *
  * @property int $id
+ * @property int $filiale_id
  * @property string $title
  * @property int $event_type_id
  * @property Carbon $starts_at
  * @property Carbon $ends_at
+ * @property bool $grace_check_in_enabled
  * @property ?string $location
  * @property ?float $geofence_latitude
  * @property ?float $geofence_longitude
@@ -28,7 +31,7 @@ use Illuminate\Support\Carbon;
  * @property ?string $qr_secret
  * @property string $public_slug
  * @property ?Carbon $closed_at
- * @property ?Carbon $report_email_sent_at
+ * @property ?Carbon $report_email_queued_at
  * @property ?Carbon $cancelled_at
  * @property ?string $cancellation_reason
  */
@@ -36,15 +39,41 @@ class Event extends Model
 {
     /** @var list<string> */
     protected $fillable = [
-        'title', 'event_type_id', 'starts_at', 'ends_at', 'location',
+        'filiale_id',
+        'title', 'event_type_id', 'starts_at', 'ends_at', 'grace_check_in_enabled', 'location',
         'geofence_latitude', 'geofence_longitude', 'geofence_radius_m',
         'qr_mode', 'qr_secret', 'public_slug',
-        'closed_at', 'report_email_sent_at', 'cancelled_at', 'cancellation_reason',
+        'closed_at', 'report_email_queued_at', 'cancelled_at', 'cancellation_reason',
         'created_by', 'event_series_id', 'series_position',
     ];
 
     /** @var list<string> */
     protected $hidden = ['qr_secret'];
+
+    /**
+     * Délai de grâce d'émargement après l'heure de clôture (constante, Q-ME-5 :
+     * fixe 15 min pour tous ; configurabilité en réserve — YAGNI).
+     */
+    public const int GRACE_CHECK_IN_MINUTES = 15;
+
+    /**
+     * - Pose le global scope de cloisonnement par filiale (inactif hors requête
+     *   admin — voir {@see FilialeScope}).
+     * - À la création, renseigne `filiale_id` s'il n'est pas fourni via
+     *   {@see Filiale::resolveForCreation()} (compte → contexte sélectionné →
+     *   défaut). Garantit que la contrainte NOT NULL ne casse jamais la création,
+     *   y compris hors requête admin (CLI, tests, imports).
+     */
+    protected static function booted(): void
+    {
+        static::addGlobalScope(new FilialeScope);
+
+        static::creating(function (Event $event): void {
+            if ($event->filiale_id === null) {
+                $event->filiale_id = Filiale::resolveForCreation();
+            }
+        });
+    }
 
     /**
      * @return array<string, string>
@@ -54,8 +83,9 @@ class Event extends Model
         return [
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
+            'grace_check_in_enabled' => 'boolean',
             'closed_at' => 'datetime',
-            'report_email_sent_at' => 'datetime',
+            'report_email_queued_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'qr_mode' => QrMode::class,
             'geofence_latitude' => 'float',
@@ -64,10 +94,25 @@ class Event extends Model
         ];
     }
 
-    /** @return BelongsTo<EventType, $this> */
+    /** @return BelongsTo<Filiale, $this> */
+    public function filiale(): BelongsTo
+    {
+        return $this->belongsTo(Filiale::class);
+    }
+
+    /**
+     * @return BelongsTo<EventType, $this>
+     *
+     * Le type est résolu SANS le global scope de filiale : un événement déjà
+     * scopé porte légitimement son type, dont l'affichage ne doit pas dépendre du
+     * contexte courant (sinon `->with('type')` peut renvoyer null quand le contexte
+     * cible une autre filiale que celle du type). L'événement lui-même reste, lui,
+     * cloisonné.
+     */
     public function type(): BelongsTo
     {
-        return $this->belongsTo(EventType::class, 'event_type_id');
+        return $this->belongsTo(EventType::class, 'event_type_id')
+            ->withoutGlobalScope(FilialeScope::class);
     }
 
     /** @return BelongsTo<EventSeries, $this> */
@@ -156,14 +201,36 @@ class Event extends Model
         return ! $this->isCancelled() && ($now ?? Carbon::now())->greaterThanOrEqualTo($this->starts_at);
     }
 
-    /** L'émargement est ouvert seulement pendant la fenêtre, hors annulation/clôture. */
+    /**
+     * Borne effective de fermeture de l'émargement : `ends_at` par défaut, ou
+     * `ends_at + 15 min` si le délai de grâce est activé (QR post-clôture, § 6).
+     *
+     * ⚠️ Découplé de {@see status()} : un événement affiche « Clos » dès
+     * `now > ends_at`, MÊME pendant la grâce. « Statut affiché » et « émargement
+     * encore ouvert » sont deux notions distinctes.
+     */
+    public function checkInClosesAt(): Carbon
+    {
+        $closesAt = $this->ends_at->copy();
+
+        return $this->grace_check_in_enabled
+            ? $closesAt->addMinutes(self::GRACE_CHECK_IN_MINUTES)
+            : $closesAt;
+    }
+
+    /**
+     * L'émargement est ouvert entre `starts_at` et {@see checkInClosesAt()},
+     * hors annulation/clôture. Une clôture manuelle (`closed_at` posé) ferme
+     * immédiatement l'émargement et PRIME sur le délai de grâce (Q-ME-7 :
+     * l'organisateur ferme volontairement).
+     */
     public function isOpenForCheckIn(?Carbon $now = null): bool
     {
         $now ??= Carbon::now();
 
         return ! $this->isCancelled()
             && $this->closed_at === null
-            && $now->betweenIncluded($this->starts_at, $this->ends_at);
+            && $now->betweenIncluded($this->starts_at, $this->checkInClosesAt());
     }
 
     /** Le mode QR se verrouille dès qu'une présence existe. */

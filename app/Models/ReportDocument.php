@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Http\Controllers\Admin\ReportController;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -37,9 +38,13 @@ class ReportDocument extends Model
         return $this->belongsTo(Event::class);
     }
 
-    /** URL publique du document (via le lien symbolique storage). */
+    /**
+     * URL AUTHENTIFIÉE du document (route admin scopée par filiale), et non une URL
+     * publique : le fichier vit sur le disque privé, servi par
+     * {@see ReportController::showDocument()}.
+     */
     public function url(): string
     {
-        return \Illuminate\Support\Facades\Storage::disk('public')->url($this->path);
+        return route('admin.events.report.documents.show', [$this->event_id, $this->id]);
     }
 }

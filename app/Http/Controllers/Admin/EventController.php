@@ -11,8 +11,12 @@ use App\Mail\EventInvitationMail;
 use App\Models\Event;
 use App\Models\EventSeries;
 use App\Models\EventType;
+use App\Models\Filiale;
+use App\Models\Scopes\FilialeScope;
 use App\Services\EventPresenceService;
+use App\Support\FilialeScoping;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -62,6 +66,11 @@ class EventController extends Controller
             'types' => EventType::where('is_active', true)->orWhere('id', $event->event_type_id)->orderBy('position')->get(),
             'lastReschedule' => $lastReschedule,
             'siblingSeances' => $siblingSeances,
+            // Transfert vers une filiale (SuperAdmin uniquement, T-ME-14) : liste
+            // des filiales cibles possibles (hors celle de l'événement) avec leurs
+            // types actifs, pour peupler le sélecteur dépendant côté client. `null`
+            // pour les autres rôles → aucune action de transfert exposée.
+            'transferFiliales' => $this->transferFiliales($event),
             'rows' => $this->presence->rows($event),
             'stats' => $this->presence->stats($event),
             'pendingInvitees' => $this->presence->pendingInvitees($event),
@@ -80,10 +89,28 @@ class EventController extends Controller
         ]);
     }
 
-    public function create(): View
+    /**
+     * Formulaire de création. La filiale de rattachement est rendue EXPLICITE
+     * (anomalie P1) :
+     *  - contexte filiale précis (AdminFiliale/Organisateur, ou SuperAdmin ayant
+     *    sélectionné une filiale en topbar) → affichée en lecture seule ;
+     *  - SuperAdmin en « Toutes les filiales » → un choix devient obligatoire, et
+     *    les types proposés sont filtrés (côté client) sur la filiale choisie.
+     */
+    public function create(Request $request, FilialeScoping $scoping): View
     {
+        $contextFilialeId = $scoping->filialeId();
+        $mustChooseFiliale = $request->user()->isSuperAdmin() && $contextFilialeId === null;
+
         return view('admin.events.create', [
+            // En mode « choix », le global scope est no-op : on inclut le filiale_id
+            // de chaque type pour permettre le filtrage client par filiale.
             'types' => EventType::where('is_active', true)->orderBy('position')->get(),
+            'mustChooseFiliale' => $mustChooseFiliale,
+            'contextFilialeName' => $contextFilialeId !== null ? Filiale::find($contextFilialeId)?->name : null,
+            'filiales' => $mustChooseFiliale
+                ? Filiale::where('is_active', true)->orderBy('name')->get(['id', 'name'])
+                : collect(),
         ]);
     }
 
@@ -92,7 +119,12 @@ class EventController extends Controller
         $data = $request->validated();
         $extraSeances = $data['extra_seances'] ?? [];
 
-        $firstEvent = DB::transaction(function () use ($data, $extraSeances, $request): Event {
+        // Filiale cible résolue et validée (jamais un repli silencieux). Appliquée
+        // à TOUTES les séances de la série (une série ne s'étale pas sur plusieurs
+        // filiales).
+        $filialeId = $request->resolvedFilialeId();
+
+        $firstEvent = DB::transaction(function () use ($data, $extraSeances, $request, $filialeId): Event {
             $series = null;
             if ($extraSeances !== []) {
                 $series = EventSeries::create([
@@ -108,10 +140,12 @@ class EventController extends Controller
 
             foreach ($seances as $position => $seance) {
                 $events[] = Event::create([
+                    'filiale_id' => $filialeId,
                     'title' => $data['title'],
                     'event_type_id' => $data['event_type_id'],
                     'starts_at' => Carbon::parse($seance['date'].' '.$seance['start']),
                     'ends_at' => Carbon::parse($seance['date'].' '.$seance['end']),
+                    'grace_check_in_enabled' => $data['grace_check_in_enabled'] ?? false,
                     'location' => $data['location'] ?? null,
                     'geofence_latitude' => $data['geofence_latitude'] ?? null,
                     'geofence_longitude' => $data['geofence_longitude'] ?? null,
@@ -147,6 +181,40 @@ class EventController extends Controller
             : 'Événement créé.';
 
         return redirect()->route('admin.events.show', $firstEvent)->with('status', $message);
+    }
+
+    /**
+     * Filiales cibles d'un transfert d'événement (SuperAdmin uniquement).
+     * Chaque filiale porte ses types d'événement actifs — les types étant
+     * cloisonnés par filiale (Q-ME-10), le SuperAdmin doit choisir un type
+     * existant dans la filiale de destination. Retourne `null` pour tout autre
+     * rôle (aucune action de transfert exposée dans la vue).
+     *
+     * @return list<array{id:int, name:string, types:list<array<string,mixed>>}>|null
+     */
+    private function transferFiliales(Event $event): ?array
+    {
+        if (! auth()->user()?->isSuperAdmin()) {
+            return null;
+        }
+
+        return Filiale::query()
+            ->where('id', '!=', $event->filiale_id)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Filiale $filiale): array => [
+                'id' => $filiale->id,
+                'name' => $filiale->name,
+                // Types de la filiale CIBLE (autre que le contexte courant) : le
+                // global scope doit être levé pour les voir.
+                'types' => EventType::withoutGlobalScope(FilialeScope::class)
+                    ->where('filiale_id', $filiale->id)
+                    ->where('is_active', true)
+                    ->orderBy('position')
+                    ->get(['id', 'name', 'color'])
+                    ->all(),
+            ])
+            ->all();
     }
 
     /** Corrige titre / type / lieu / périmètre anti-fraude — n'affecte ni les horaires ni le mode QR. */

@@ -12,6 +12,7 @@
         Retour à l'annuaire
     </a>
 
+    <div class="participant-detail">
     <div class="profile">
         <div class="profile__top">
             <span class="profile__av" style="background:{{ $color }}">{{ $initials }}</span>
@@ -54,5 +55,6 @@
                 </tbody>
             </table>
         </div>
+    </div>
     </div>
 @endsection

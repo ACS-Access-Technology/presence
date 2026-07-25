@@ -26,6 +26,8 @@ class EventReportTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
+        Storage::fake('local');
+        // Le disque public est faké aussi pour vérifier qu'aucun média n'y atterrit.
         Storage::fake('public');
         $this->user = User::factory()->create();
         $this->type = EventType::create(['name' => 'Atelier', 'color' => '#7c3aed', 'position' => 0]);
@@ -73,7 +75,9 @@ class EventReportTest extends TestCase
 
         $this->assertDatabaseHas('report_documents', ['event_id' => $event->id, 'original_name' => 'bilan.pdf']);
         $path = $event->documents()->first()->path;
-        Storage::disk('public')->assertExists($path);
+        Storage::disk('local')->assertExists($path);
+        // Défense en profondeur : le média ne doit JAMAIS atterrir sur le disque public.
+        Storage::disk('public')->assertMissing($path);
         $this->assertNotNull($response->json('documents.0.delete_url'));
     }
 
@@ -95,13 +99,102 @@ class EventReportTest extends TestCase
         ])->assertStatus(201);
 
         $photo = $event->photos()->firstOrFail();
-        Storage::disk('public')->assertExists($photo->path);
+        Storage::disk('local')->assertExists($photo->path);
 
         $this->actingAs($this->user)
             ->deleteJson(route('admin.events.report.photos.destroy', [$event, $photo]))
             ->assertOk();
         $this->assertDatabaseMissing('report_photos', ['id' => $photo->id]);
-        Storage::disk('public')->assertMissing($photo->path);
+        Storage::disk('local')->assertMissing($photo->path);
+    }
+
+    public function test_url_du_document_pointe_vers_la_route_authentifiee_pas_le_disque_public(): void
+    {
+        $event = $this->event();
+        $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
+            'files' => [UploadedFile::fake()->create('bilan.pdf', 50, 'application/pdf')],
+        ])->assertStatus(201);
+
+        $doc = $event->documents()->firstOrFail();
+
+        $this->assertSame(
+            route('admin.events.report.documents.show', [$event->id, $doc->id]),
+            $doc->url(),
+        );
+        // Aucune trace d'URL /storage/ publique.
+        $this->assertStringNotContainsString('/storage/', $doc->url());
+    }
+
+    public function test_document_servi_depuis_le_disque_prive_pour_un_utilisateur_authentifie(): void
+    {
+        $event = $this->event();
+        $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
+            'files' => [UploadedFile::fake()->create('bilan.pdf', 50, 'application/pdf')],
+        ])->assertStatus(201);
+
+        $doc = $event->documents()->firstOrFail();
+
+        $this->actingAs($this->user)
+            ->get(route('admin.events.report.documents.show', [$event, $doc]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf')
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+    }
+
+    public function test_photo_servie_depuis_le_disque_prive_pour_un_utilisateur_authentifie(): void
+    {
+        $event = $this->event();
+        $this->actingAs($this->user)->postJson(route('admin.events.report.photos.store', $event), [
+            'files' => [UploadedFile::fake()->image('activite.jpg', 400, 300)],
+        ])->assertStatus(201);
+
+        $photo = $event->photos()->firstOrFail();
+
+        $this->actingAs($this->user)
+            ->get(route('admin.events.report.photos.show', [$event, $photo]))
+            ->assertOk()
+            ->assertHeader('X-Content-Type-Options', 'nosniff');
+    }
+
+    public function test_document_inaccessible_sans_authentification(): void
+    {
+        // Semé directement (sans actingAs, qui persisterait l'auth pour tout le test).
+        $event = $this->event();
+        $path = 'reports/'.$event->id.'/documents/secret.pdf';
+        Storage::disk('local')->put($path, 'CONFIDENTIEL');
+        $doc = $event->documents()->create([
+            'original_name' => 'secret.pdf', 'path' => $path, 'mime' => 'application/pdf', 'size' => 12,
+        ]);
+
+        // Non connecté → redirigé vers la connexion (jamais servi).
+        $this->get(route('admin.events.report.documents.show', [$event, $doc]))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_photo_inaccessible_sans_authentification(): void
+    {
+        $event = $this->event();
+        $path = 'reports/'.$event->id.'/photos/secret.jpg';
+        Storage::disk('local')->put($path, 'IMAGE');
+        $photo = $event->photos()->create(['path' => $path, 'position' => 1]);
+
+        $this->get(route('admin.events.report.photos.show', [$event, $photo]))
+            ->assertRedirect(route('login'));
+    }
+
+    public function test_media_show_scope_a_son_evenement(): void
+    {
+        $event = $this->event();
+        $other = $this->event();
+        $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
+            'files' => [UploadedFile::fake()->create('doc.pdf', 50, 'application/pdf')],
+        ]);
+        $doc = $event->documents()->firstOrFail();
+
+        // Servir via un AUTRE événement → 404 (scopeBindings).
+        $this->actingAs($this->user)
+            ->get(route('admin.events.report.documents.show', [$other, $doc->id]))
+            ->assertNotFound();
     }
 
     public function test_media_scope_a_son_evenement(): void

@@ -5,7 +5,7 @@
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#eef0f4;padding:24px 12px">
         <tr><td align="center">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e3e6ec">
-                <tr><td style="background:#1E2A78;padding:22px 28px;color:#fff;font-weight:800;font-size:1.1rem;letter-spacing:-.02em">
+                <tr><td style="background:{{ $accentColor }};padding:22px 28px;color:#fff;font-weight:800;font-size:1.1rem;letter-spacing:-.02em">
                     {{ $orgName }} · Presence
                 </td></tr>
                 <tr><td style="padding:28px">
@@ -18,7 +18,7 @@
                         Référence : <strong>{{ $reference }}</strong>
                     </p>
                     <p style="margin:0">
-                        <a href="{{ $feedbackUrl }}" style="color:#1E2A78;font-weight:600;text-decoration:none">Donnez votre avis sur cette activité →</a>
+                        <a href="{{ $feedbackUrl }}" style="color:{{ $accentColor }};font-weight:600;text-decoration:none">Donnez votre avis sur cette activité →</a>
                     </p>
                 </td></tr>
                 <tr><td style="padding:16px 28px;border-top:1px solid #e3e6ec;color:#8a91a0;font-size:.78rem">
