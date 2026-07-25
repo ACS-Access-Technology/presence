@@ -33,10 +33,11 @@
             d.textContent = 'Merci de patienter quelques instants.';
             ic.innerHTML = '<span class="spin" aria-hidden="true"></span>';
 
-            if (!('geolocation' in navigator)) { Geo.fail(); return; }
+            if (!window.isSecureContext) { Geo.fail('insecure'); return; }
+            if (!('geolocation' in navigator)) { Geo.fail('unsupported'); return; }
             navigator.geolocation.getCurrentPosition(
                 function (pos) { Geo.success(pos); },
-                function () { Geo.fail(); },
+                function (err) { Geo.fail(err.code); },
                 { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
             );
         },
@@ -54,7 +55,52 @@
             d.textContent = 'Vous pouvez valider votre présence.';
             Flow.validate();
         },
-        fail: function () { State.geo = 'denied'; State.coords = null; showScreen('error'); },
+        fail: function (reason) {
+            State.geo = 'denied'; State.coords = null;
+            var MESSAGES = {
+                insecure: {
+                    title: 'Connexion non sécurisée',
+                    desc: "La géolocalisation nécessite une connexion sécurisée (https). Ce lien n'en est pas une — signalez-le à l'organisateur.",
+                    tips: []
+                },
+                unsupported: {
+                    title: 'Localisation indisponible',
+                    desc: 'Votre navigateur ne prend pas en charge la géolocalisation.',
+                    tips: ['Essayez avec un autre navigateur (Chrome, Safari récent).']
+                },
+                1: {
+                    title: 'Localisation refusée',
+                    desc: "Vous avez refusé l'accès à votre position pour ce site.",
+                    tips: ['Ouvrez les réglages du site dans votre navigateur (icône cadenas ou (i) à côté de l\'adresse) et autorisez la localisation.', 'Puis réessayez ci-dessous.']
+                },
+                2: {
+                    title: 'Position indisponible',
+                    desc: "Votre appareil n'arrive pas à déterminer sa position.",
+                    tips: ['Vérifiez que le GPS / la localisation est activé(e) sur votre appareil.', 'Rapprochez-vous d\'une fenêtre ou sortez à l\'extérieur si possible.']
+                },
+                3: {
+                    title: 'Localisation trop longue',
+                    desc: 'La recherche de votre position a pris trop de temps.',
+                    tips: ['Vérifiez votre connexion et réessayez.']
+                }
+            };
+            var m = MESSAGES[reason] || {
+                title: 'Nous avons besoin de votre position',
+                desc: "Votre position confirme votre présence sur place. Sans elle, l'émargement ne peut pas être validé.",
+                tips: ['Autorisez la localisation dans votre navigateur.', 'Vérifiez que le GPS / la localisation est activé(e) sur votre appareil.']
+            };
+            $('#geoErrTitle').textContent = m.title;
+            $('#geoErrDesc').textContent = m.desc;
+            var tipsList = $('#geoErrTips');
+            tipsList.textContent = '';
+            m.tips.forEach(function (t) {
+                var li = document.createElement('li');
+                li.textContent = t;
+                tipsList.appendChild(li);
+            });
+            tipsList.hidden = m.tips.length === 0;
+            showScreen('error');
+        },
         retry: function () { showScreen('form'); Geo.request(); }
     };
 

@@ -129,9 +129,9 @@
             <div class="errscreen__ic">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><line x1="9.5" y1="9.5" x2="14.5" y2="14.5"/><line x1="14.5" y1="9.5" x2="9.5" y2="14.5"/></svg>
             </div>
-            <h1>Nous avons besoin de votre position</h1>
-            <p>Votre position confirme votre présence sur place. Sans elle, l'émargement ne peut pas être validé.</p>
-            <ul class="tips">
+            <h1 id="geoErrTitle">Nous avons besoin de votre position</h1>
+            <p id="geoErrDesc">Votre position confirme votre présence sur place. Sans elle, l'émargement ne peut pas être validé.</p>
+            <ul class="tips" id="geoErrTips">
                 <li>Autorisez la localisation dans votre navigateur.</li>
                 <li>Vérifiez que le GPS / la localisation est activé(e) sur votre appareil.</li>
             </ul>
