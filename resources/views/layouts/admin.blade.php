@@ -15,11 +15,7 @@
 <div class="app">
     <aside class="side" id="side" aria-label="Navigation principale">
         <div class="side__brand">
-            <img src="{{ asset('assets/logo-acs-groupe.png') }}" alt="ACS Groupe" class="side__brand-ic">
-            <div>
-                <div class="side__brand-n">Presence</div>
-                <div class="side__brand-s">ACS Groupe</div>
-            </div>
+            <img src="{{ asset('assets/logo-acs-groupe.png') }}" alt="ACS Groupe" width="100%">
         </div>
         <nav class="nav" aria-label="Sections">
             <a href="{{ route('admin.events.index') }}" class="{{ ($nav ?? '') === 'events' ? 'active' : '' }}" @if(($nav ?? '')==='events') aria-current="page" @endif>

@@ -18,7 +18,7 @@ class PortfolioController extends Controller
     public function index(): View
     {
         $events = Event::query()
-            ->with(['type', 'photos' => fn ($q) => $q->orderBy('position')])
+            ->with(['type', 'report', 'photos' => fn ($q) => $q->orderBy('position')])
             ->withCount(['documents', 'photos'])
             ->where(function ($q): void {
                 $q->whereHas('report', fn ($r) => $r->whereNotNull('body')->where('body', '!=', ''))
