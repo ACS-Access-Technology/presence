@@ -18,7 +18,7 @@ jobs:
         uses: shivammathur/setup-php@7c071dfe9dc99bdf297fa79cb49ea005b9fcadbc  # v2
         with:
           php-version: '8.3'
-          extensions: mbstring, pdo, pdo_sqlite, sqlite3, fileinfo
+          extensions: mbstring, pdo, pdo_sqlite, sqlite3, fileinfo, intl
           coverage: none
 
       - name: Node.js 20
