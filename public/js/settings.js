@@ -17,6 +17,10 @@
         t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove('show'); }, 2600);
     }
     function url(tpl, id) { return tpl.replace('__ID__', id); }
+    function initials(name) {
+        var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
+        return ((parts[0] || '')[0] || '') + ((parts[1] || '')[0] || '');
+    }
 
     var Settings = {
         types: CFG.types.slice(),
@@ -153,7 +157,7 @@
                 var st = !a.is_active ? '<span class="st st--off">Désactivé</span>'
                     : (a.never_connected ? '<span class="st st--invited">Invité</span>' : '<span class="st st--on">Actif</span>');
                 var filialeCell = isSuper
-                    ? '<td>' + (a.role === 'super_admin' ? '— <span class="mut">holding</span>' : esc(a.filiale_name || '—')) + '</td>'
+                    ? '<td>' + (a.role === 'super_admin' ? '— <span class="mut">holding</span>' : '<span class="fdot"></span>' + esc(a.filiale_name || '—')) + '</td>'
                     : '';
                 var canManage = a.can_manage;
                 var actions;
@@ -162,8 +166,9 @@
                 } else if (a.never_connected && canManage) {
                     actions = '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.resetAccount(' + a.id + ')">Renvoyer l\'invitation</button>';
                 } else {
+                    var reassignIc = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="15" height="15"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg> ';
                     var reassign = (isSuper && a.role !== 'super_admin')
-                        ? '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.reassignModal(' + a.id + ')">Réassigner</button> ' : '';
+                        ? '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.reassignModal(' + a.id + ')">' + reassignIc + 'Réassigner</button> ' : '';
                     var edit = canManage
                         ? '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.accountModal(' + a.id + ')">Modifier</button> ' : '';
                     var reset = canManage
@@ -172,8 +177,9 @@
                         ? '<button class="mini mini--danger" title="Supprimer" onclick="Settings.deleteAccount(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' : '';
                     actions = reassign + edit + reset + del;
                 }
+                var avStyle = a.is_self ? ' style="background:var(--brand-orange)"' : '';
                 return '<tr>'
-                    + '<td><div class="person__n">' + esc(a.name) + '</div><div class="person__e">' + esc(a.email) + '</div></td>'
+                    + '<td><div class="person"><span class="av"' + avStyle + '>' + esc(initials(a.name)) + '</span><div><div class="person__n">' + esc(a.name) + '</div><div class="person__e">' + esc(a.email) + '</div></div></div></td>'
                     + filialeCell
                     + '<td>' + role + '</td>'
                     + '<td>' + st + '</td>'

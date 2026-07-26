@@ -369,6 +369,7 @@ body.sheet-open{overflow:hidden}
 .role--admin{background:var(--accent-soft);color:var(--accent)}
 .role--super{background:var(--brand-orange-soft);color:var(--brand-orange)}
 .st--invited{background:var(--surface-3);color:var(--muted)}
+.fdot{width:8px;height:8px;border-radius:50%;background:var(--accent-bright);display:inline-block;margin-right:7px;vertical-align:middle}
 .mini{width:36px;height:36px;border-radius:9px;border:1px solid var(--border-strong);background:var(--surface);color:var(--muted);display:inline-grid;place-items:center;cursor:pointer;transition:.12s;vertical-align:middle}
 .mini + .mini{margin-left:6px}
 .mini:hover{border-color:var(--accent);color:var(--accent)}
