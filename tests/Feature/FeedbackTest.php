@@ -12,7 +12,6 @@ use App\Models\EventType;
 use App\Models\Person;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -88,8 +87,8 @@ class FeedbackTest extends TestCase
     public function test_limite_le_debit_pour_freiner_l_enumeration_de_references(): void
     {
         // La référence est une clé d'accès (identité + dépôt d'avis) : sans limite,
-        // elle est brute-forçable. On borne les consultations par IP.
-        RateLimiter::clear('feedback-show:127.0.0.1');
+        // elle est brute-forçable. On borne les consultations par IP (middleware
+        // `throttle:30,1` sur la route, voir routes/web.php).
         $attendance = $this->attendance();
         $url = route('public.feedback.show', ['attendance' => $attendance->reference]);
 
@@ -98,5 +97,21 @@ class FeedbackTest extends TestCase
         }
 
         $this->get($url)->assertStatus(429);
+    }
+
+    /**
+     * Régression : le throttle doit tourner AVANT la résolution du binding
+     * `{attendance:reference}`. Posé dans le corps du contrôleur, il ne
+     * s'exécuterait jamais pour une référence inexistante (404 avant d'atteindre
+     * le code) — l'énumération de références invalides resterait illimitée.
+     */
+    public function test_limite_le_debit_meme_sur_des_references_inexistantes(): void
+    {
+        for ($i = 0; $i < 30; $i++) {
+            $this->get(route('public.feedback.show', ['attendance' => 'REF-BIDON-'.$i]));
+        }
+
+        $this->get(route('public.feedback.show', ['attendance' => 'REF-BIDON-ENCORE']))
+            ->assertStatus(429);
     }
 }

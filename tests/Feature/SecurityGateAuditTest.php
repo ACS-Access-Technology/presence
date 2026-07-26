@@ -86,6 +86,30 @@ class SecurityGateAuditTest extends TestCase
         $this->assertSame($typeA->id, $event->refresh()->event_type_id);
     }
 
+    /**
+     * Régression (revue indépendante post-déploiement) : `UpdateEventRequest`
+     * s'appuyait sur le seul global scope (`EventType::whereKey()->exists()`),
+     * qui est un no-op en contexte SuperAdmin « Toutes les filiales » — un type
+     * d'une AUTRE filiale que celle de l'événement passait la validation,
+     * produisant un état incohérent event.filiale_id != type.filiale_id (jamais
+     * une escalade de privilège, mais une atteinte à l'intégrité avec impact
+     * aval réel : accès `->type->name` sur `null` pour un AdminFiliale scopé).
+     */
+    public function test_regression_super_admin_en_toutes_filiales_ne_peut_pas_repointer_un_event_sur_un_type_hors_de_sa_filiale(): void
+    {
+        $super = User::factory()->superAdmin()->create();
+        $typeA = $this->type($this->a, 'Type A');
+        $typeB = $this->type($this->b, 'Type B');
+        $event = $this->eventIn($this->a, $typeA, 'Event de A');
+
+        // Contexte SuperAdmin explicitement « Toutes » (pas de filiale sélectionnée).
+        $this->actingAs($super)->patch(route('admin.events.update', $event), [
+            'title' => 'Event de A', 'event_type_id' => $typeB->id,
+        ])->assertSessionHasErrors('event_type_id');
+
+        $this->assertSame($typeA->id, $event->refresh()->event_type_id);
+    }
+
     public function test_nominal_organisateur_a_peut_utiliser_un_type_de_sa_filiale(): void
     {
         $orgaA = User::factory()->forFiliale($this->a)->create();

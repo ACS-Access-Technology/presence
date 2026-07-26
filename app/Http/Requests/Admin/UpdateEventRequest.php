@@ -5,8 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Requests\Admin;
 
 use App\Enums\QrMode;
-use App\Http\Requests\Concerns\ValidatesEventTypeInScope;
 use App\Models\Event;
+use App\Models\EventType;
+use App\Models\Scopes\FilialeScope;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -17,8 +18,6 @@ use Illuminate\Validation\Rule;
  */
 class UpdateEventRequest extends FormRequest
 {
-    use ValidatesEventTypeInScope;
-
     public function authorize(): bool
     {
         return true;
@@ -35,7 +34,27 @@ class UpdateEventRequest extends FormRequest
 
         return [
             'title' => ['required', 'string', 'max:150'],
-            'event_type_id' => ['required', 'integer', $this->eventTypeInScopeRule()],
+            // Le type doit appartenir à LA FILIALE DE L'ÉVÉNEMENT (qui ne change pas ici,
+            // seul le transfert la modifie). S'appuyer sur le seul global scope de
+            // filiale ne suffit pas : en contexte SuperAdmin « Toutes les filiales », le
+            // scope est un no-op et laisserait passer un type d'une AUTRE filiale que
+            // celle de l'événement (incohérence event.filiale_id != type.filiale_id).
+            // Même garde explicite que StoreEventRequest, mais contre la filiale figée
+            // de l'événement plutôt qu'une filiale cible choisie à la création.
+            'event_type_id' => ['required', 'integer', function (string $attribute, mixed $value, \Closure $fail) use ($event): void {
+                if (! $event instanceof Event) {
+                    return;
+                }
+
+                $exists = EventType::withoutGlobalScope(FilialeScope::class)
+                    ->whereKey($value)
+                    ->where('filiale_id', $event->filiale_id)
+                    ->exists();
+
+                if (! $exists) {
+                    $fail("Ce type d'événement n'appartient pas à la filiale de cet événement.");
+                }
+            }],
             'location' => ['nullable', 'string', 'max:190'],
 
             // Délai de grâce d'émargement post-clôture (voir Event::checkInClosesAt()).

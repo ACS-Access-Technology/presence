@@ -55,8 +55,13 @@ Route::prefix('e')->name('public.attendance.')->group(function (): void {
 | /avis/{reference} : lien envoyé dans l'email de confirmation de présence.
 */
 Route::prefix('avis')->name('public.feedback.')->group(function (): void {
-    Route::get('/{attendance:reference}', [FeedbackController::class, 'show'])->name('show');
-    Route::post('/{attendance:reference}', [FeedbackController::class, 'store'])->name('store');
+    // `throttle` (middleware Laravel natif) tourne AVANT `SubstituteBindings` dans la
+    // liste de priorité du kernel : la limite par IP s'applique donc même sur une
+    // référence inexistante (404 côté binding), contrairement à un throttle posé dans
+    // le corps du contrôleur qui ne s'exécuterait jamais dans ce cas — ce qui annulait
+    // la protection anti-énumération pour tout accès sur une référence invalide.
+    Route::get('/{attendance:reference}', [FeedbackController::class, 'show'])->name('show')->middleware('throttle:30,1');
+    Route::post('/{attendance:reference}', [FeedbackController::class, 'store'])->name('store')->middleware('throttle:10,1');
 });
 
 /*
