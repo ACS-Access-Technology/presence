@@ -51,7 +51,7 @@ class EventController extends Controller
 
     public function show(Event $event): View
     {
-        $event->load('type', 'report', 'documents', 'photos');
+        $event->load('type', 'documents', 'photos');
         $lastReschedule = $event->reschedules()->latest()->first();
         $siblingSeances = $event->event_series_id !== null
             ? Event::where('event_series_id', $event->event_series_id)
@@ -75,7 +75,6 @@ class EventController extends Controller
             'stats' => $this->presence->stats($event),
             'pendingInvitees' => $this->presence->pendingInvitees($event),
             'feedbackStats' => $this->presence->feedbackStats($event),
-            'report' => $event->report,
             'documents' => $event->documents
                 ->map(fn ($d) => [
                     'id' => $d->id, 'name' => $d->original_name, 'url' => $d->url(), 'size' => $d->size,

@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
- * Compte-rendu d'un événement : texte (markdown), documents et photos.
- * Le compte-rendu n'est éditable qu'une fois l'événement commencé.
+ * Documents et photos d'un événement (alimentent le Portfolio).
+ * Éditables uniquement une fois l'événement commencé.
  *
  * Médias stockés sur le disque PRIVÉ `local` (jamais exposé directement par le
  * serveur web). Le portfolio et les comptes-rendus sont une surface strictement
@@ -28,23 +28,6 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
  */
 class ReportController extends Controller
 {
-    /** Enregistre le texte du compte-rendu. */
-    public function saveText(Request $request, Event $event): JsonResponse
-    {
-        $this->ensureEditable($event);
-
-        $validated = $request->validate([
-            'body' => ['nullable', 'string', 'max:20000'],
-        ]);
-
-        $event->report()->updateOrCreate(
-            ['event_id' => $event->id],
-            ['body' => $validated['body'] ?? null, 'updated_by' => $request->user()->id],
-        );
-
-        return response()->json(['saved_at' => now()->format('H:i')]);
-    }
-
     /** Ajoute un ou plusieurs documents au compte-rendu. */
     public function uploadDocuments(Request $request, Event $event): JsonResponse
     {

@@ -142,7 +142,7 @@
         </button>
         <button class="tab" role="tab" id="tab-stats" aria-selected="false" onclick="Detail.tab('stats')">Statistiques</button>
         <button class="tab" role="tab" id="tab-cr" aria-selected="false" onclick="Detail.tab('cr')">
-            Compte-rendu <span class="cnt" id="cnt-cr">{{ count($documents) + count($photos) }}</span>
+            Photos &amp; documents <span class="cnt" id="cnt-cr">{{ count($documents) + count($photos) }}</span>
         </button>
     </div>
 
@@ -251,33 +251,24 @@
         @if (! $event->hasStarted())
             <div class="cr-locked">
                 <div class="cr-locked__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg></div>
-                <h3>Le compte-rendu s'ouvrira après le début de l'événement</h3>
-                <p>Cette activité n'a pas encore eu lieu. Une fois qu'elle aura démarré, vous pourrez rédiger le compte-rendu, joindre des documents et ajouter les photos — le tout alimentera le portfolio.</p>
+                <h3>Cet onglet s'ouvrira après le début de l'événement</h3>
+                <p>Cette activité n'a pas encore eu lieu. Une fois qu'elle aura démarré, vous pourrez joindre des documents et ajouter des photos — le tout alimentera le portfolio.</p>
             </div>
         @else
             <div class="cr-banner">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 2"/></svg>
-                <div><b>{{ $event->status()->value === 'clos' ? 'Activité clôturée.' : 'Activité en cours.' }}</b> <span>Rédigez le compte-rendu, joignez documents et photos — ils sont conservés et visibles dans le portfolio.</span></div>
+                <div><b>{{ $event->status()->value === 'clos' ? 'Activité clôturée.' : 'Activité en cours.' }}</b> <span>Joignez documents et photos — ils sont conservés et visibles dans le portfolio.</span></div>
             </div>
 
             <div class="cr-grid">
                 <div class="cr-card">
-                    <div class="cr-card__hd"><h3>Compte-rendu de l'activité</h3><span class="cr-savestate" id="cr-save"></span></div>
-                    <div class="cr-toolbar">
-                        <button type="button" title="Gras" onclick="Report.wrap('**')"><b>B</b></button>
-                        <button type="button" title="Italique" onclick="Report.wrap('_')"><i>I</i></button>
-                        <button type="button" title="Titre" onclick="Report.prefix('## ')">H</button>
-                        <button type="button" title="Liste à puces" onclick="Report.prefix('- ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></button>
-                        <button type="button" title="Case à cocher" onclick="Report.prefix('- [ ] ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 12l3 3 5-6"/></svg></button>
-                    </div>
-                    <textarea class="cr-textarea" id="cr-text" placeholder="Objectifs, déroulé, décisions prises, actions à suivre…">{{ $report->body ?? '' }}</textarea>
-                    <div class="cr-chars"><span id="cr-count">0</span> caractères</div>
-                    <div style="margin-top:12px">
-                        <button class="btn btn--primary" id="cr-savebtn" onclick="Report.save()">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M20 6 9 17l-5-5"/></svg>
-                            Enregistrer le compte-rendu
-                        </button>
-                    </div>
+                    <div class="cr-card__hd"><div><h3>Photos <span class="cnt" id="photo-cnt">0</span></h3><p class="cr-card__sub">Composent la galerie du portfolio</p></div></div>
+                    <div class="photo-grid" id="photo-grid"></div>
+                    <label class="dropzone" id="photo-drop">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+                        Glissez des photos ou <b>parcourez</b>
+                        <input type="file" id="photo-input" multiple hidden accept="image/*">
+                    </label>
                 </div>
 
                 <div class="cr-card">
@@ -287,16 +278,6 @@
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
                         Glissez des fichiers ou <b>parcourez</b>
                         <input type="file" id="doc-input" multiple hidden accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.csv,.txt">
-                    </label>
-                </div>
-
-                <div class="cr-card">
-                    <div class="cr-card__hd"><div><h3>Photos <span class="cnt" id="photo-cnt">0</span></h3><p class="cr-card__sub">Composent la galerie du portfolio</p></div></div>
-                    <div class="photo-grid" id="photo-grid"></div>
-                    <label class="dropzone" id="photo-drop">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
-                        Glissez des photos ou <b>parcourez</b>
-                        <input type="file" id="photo-input" multiple hidden accept="image/*">
                     </label>
                 </div>
             </div>
@@ -323,7 +304,6 @@
         report: {
             canEdit: @json($event->hasStarted()),
             urls: {
-                saveText: @json(route('admin.events.report.save', $event)),
                 uploadDocuments: @json(route('admin.events.report.documents.store', $event)),
                 uploadPhotos: @json(route('admin.events.report.photos.store', $event)),
             },

@@ -44,27 +44,6 @@ class EventReportTest extends TestCase
         ]);
     }
 
-    public function test_enregistre_le_texte(): void
-    {
-        $event = $this->event();
-
-        $this->actingAs($this->user)->postJson(route('admin.events.report.save', $event), [
-            'body' => "## Bilan\n\n- Objectif atteint",
-        ])->assertOk();
-
-        $this->assertDatabaseHas('event_reports', ['event_id' => $event->id]);
-        $this->assertStringContainsString('Bilan', $event->report()->first()->body);
-    }
-
-    public function test_texte_bloque_avant_le_debut(): void
-    {
-        $event = $this->event(started: false);
-
-        $this->actingAs($this->user)->postJson(route('admin.events.report.save', $event), ['body' => 'x'])
-            ->assertStatus(422);
-        $this->assertDatabaseCount('event_reports', 0);
-    }
-
     public function test_upload_document(): void
     {
         $event = $this->event();

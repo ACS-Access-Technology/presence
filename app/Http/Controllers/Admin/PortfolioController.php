@@ -37,7 +37,7 @@ class PortfolioController extends Controller
                 'type_color' => $event->type->color,
                 'date' => $event->starts_at->translatedFormat('j M Y'),
                 'location' => $event->location,
-                'url' => route('admin.events.show', $event).'#cr',
+                'url' => route('admin.portfolio.show', $event),
                 'cover' => $cover?->url(),
                 'excerpt' => $this->excerpt($event),
                 'photos_count' => $event->photos_count,
@@ -54,6 +54,17 @@ class PortfolioController extends Controller
                 'documents' => (int) $events->sum('documents_count'),
             ],
             'types' => EventType::orderBy('position')->get(),
+        ]);
+    }
+
+    /** Galerie photo d'une activité : clic sur une carte du portfolio. */
+    public function show(Event $event): View
+    {
+        $event->load(['type', 'photos' => fn ($q) => $q->orderBy('position')]);
+
+        return view('admin.portfolio.show', [
+            'event' => $event,
+            'photos' => $event->photos->map(fn ($p) => ['id' => $p->id, 'url' => $p->url()])->values()->all(),
         ]);
     }
 

@@ -308,6 +308,26 @@ body.sheet-open{overflow:hidden}
 .pf-empty svg{width:48px;height:48px;color:var(--faint);margin-bottom:12px}
 .pf-empty h3{font-size:1.05rem;font-weight:700;color:var(--text);margin:0 0 4px}
 
+/* ===== Galerie photo d'une activité (Portfolio > activité) ===== */
+.pfg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px}
+.pfg-cell{position:relative;aspect-ratio:4/3;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--surface-2);padding:0;cursor:pointer;transition:box-shadow .15s,transform .12s}
+.pfg-cell:hover{box-shadow:var(--sh-2);transform:translateY(-2px)}
+.pfg-cell:focus-visible{outline:none;box-shadow:var(--focus)}
+.pfg-cell img{width:100%;height:100%;object-fit:cover;display:block}
+.pfg-lightbox{position:fixed;inset:0;z-index:110;display:flex;align-items:center;justify-content:center}
+.pfg-lightbox[hidden]{display:none}
+.pfg-lightbox__backdrop{position:absolute;inset:0;width:100%;height:100%;border:0;background:rgba(8,10,16,.88);cursor:pointer}
+.pfg-lightbox__img{position:relative;max-width:min(1100px,88vw);max-height:86vh;object-fit:contain;border-radius:12px;box-shadow:var(--sh-3)}
+.pfg-lightbox__close{position:absolute;top:18px;right:18px;width:44px;height:44px;border:0;border-radius:12px;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer}
+.pfg-lightbox__close svg{width:20px;height:20px}
+.pfg-lightbox__nav{position:absolute;top:50%;transform:translateY(-50%);width:52px;height:52px;border:0;border-radius:50%;background:rgba(255,255,255,.12);color:#fff;display:grid;place-items:center;cursor:pointer}
+.pfg-lightbox__nav[hidden]{display:none}
+.pfg-lightbox__nav:hover{background:rgba(255,255,255,.22)}
+.pfg-lightbox__nav svg{width:24px;height:24px}
+.pfg-lightbox__nav--prev{left:18px}
+.pfg-lightbox__nav--next{right:18px}
+.pfg-lightbox__count{position:absolute;bottom:18px;left:50%;transform:translateX(-50%);color:#fff;font-size:.82rem;font-weight:650;background:rgba(255,255,255,.12);padding:5px 13px;border-radius:var(--r-pill)}
+
 /* ===== Bannière de cycle de vie (annulé / reporté) ===== */
 .evbanner{display:flex;gap:13px;align-items:flex-start;padding:15px 17px;border-radius:var(--radius);margin-bottom:18px;font-size:.9rem}
 .evbanner svg{width:20px;height:20px;flex:0 0 auto;margin-top:1px}
@@ -333,14 +353,6 @@ body.sheet-open{overflow:hidden}
 .cr-card__hd{display:flex;align-items:center;gap:10px;margin-bottom:12px}
 .cr-card__hd h3{margin:0;font-size:1rem}
 .cr-card__sub{color:var(--muted);font-size:.8rem;margin:2px 0 0}
-.cr-savestate{margin-left:auto;font-size:.76rem;font-weight:600;color:var(--faint);display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
-.cr-toolbar{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-.cr-toolbar button{min-width:34px;height:34px;border:1px solid var(--border-strong);background:var(--surface);border-radius:8px;color:var(--muted);cursor:pointer;font-weight:700;display:grid;place-items:center;padding:0 8px}
-.cr-toolbar button:hover{border-color:var(--accent);color:var(--accent)}
-.cr-toolbar button svg{width:16px;height:16px}
-.cr-textarea{width:100%;min-height:220px;resize:vertical;font:inherit;font-size:.92rem;line-height:1.6;color:var(--text);background:var(--surface-2);border:1px solid var(--border-strong);border-radius:var(--r-control);padding:13px 15px}
-.cr-textarea:focus{outline:none;border-color:var(--accent);box-shadow:var(--focus)}
-.cr-chars{font-size:.74rem;color:var(--faint);margin-top:6px;text-align:right}
 .doc-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
 .doc-item{display:flex;align-items:center;gap:11px;padding:9px 11px;border:1px solid var(--border);border-radius:var(--r-control);background:var(--surface-2)}
 .doc-item__ic{width:34px;height:34px;border-radius:9px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:0 0 auto}
@@ -359,7 +371,7 @@ body.sheet-open{overflow:hidden}
 .photo-cell img{width:100%;height:100%;object-fit:cover;display:block}
 .photo-cell .del{position:absolute;top:5px;right:5px;background:rgba(15,18,25,.6);border:none;color:#fff;width:26px;height:26px;border-radius:7px;cursor:pointer;display:grid;place-items:center}
 .photo-cell .del svg{width:14px;height:14px}
-@media (min-width:760px){.cr-grid{grid-template-columns:1fr 1fr}.cr-grid > .cr-card:first-child{grid-column:1 / -1}}
+@media (min-width:760px){.cr-grid{grid-template-columns:1fr 1fr}}
 
 /* ===== Paramètres ===== */
 .st{display:inline-flex;align-items:center;gap:7px;font-size:.74rem;font-weight:700;padding:4px 11px;border-radius:var(--r-pill)}

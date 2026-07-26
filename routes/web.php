@@ -100,8 +100,9 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
     Route::get('/participants/{person}', [ParticipantController::class, 'show'])->name('participants.show');
 
-    // Portfolio des activités documentées.
+    // Portfolio des activités documentées : galerie photo par activité.
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
+    Route::get('/portfolio/{event}', [PortfolioController::class, 'show'])->name('portfolio.show');
 
     // Statistiques globales (toutes activités confondues).
     Route::get('/statistiques', [StatisticsController::class, 'index'])->name('statistics');
@@ -136,10 +137,9 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
     Route::post('/events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
     Route::patch('/events/{event}/qr-mode', [EventLifecycleController::class, 'changeQrMode'])->name('events.qr-mode');
 
-    // Compte-rendu d'un événement (texte + documents + photos).
+    // Documents et photos d'un événement (alimentent le Portfolio).
     Route::prefix('events/{event}/report')->name('events.report.')
         ->scopeBindings()->group(function (): void {
-            Route::post('/', [ReportController::class, 'saveText'])->name('save');
             Route::post('/documents', [ReportController::class, 'uploadDocuments'])->name('documents.store');
             // Service des médias depuis le disque PRIVÉ (jamais d'URL publique devinable).
             Route::get('/documents/{document}', [ReportController::class, 'showDocument'])->name('documents.show');

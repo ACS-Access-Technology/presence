@@ -1,6 +1,6 @@
 /* ============================================================
-   Presence — Compte-rendu d'un événement.
-   Éditeur markdown léger, upload/suppression de documents et photos.
+   Presence — Documents et photos d'un événement (alimentent le portfolio).
+   Upload/suppression de documents et photos.
    ============================================================ */
 (function () {
     'use strict';
@@ -29,38 +29,6 @@
     var Report = {
         docs: (CFG.documents || []).slice(),
         photos: (CFG.photos || []).slice(),
-
-        ta: function () { return $('#cr-text'); },
-
-        updateChars: function () { var c = $('#cr-count'); if (c && this.ta()) c.textContent = this.ta().value.length; },
-        touch: function () { var s = $('#cr-save'); if (s) s.textContent = 'Modifié — non enregistré'; this.updateChars(); },
-
-        wrap: function (token) {
-            var ta = this.ta(); if (!ta) return;
-            var s = ta.selectionStart, e = ta.selectionEnd, val = ta.value;
-            var sel = val.slice(s, e) || 'texte';
-            ta.value = val.slice(0, s) + token + sel + token + val.slice(e);
-            ta.focus(); ta.selectionStart = s + token.length; ta.selectionEnd = s + token.length + sel.length;
-            this.touch();
-        },
-        prefix: function (token) {
-            var ta = this.ta(); if (!ta) return;
-            var s = ta.selectionStart, val = ta.value;
-            var lineStart = val.lastIndexOf('\n', s - 1) + 1;
-            ta.value = val.slice(0, lineStart) + token + val.slice(lineStart);
-            ta.focus(); ta.selectionStart = ta.selectionEnd = s + token.length;
-            this.touch();
-        },
-
-        save: function () {
-            var ta = this.ta(); if (!ta) return;
-            var btn = $('#cr-savebtn'); btn.disabled = true;
-            post(CFG.urls.saveText, { body: ta.value }).then(function (res) {
-                btn.disabled = false;
-                if (res.ok) { var s = $('#cr-save'); if (s) s.textContent = 'Enregistré à ' + (res.data.saved_at || ''); toast('Compte-rendu enregistré'); }
-                else toast('Enregistrement impossible');
-            });
-        },
 
         renderDocs: function () {
             var list = $('#doc-list'); if (!list) return;
@@ -151,11 +119,9 @@
     window.Report = Report;
 
     document.addEventListener('DOMContentLoaded', function () {
-        if (!$('#cr-text')) return; // onglet non rendu
-        Report.updateChars();
+        if (!$('#photo-grid')) return; // onglet non rendu
         Report.renderDocs();
         Report.renderPhotos();
-        $('#cr-text').addEventListener('input', function () { Report.touch(); });
         bindDrop('doc-drop', 'doc-input', function (f) { Report.uploadDocs(f); });
         bindDrop('photo-drop', 'photo-input', function (f) { Report.uploadPhotos(f); });
     });
