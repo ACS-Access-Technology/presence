@@ -33,8 +33,46 @@ trait ValidatesSignature
                 // est réellement un PNG (pas un fichier arbitraire renommé).
                 if ($info === false || $info[2] !== IMAGETYPE_PNG) {
                     $fail('Signature invalide.');
+
+                    return;
+                }
+
+                // Garde-fou côté serveur, indépendant de tout bug client (passé,
+                // présent ou futur) : un PNG structurellement valide mais SANS
+                // encre réelle (canevas resize côté navigateur qui l'a effacé,
+                // etc.) ne doit jamais être accepté comme une vraie signature.
+                if (! $this->signatureHasInk($binary)) {
+                    $fail('La signature est vide. Veuillez signer avant de valider.');
                 }
             },
         ];
+    }
+
+    /** Le canevas du pad de signature part transparent : tout pixel non totalement transparent = de l'encre. */
+    private function signatureHasInk(string $binary): bool
+    {
+        $image = @imagecreatefromstring($binary);
+        if ($image === false) {
+            return false;
+        }
+
+        $width = imagesx($image);
+        $height = imagesy($image);
+        $hasInk = false;
+
+        for ($y = 0; $y < $height && ! $hasInk; $y += 2) {
+            for ($x = 0; $x < $width; $x += 2) {
+                $alpha = (imagecolorat($image, $x, $y) >> 24) & 0x7F;
+                // GD : 0 = opaque, 127 = totalement transparent.
+                if ($alpha < 127) {
+                    $hasInk = true;
+                    break;
+                }
+            }
+        }
+
+        imagedestroy($image);
+
+        return $hasInk;
     }
 }

@@ -23,6 +23,9 @@ class PublicAttendanceTest extends TestCase
 
     private const string TINY_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=';
 
+    /** PNG 4×4 totalement transparent (aucun pixel opaque) — canevas jamais dessiné. */
+    private const string BLANK_PNG_B64 = 'iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAACXBIWXMAAA7EAAAOxAGVKw4bAAAADElEQVQImWNgoBwAAABEAAGC/mVLAAAAAElFTkSuQmCC';
+
     private EventType $type;
 
     protected function setUp(): void
@@ -232,6 +235,23 @@ class PublicAttendanceTest extends TestCase
 
         $this->postJson('/e/'.$event->public_slug, $this->payload($event, ['signature' => '']))
             ->assertStatus(422)->assertJsonValidationErrors(['signature']);
+    }
+
+    /**
+     * Non-régression : un canevas HTML5 vidé par un `resize` (clavier mobile,
+     * barre d'adresse...) produit un PNG structurellement valide mais SANS
+     * aucun pixel opaque. Ce garde-fou serveur doit le refuser même si le
+     * bug côté client qui a permis son envoi n'existait plus.
+     */
+    public function test_store_refuse_une_signature_techniquement_valide_mais_totalement_vide(): void
+    {
+        $event = $this->makeEvent();
+
+        $this->postJson('/e/'.$event->public_slug, $this->payload($event, [
+            'signature' => 'data:image/png;base64,'.self::BLANK_PNG_B64,
+        ]))->assertStatus(422)->assertJsonValidationErrors(['signature']);
+
+        $this->assertDatabaseCount('attendances', 0);
     }
 
     public function test_store_refuse_hors_perimetre_anti_fraude(): void

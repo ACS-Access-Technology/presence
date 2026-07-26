@@ -106,7 +106,7 @@
 
     /* ------------------------- Signature (canvas) ------------------------- */
     var Sig = {
-        canvas: null, ctx: null, drawing: false, hasInk: false, last: null,
+        canvas: null, ctx: null, drawing: false, hasInk: false, last: null, lastMid: null,
         init: function () {
             this.canvas = $('#sigpad'); this.ctx = this.canvas.getContext('2d');
             this.resize();
@@ -115,30 +115,77 @@
             c.addEventListener('pointerdown', function (e) { Sig.start(e); });
             c.addEventListener('pointermove', function (e) { Sig.move(e); });
             c.addEventListener('pointerup', function () { Sig.end(); });
+            c.addEventListener('pointercancel', function () { Sig.end(); });
             c.addEventListener('pointerleave', function () { Sig.end(); });
         },
+        // Changer canvas.width/height EFFACE tout son contenu, même à valeur
+        // identique (règle du standard HTML5) — et `resize` se déclenche très
+        // souvent sur mobile sans rapport avec une vraie signature (clavier
+        // qui s'ouvre/ferme, barre d'adresse qui apparaît/disparaît au scroll).
+        // Sans cette sauvegarde/restauration, la signature déjà tracée
+        // disparaissait silencieusement : `hasInk` restait vrai, le bouton
+        // Valider restait actif, et un PNG blanc partait au serveur.
         resize: function () {
+            var hadInk = this.hasInk;
+            var saved = hadInk ? this.canvas.toDataURL('image/png') : null;
+
             var r = this.canvas.getBoundingClientRect();
             var dpr = window.devicePixelRatio || 1;
             this.canvas.width = r.width * dpr; this.canvas.height = r.height * dpr;
             this.ctx.scale(dpr, dpr);
             this.ctx.lineWidth = 2.5; this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
             this.ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#12141a';
+
+            if (saved) {
+                var ctx = this.ctx, w = r.width, h = r.height;
+                var img = new Image();
+                img.onload = function () { ctx.drawImage(img, 0, 0, w, h); };
+                img.src = saved;
+            }
         },
         pos: function (e) {
             var r = this.canvas.getBoundingClientRect();
             return { x: e.clientX - r.left, y: e.clientY - r.top };
         },
-        start: function (e) { this.canvas.setPointerCapture(e.pointerId); this.drawing = true; this.last = this.pos(e); },
+        start: function (e) {
+            this.canvas.setPointerCapture(e.pointerId);
+            this.drawing = true;
+            this.last = this.pos(e);
+            this.lastMid = this.last;
+        },
+        // Lissage par courbe quadratique entre midpoints successifs (algorithme
+        // standard des pads de signature) : chaque segment va du MILIEU
+        // précédent au NOUVEAU milieu, avec le point brut comme point de
+        // contrôle. L'ancienne version dessinait du point précédent jusqu'au
+        // milieu suivant SANS jamais parcourir l'autre moitié — la ligne
+        // ratait donc systématiquement la moitié du trajet entre deux points,
+        // visible comme des trous dès que le doigt bouge vite.
         move: function (e) {
             if (!this.drawing) return;
             e.preventDefault();
-            var p = this.pos(e), l = this.last, mx = (l.x + p.x) / 2, my = (l.y + p.y) / 2;
-            this.ctx.beginPath(); this.ctx.moveTo(l.x, l.y); this.ctx.quadraticCurveTo(l.x, l.y, mx, my); this.ctx.stroke();
+            var p = this.pos(e);
+            var mid = { x: (this.last.x + p.x) / 2, y: (this.last.y + p.y) / 2 };
+            this.ctx.beginPath();
+            this.ctx.moveTo(this.lastMid.x, this.lastMid.y);
+            this.ctx.quadraticCurveTo(this.last.x, this.last.y, mid.x, mid.y);
+            this.ctx.stroke();
+            this.lastMid = mid;
             this.last = p;
             if (!this.hasInk) { this.hasInk = true; $('#sigPh').style.opacity = '0'; Flow.validate(); }
         },
-        end: function () { this.drawing = false; },
+        end: function () {
+            // Tap/point unique (pointerdown puis pointerup sans aucun
+            // pointermove) : sans ça, une marque volontaire mais très brève
+            // ne laissait aucune trace ni sur le canevas ni dans `hasInk`.
+            if (this.drawing && !this.hasInk && this.last) {
+                this.ctx.beginPath();
+                this.ctx.arc(this.last.x, this.last.y, this.ctx.lineWidth / 2, 0, Math.PI * 2);
+                this.ctx.fillStyle = this.ctx.strokeStyle;
+                this.ctx.fill();
+                this.hasInk = true; $('#sigPh').style.opacity = '0'; Flow.validate();
+            }
+            this.drawing = false;
+        },
         clear: function () {
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
             this.hasInk = false; $('#sigPh').style.opacity = '1'; Flow.validate();
