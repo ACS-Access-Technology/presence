@@ -172,7 +172,7 @@
             </div>
             <h2 id="m-men-t">Traitement de vos données</h2>
             <p>ACS Groupe collecte ces informations (identité, coordonnées, structure, position et signature) dans le seul but d'établir la liste de présence de cet événement.</p>
-            <p style="margin-top:8px">Conservation, base légale et droits selon le cadre ivoirien (Loi n°2013-450, ARTCI). <i>(Contenu à finaliser.)</i></p>
+            <p style="margin-top:8px">Détail complet — collecte, conservation, droits — dans notre <a href="{{ route('legal.confidentialite') }}" target="_blank" rel="noopener">politique de confidentialité</a>.</p>
             <hr class="modal__sep">
             <div class="modal__foot"><button type="button" class="btn btn--primary" data-close>J'ai compris</button></div>
         </div>

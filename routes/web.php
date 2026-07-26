@@ -35,6 +35,9 @@ Route::get('/', static fn () => auth()->check()
     ? redirect()->route('admin.dashboard')
     : redirect()->route('login'));
 
+// Brouillon de travail (non validé juridiquement, voir le contenu de la page).
+Route::view('/confidentialite', 'legal.confidentialite')->name('legal.confidentialite');
+
 /*
 |--------------------------------------------------------------------------
 | Page publique d'émargement (sans compte)

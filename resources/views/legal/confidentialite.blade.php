@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="fr">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Politique de confidentialité — Presence · ACS Groupe</title>
+    <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
+    <style>
+        body{max-width:760px;margin:0 auto;padding:32px 20px 80px;color:var(--text);background:var(--bg)}
+        h1{font-size:1.6rem;font-weight:800;margin-bottom:4px}
+        h2{font-size:1.1rem;font-weight:750;margin:32px 0 10px}
+        p,li{font-size:.94rem;line-height:1.65;color:var(--muted)}
+        ul{padding-left:20px;margin:8px 0}
+        .draft{display:flex;gap:12px;align-items:flex-start;background:var(--warning-soft);color:var(--warning);border-radius:12px;padding:16px;margin:20px 0 28px;font-size:.9rem}
+        .draft svg{width:20px;height:20px;flex:0 0 auto;margin-top:1px}
+        .draft strong{color:var(--text)}
+        .maj{font-size:.82rem;color:var(--faint)}
+        a{color:var(--accent)}
+    </style>
+</head>
+<body>
+    <h1>Politique de confidentialité</h1>
+    <p class="maj">Dernière mise à jour : {{ now()->translatedFormat('j F Y') }}</p>
+
+    <div class="draft">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <span><strong>Brouillon de travail — pas encore validé par un juriste.</strong>
+        Ce document décrit fidèlement ce que la plateforme fait réellement aujourd'hui.
+        Il ne constitue pas un avis juridique et doit être relu par un conseil juridique /
+        délégué à la protection des données avant toute publication officielle, notamment
+        pour la conformité à la Loi ivoirienne n°2013-450 relative à la protection des
+        données à caractère personnel.</span>
+    </div>
+
+    <h2>1. Qui collecte vos données ?</h2>
+    <p>ACS Groupe, à travers la plateforme Presence, utilisée pour l'émargement des
+    participants à ses événements, réunions et ateliers.</p>
+
+    <h2>2. Quelles données sont collectées ?</h2>
+    <p>Lorsque vous émargez à un événement via un QR code, nous collectons :</p>
+    <ul>
+        <li>Identité : nom, prénom, email</li>
+        <li>Coordonnées professionnelles : téléphone, entreprise, direction, service, poste</li>
+        <li>Preuve de présence : votre signature manuscrite (saisie à l'écran)</li>
+        <li>Géolocalisation approximative de votre appareil au moment de l'émargement (confirme votre présence sur place ; jamais utilisée à d'autres fins, jamais suivie en continu)</li>
+        <li>Horodatage de votre arrivée et, le cas échéant, de votre départ</li>
+    </ul>
+
+    <h2>3. Pourquoi ces données sont-elles collectées ?</h2>
+    <ul>
+        <li>Constituer la feuille de présence officielle de l'événement</li>
+        <li>Vous envoyer un email récapitulatif après l'événement</li>
+        <li>Vous reconnaître automatiquement si vous participez à un autre événement ACS Groupe (éviter de ressaisir vos informations)</li>
+        <li>Prévenir les doublons et les émargements frauduleux (QR photographié à distance, etc.)</li>
+    </ul>
+
+    <h2>4. Qui a accès à ces données ?</h2>
+    <p>Uniquement les comptes internes ACS Groupe autorisés (organisateurs et
+    administrateurs de la plateforme). Vos données ne sont <strong>ni vendues, ni
+    partagées avec un tiers</strong> en dehors d'ACS Groupe.</p>
+
+    <h2>5. Combien de temps vos données sont-elles conservées ?</h2>
+    <div class="draft">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <span><strong>Point non tranché aujourd'hui.</strong> À date, la plateforme
+        conserve les données indéfiniment (pas de purge automatique). C'est précisément
+        le point qui doit être validé avec un conseil juridique avant publication : une
+        durée de conservation proportionnée devra être définie et appliquée.</span>
+    </div>
+
+    <h2>6. Quels sont vos droits ?</h2>
+    <p>Vous pouvez demander l'accès, la rectification ou la suppression de vos données
+    en contactant <a href="mailto:contact@acsgroupe.ci">contact@acsgroupe.ci</a>
+    <span class="maj">(adresse à confirmer)</span>.</p>
+
+    <h2>7. Cookies</h2>
+    <p>La plateforme utilise uniquement un cookie de session technique, nécessaire au
+    bon fonctionnement du site (aucun cookie de mesure d'audience ou de publicité).</p>
+</body>
+</html>
