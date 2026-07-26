@@ -33,6 +33,11 @@
             });
         },
 
+        toggleBrandInherit: function (checked) {
+            var fields = $('#brandFields'); if (!fields) return;
+            fields.style.display = checked ? 'none' : '';
+        },
+
         /* ---------- Types ---------- */
         renderTypes: function () {
             var body = $('#types-body'); if (!body) return;
@@ -135,25 +140,45 @@
         },
 
         /* ---------- Comptes ---------- */
+        /** Libellés courts pour le badge de rôle (le libellé long sert ailleurs, ex. sidebar). */
+        ROLE_SHORT: { super_admin: 'Super admin', admin_filiale: 'Admin filiale', organisateur: 'Organisateur' },
+        ROLE_CLASS: { super_admin: 'role--super', admin_filiale: 'role--admin', organisateur: '' },
+
         renderAccounts: function () {
             var body = $('#accounts-body'); if (!body) return;
             var isSuper = CFG.isSuper;
+            var self = this;
             body.innerHTML = this.accounts.map(function (a) {
-                var role = '<span class="role ' + (a.role === 'admin_filiale' ? 'role--admin' : '') + '">' + esc(a.role_label) + '</span>';
-                var st = a.is_active ? '<span class="st st--on">Actif</span>' : '<span class="st st--off">Désactivé</span>';
-                var filialeCell = isSuper ? '<td>' + esc(a.filiale_name || '—') + '</td>' : '';
+                var role = '<span class="role ' + self.ROLE_CLASS[a.role] + '">' + esc(self.ROLE_SHORT[a.role] || a.role_label) + '</span>';
+                var st = !a.is_active ? '<span class="st st--off">Désactivé</span>'
+                    : (a.never_connected ? '<span class="st st--invited">Invité</span>' : '<span class="st st--on">Actif</span>');
+                var filialeCell = isSuper
+                    ? '<td>' + (a.role === 'super_admin' ? '— <span class="mut">holding</span>' : esc(a.filiale_name || '—')) + '</td>'
+                    : '';
                 var canManage = a.can_manage;
-                var edit = canManage ? '<button class="mini" title="Modifier" onclick="Settings.accountModal(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>' : '';
-                var reset = canManage ? '<button class="mini" title="Réinitialiser le mot de passe" onclick="Settings.resetAccount(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>' : '';
-                var reassign = (isSuper && a.role !== 'super_admin') ? '<button class="mini" title="Réassigner à une autre filiale" onclick="Settings.reassignModal(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4M21 7H9M7 21l-4-4 4-4M3 17h12"/></svg></button>' : '';
-                var del = (a.is_self || !canManage) ? '' : '<button class="mini mini--danger" title="Supprimer" onclick="Settings.deleteAccount(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>';
+                var actions;
+                if (a.is_self) {
+                    actions = '<button class="btn btn--ghost btn--sm" type="button" disabled>Vous-même</button>';
+                } else if (a.never_connected && canManage) {
+                    actions = '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.resetAccount(' + a.id + ')">Renvoyer l\'invitation</button>';
+                } else {
+                    var reassign = (isSuper && a.role !== 'super_admin')
+                        ? '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.reassignModal(' + a.id + ')">Réassigner</button> ' : '';
+                    var edit = canManage
+                        ? '<button class="btn btn--ghost btn--sm" type="button" onclick="Settings.accountModal(' + a.id + ')">Modifier</button> ' : '';
+                    var reset = canManage
+                        ? '<button class="mini" title="Réinitialiser le mot de passe" onclick="Settings.resetAccount(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg></button>' : '';
+                    var del = canManage
+                        ? '<button class="mini mini--danger" title="Supprimer" onclick="Settings.deleteAccount(' + a.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>' : '';
+                    actions = reassign + edit + reset + del;
+                }
                 return '<tr>'
-                    + '<td><div class="person__n">' + esc(a.name) + (a.is_self ? ' <span class="badge-new" style="color:var(--accent);background:var(--accent-soft)">Vous</span>' : '') + '</div><div class="person__e">' + esc(a.email) + '</div></td>'
-                    + '<td>' + role + '</td>'
+                    + '<td><div class="person__n">' + esc(a.name) + '</div><div class="person__e">' + esc(a.email) + '</div></td>'
                     + filialeCell
+                    + '<td>' + role + '</td>'
                     + '<td>' + st + '</td>'
                     + '<td class="mut">' + esc(a.last_login) + '</td>'
-                    + '<td class="r-actions">' + edit + reset + reassign + del + '</td></tr>';
+                    + '<td class="r-actions">' + actions + '</td></tr>';
             }).join('');
         },
         accountModal: function (id) {
@@ -278,12 +303,16 @@
         Settings.renderTypes();
         Settings.renderAccounts();
         document.addEventListener('keydown', function (e) { if (e.key === 'Escape') Settings.close(); });
-        // Arrivée depuis « Nouvelle filiale » (Filiales.save) : ouvre directement
-        // l'onglet Comptes et propose d'inviter le premier admin de la filiale.
+        // Arrivée depuis « Gérer les comptes » ou « Nouvelle filiale ».
         var params = new URLSearchParams(location.search);
         if (params.get('tab') === 'comptes') {
             Settings.tab('comptes');
-            if (params.get('invite') === '1') { Settings.accountModal(null); }
+            // Flag one-shot (pas un paramètre d'URL) : ne propose l'invitation que
+            // juste après une création de filiale, pas à chaque "Gérer les comptes".
+            if (sessionStorage.getItem('presence_invite_prompt') === '1') {
+                sessionStorage.removeItem('presence_invite_prompt');
+                Settings.accountModal(null);
+            }
         }
     });
 })();

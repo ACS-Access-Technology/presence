@@ -36,6 +36,11 @@ body{padding:24px 12px 64px;min-height:100vh}
 .flash svg{width:20px;height:20px;color:var(--success);flex:0 0 auto;margin-top:1px}
 .flash b{color:var(--text)}
 
+/* Bandeau délai de grâce (QR post-clôture) */
+.grace-banner{display:flex;gap:10px;align-items:flex-start;background:var(--warning-soft);border-radius:var(--radius);padding:12px 14px;margin-bottom:14px;font-size:.86rem}
+.grace-banner svg{width:20px;height:20px;color:var(--warning);flex:0 0 auto;margin-top:1px}
+.grace-banner strong{color:var(--text);font-variant-numeric:tabular-nums}
+
 /* Carte événement (modal chevauchement) */
 .ov-card{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-control);padding:13px 14px;margin:12px 0}
 .ov-card__t{font-weight:700;font-size:.95rem}

@@ -46,6 +46,7 @@ class SettingsController extends Controller
                 'filiale_id' => $u->filiale_id,
                 'filiale_name' => $u->filiale?->name,
                 'last_login' => $u->last_login_at?->translatedFormat('j M Y · H:i') ?? 'Jamais connecté',
+                'never_connected' => $u->last_login_at === null,
                 'is_self' => $u->is($actor),
                 'can_manage' => $actor->can('manage', $u),
             ])->all();

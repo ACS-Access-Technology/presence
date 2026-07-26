@@ -14,15 +14,17 @@
 @php($user = auth()->user())
 <div class="app">
     <aside class="side" id="side" aria-label="Navigation principale">
-        <div class="side__logo"><img src="{{ asset('assets/logo-acs-groupe.png') }}" alt="ACS Groupe"></div>
+        <div class="side__brand">
+            <div class="side__brand-ic">P</div>
+            <div>
+                <div class="side__brand-n">Presence</div>
+                <div class="side__brand-s">ACS Groupe</div>
+            </div>
+        </div>
         <nav class="nav" aria-label="Sections">
             <a href="{{ route('admin.events.index') }}" class="{{ ($nav ?? '') === 'events' ? 'active' : '' }}" @if(($nav ?? '')==='events') aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
                 Événements
-            </a>
-            <a href="{{ route('admin.events.create') }}" class="{{ ($nav ?? '') === 'events-create' ? 'active' : '' }}" @if(($nav ?? '')==='events-create') aria-current="page" @endif>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 5v14M5 12h14"/></svg>
-                Nouvel événement
             </a>
             <a href="{{ route('admin.participants.index') }}" class="{{ ($nav ?? '') === 'participants' ? 'active' : '' }}" @if(($nav ?? '')==='participants') aria-current="page" @endif>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
@@ -41,6 +43,7 @@
                 <a href="{{ route('admin.filiales.index') }}" class="{{ ($nav ?? '') === 'filiales' ? 'active' : '' }}" @if(($nav ?? '')==='filiales') aria-current="page" @endif>
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h6"/></svg>
                     Filiales
+                    <span class="navsuper">SUPER</span>
                 </a>
             @endif
             @if($user->canManageSettings())
@@ -63,7 +66,7 @@
                 <div class="av">{{ \Illuminate\Support\Str::of($user->name)->explode(' ')->map(fn($w)=>mb_substr($w,0,1))->take(2)->implode('') }}</div>
                 <div>
                     <div class="user__n">{{ $user->name }}</div>
-                    <div class="user__r">{{ $user->role->label() }} · ACS</div>
+                    <div class="user__r">{{ $user->role->label() }}</div>
                 </div>
             </a>
         </div>

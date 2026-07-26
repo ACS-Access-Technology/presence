@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Controller;
+use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\Filiale;
 use App\Models\Scopes\FilialeScope;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -32,11 +35,13 @@ class FilialeController extends Controller
         $filiales = Filiale::query()
             ->withCount([
                 'users',
+                'users as admin_count' => fn ($q) => $q->where('role', UserRole::AdminFiliale->value),
                 // Les événements portent un global scope de filiale : on le retire
                 // pour compter TOUS les événements de chaque filiale, indépendamment
                 // du contexte sélectionné par le SuperAdmin.
                 'events' => fn ($q) => $q->withoutGlobalScope(FilialeScope::class),
             ])
+            ->with(['users' => fn ($q) => $q->where('role', UserRole::AdminFiliale->value)->oldest('id')->limit(1)])
             ->orderBy('name')
             ->get()
             // Filiale par défaut (holding) toujours en tête, le reste par nom.
@@ -52,6 +57,9 @@ class FilialeController extends Controller
                 'active' => $filiales->where('is_active', true)->count(),
                 'users' => (int) $filiales->sum('users_count'),
                 'events' => (int) $filiales->sum('events_count'),
+                // Holding-wide, indépendant du scope de filiale (Attendance n'en porte
+                // pas — rattachée à l'événement, cf. D-ME-1 sur Person).
+                'attendances' => Attendance::count(),
             ],
         ]);
     }
@@ -115,6 +123,8 @@ class FilialeController extends Controller
             'is_active' => $filiale->is_active,
             'is_default' => $filiale->id === $defaultId,
             'users_count' => (int) ($filiale->users_count ?? 0),
+            'admin_count' => (int) ($filiale->admin_count ?? User::where('filiale_id', $filiale->id)->where('role', UserRole::AdminFiliale->value)->count()),
+            'admin_name' => $filiale->relationLoaded('users') ? $filiale->users->first()?->name : null,
             'events_count' => (int) ($filiale->events_count ?? Event::withoutGlobalScope(FilialeScope::class)
                 ->where('filiale_id', $filiale->id)->count()),
             'created_label' => $filiale->slug === Filiale::DEFAULT_SLUG

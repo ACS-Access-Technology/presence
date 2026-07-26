@@ -46,10 +46,13 @@ class FilialeContextController extends Controller
             return redirect()->route('admin.dashboard');
         }
 
-        // Après création d'une filiale : droit sur Comptes, avec l'invitation du
-        // premier admin déjà ouverte (branding se règle depuis l'onglet Général).
+        // Raccourci « Gérer les comptes » / après création d'une filiale : droit sur
+        // l'onglet Comptes. L'ouverture automatique de l'invitation (juste après une
+        // création) est un flag one-shot côté client (sessionStorage, settings.js),
+        // pas un paramètre d'URL — pour que "Gérer les comptes" reste une simple
+        // navigation à chaque fois, pas seulement au premier passage.
         if (($data['redirect_to'] ?? null) === 'settings') {
-            return redirect()->route('admin.settings.index', ['tab' => 'comptes', 'invite' => 1]);
+            return redirect()->route('admin.settings.index', ['tab' => 'comptes']);
         }
 
         return back();

@@ -37,14 +37,23 @@
                 var toggleBtn = f.is_default
                     ? ''
                     : '<button class="btn btn--ghost btn--sm" type="button" onclick="Filiales.toggle(' + f.id + ')">' + toggleLabel + '</button>';
+                var initials = f.name.trim().split(/\s+/).map(function (w) { return w[0]; }).slice(0, 2).join('').toUpperCase();
+                var subtitle = f.is_default
+                    ? 'Filiale par défaut · non supprimable'
+                    : (f.is_active
+                        ? (f.admin_name ? 'Admin : ' + esc(f.admin_name) : 'Aucun admin de filiale')
+                        : 'Aucune connexion possible');
                 return '<tr>'
-                    + '<td>' + esc(f.name) + (f.is_default ? ' <span class="tag tag--mode">Défaut</span>' : '') + '</td>'
+                    + '<td><div style="display:flex;align-items:center;gap:11px">'
+                    + '<span class="fav">' + esc(initials) + '</span>'
+                    + '<div><div style="font-weight:700">' + esc(f.name) + '</div><div class="mut" style="font-size:.78rem">' + subtitle + '</div></div>'
+                    + '</div></td>'
                     + '<td>' + statusTag + '</td>'
-                    + '<td>' + f.users_count + '</td>'
+                    + '<td>' + f.users_count + (f.admin_count ? ' <span class="mut">(' + f.admin_count + ' admin)</span>' : '') + '</td>'
                     + '<td>' + f.events_count + '</td>'
                     + '<td>' + esc(f.created_label || '—') + '</td>'
                     + '<td style="text-align:right;white-space:nowrap">'
-                    + '<button class="btn btn--ghost btn--sm" type="button" onclick="Filiales.view(' + f.id + ')">Voir</button> '
+                    + '<button class="btn btn--ghost btn--sm" type="button" onclick="Filiales.manage(' + f.id + ')">Gérer les comptes</button> '
                     + '<button class="btn btn--ghost btn--sm" type="button" onclick="Filiales.openEdit(' + f.id + ')">Renommer</button> '
                     + toggleBtn
                     + '</td>'
@@ -52,7 +61,7 @@
             }).join('');
         },
 
-        view: function (id) { this.goto(id, 'dashboard'); },
+        manage: function (id) { this.goto(id, 'settings'); },
         goto: function (id, redirectTo) {
             $('#f-goto-id').value = id;
             $('#f-goto-redirect').value = redirectTo;
@@ -108,7 +117,14 @@
                 // Nouvelle filiale : bascule directement dans son contexte et
                 // ouvre l'onglet Comptes (invitation prête) pour lui assigner un
                 // admin — le branding (logo, couleur) se règle depuis Général.
-                if (wasCreate) { Filiales.goto(saved.id, 'settings'); return; }
+                // Le flag est lu une seule fois par settings.js (sessionStorage,
+                // pas un paramètre d'URL) : "Gérer les comptes" doit rester une
+                // simple navigation, sans ouvrir l'invitation à chaque fois.
+                if (wasCreate) {
+                    sessionStorage.setItem('presence_invite_prompt', '1');
+                    Filiales.goto(saved.id, 'settings');
+                    return;
+                }
                 var idx = Filiales.list.findIndex(function (x) { return x.id === saved.id; });
                 if (idx >= 0) { Filiales.list[idx] = saved; }
                 Filiales.render();

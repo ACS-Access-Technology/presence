@@ -5,6 +5,13 @@
 @endpush
 
 @section('content')
+    @if ($event->grace_check_in_enabled && now()->greaterThan($event->ends_at) && now()->lessThanOrEqualTo($event->checkInClosesAt()))
+        <div class="grace-banner" id="graceBanner" data-ends="{{ $event->checkInClosesAt()->toIso8601String() }}" role="status" aria-live="polite">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>
+            <div>L'événement est terminé, mais l'émargement reste ouvert. Vous pouvez encore signer votre présence pendant <strong id="graceCountdown">--:--</strong>. Passé ce délai, l'inscription ne sera plus possible.</div>
+        </div>
+    @endif
+
     {{-- ÉCRAN : identification par email --}}
     <section class="screen" id="s-email">
         <div class="section-label">Votre email</div>

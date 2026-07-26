@@ -261,9 +261,10 @@ class MultiFilialeCreationContextTest extends TestCase
 
         $html = $this->actingAs($super)->get(route('admin.events.index'))->assertOk()->getContent();
 
-        // L'option de la filiale désactivée est présente mais disabled.
+        // La filiale désactivée reste listée (choose(id) présent) mais son bouton
+        // est disabled — composant custom (filctx-pop), plus un <select> natif.
         $this->assertMatchesRegularExpression(
-            '/<option[^>]*value="'.$this->filialeA->id.'"[^>]*\bdisabled\b/',
+            '/<button[^>]*disabled[^>]*onclick="Filctx\.choose\('.$this->filialeA->id.'\)"/',
             (string) $html,
         );
     }

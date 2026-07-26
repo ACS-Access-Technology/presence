@@ -344,9 +344,29 @@
         });
     }
 
+    /* ------------------------- Bandeau de grâce (post-clôture) ------------------------- */
+    var Grace = {
+        init: function () {
+            var el = $('#graceBanner');
+            if (!el) return;
+            var endsAt = new Date(el.getAttribute('data-ends')).getTime();
+            var out = $('#graceCountdown');
+            function tick() {
+                var remaining = Math.max(0, Math.round((endsAt - Date.now()) / 1000));
+                if (remaining <= 0) { window.location.reload(); return; }
+                var m = Math.floor(remaining / 60);
+                var s = remaining % 60;
+                out.textContent = m + ':' + (s < 10 ? '0' : '') + s;
+            }
+            tick();
+            setInterval(tick, 1000);
+        }
+    };
+
     /* ------------------------- Câblage ------------------------- */
     document.addEventListener('DOMContentLoaded', function () {
         Sig.init();
+        Grace.init();
 
         $('#emailContinue').addEventListener('click', function () { Flow.continueFromEmail(); });
         $('#email').addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); Flow.continueFromEmail(); } });
