@@ -69,6 +69,39 @@ class EventDashboardTest extends TestCase
             ->assertOk()->assertSee('Atelier Cybersécurité');
     }
 
+    /**
+     * Un événement annulé dont le jour est passé est marqué `data-archived="1"` :
+     * le JS (`events-list.js`) le range hors de la vue "Tous" par défaut (pollution
+     * signalée), mais il reste dans le HTML — consultable via l'onglet "Annulés",
+     * jamais supprimé.
+     */
+    public function test_evenement_annule_passe_est_marque_archive(): void
+    {
+        $ancien = Event::create([
+            'title' => 'Vieux séminaire annulé', 'event_type_id' => $this->type->id,
+            'starts_at' => Carbon::now()->subDays(5), 'ends_at' => Carbon::now()->subDays(5)->addHours(2),
+            'qr_mode' => QrMode::Statique->value, 'qr_secret' => Str::random(32), 'public_slug' => 'vieux-annule',
+            'cancelled_at' => Carbon::now()->subDays(4),
+        ]);
+        $recent = Event::create([
+            'title' => 'Annulation du jour', 'event_type_id' => $this->type->id,
+            'starts_at' => Carbon::now()->addHour(), 'ends_at' => Carbon::now()->addHours(3),
+            'qr_mode' => QrMode::Statique->value, 'qr_secret' => Str::random(32), 'public_slug' => 'annulation-du-jour',
+            'cancelled_at' => Carbon::now(),
+        ]);
+
+        $html = $this->actingAs($this->user)->get(route('admin.events.index'))->assertOk()->getContent();
+
+        $this->assertMatchesRegularExpression(
+            '#href="[^"]*/admin/events/'.$ancien->id.'"[^>]*data-archived="1"#',
+            $html,
+        );
+        $this->assertMatchesRegularExpression(
+            '#href="[^"]*/admin/events/'.$recent->id.'"[^>]*data-archived="0"#',
+            $html,
+        );
+    }
+
     public function test_liste_expose_le_createur_pour_le_filtre_mes_evenements(): void
     {
         $event = $this->liveEvent();

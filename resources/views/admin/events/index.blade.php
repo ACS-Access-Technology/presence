@@ -62,8 +62,12 @@
                 $reported = $event->reschedules->isNotEmpty();
                 $lastResched = $event->reschedules->first();
                 $tint = 'background:color-mix(in srgb, '.$event->type->color.' 14%, transparent);color:'.$event->type->color;
+                // Annulé + jour passé : rangé hors de la vue "Tous" (pollue sinon), mais
+                // jamais supprimé — reste consultable via l'onglet "Annulés" (jamais de
+                // perte d'historique/audit).
+                $archived = $st === 'annule' && $event->starts_at->lt(now()->startOfDay());
             @endphp
-            <a class="ev {{ $st === 'annule' ? 'is-cancelled' : '' }}" href="{{ route('admin.events.show', $event) }}" data-status="{{ $st }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}" data-owner="{{ $event->created_by }}">
+            <a class="ev {{ $st === 'annule' ? 'is-cancelled' : '' }}" href="{{ route('admin.events.show', $event) }}" data-status="{{ $st }}" data-archived="{{ $archived ? '1' : '0' }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}" data-owner="{{ $event->created_by }}">
                 <div class="ev__top">
                     <div class="ev__date" style="{{ $tint }}"><span class="d">{{ $event->starts_at->day }}</span><span class="m">{{ mb_strtoupper($months[$event->starts_at->month - 1]) }}</span></div>
                     <div class="ev__hd">
@@ -116,7 +120,8 @@
                 <tbody id="evbody">
                     @forelse ($events as $event)
                         @php($st = $event->status()->value)
-                        <tr class="evrow" data-status="{{ $st }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}" data-owner="{{ $event->created_by }}">
+                        @php($archived = $st === 'annule' && $event->starts_at->lt(now()->startOfDay()))
+                        <tr class="evrow" data-status="{{ $st }}" data-archived="{{ $archived ? '1' : '0' }}" data-search="{{ Str::lower($event->title.' '.$event->location.' '.$event->type->name) }}" data-owner="{{ $event->created_by }}">
                             <td>
                                 <a class="rowlink" href="{{ route('admin.events.show', $event) }}">{{ $event->title }}</a>
                                 @if($event->location)<div class="person__e">{{ $event->location }}</div>@endif

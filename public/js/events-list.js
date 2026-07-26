@@ -8,10 +8,13 @@
             this.term = (document.getElementById('evsearch').value || '').trim().toLowerCase();
             var rows = document.querySelectorAll('.ev, .evrow'), visible = 0;
             rows.forEach(function (r) {
+                // Annulé + jour passé : rangé hors de la vue "Tous" (pollue sinon), mais
+                // jamais supprimé — l'onglet "Annulés" continue de tout montrer.
+                var okArchived = EvList.currentStatus !== 'all' || r.dataset.archived !== '1';
                 var okStatus = EvList.currentStatus === 'all' || r.dataset.status === EvList.currentStatus;
                 var okTerm = EvList.term === '' || (r.dataset.search || '').indexOf(EvList.term) !== -1;
                 var okOwner = !EvList.mineOnly || String(r.dataset.owner) === String(CFG.userId);
-                var show = okStatus && okTerm && okOwner;
+                var show = okArchived && okStatus && okTerm && okOwner;
                 r.hidden = !show;
                 if (show) visible++;
             });
@@ -37,4 +40,8 @@
         }
     };
     window.EvList = EvList;
+    // Applique le filtre par défaut ("Tous") dès le chargement : sans cet appel,
+    // rien n'est filtré tant qu'aucune interaction n'a eu lieu, et les événements
+    // annulés archivés (jour passé) restent visibles au premier chargement.
+    document.addEventListener('DOMContentLoaded', function () { EvList.filter(); });
 })();
