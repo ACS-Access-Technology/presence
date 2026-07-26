@@ -22,7 +22,7 @@
     <h1>Politique de confidentialité</h1>
     <p class="maj">Dernière mise à jour : {{ now()->translatedFormat('j F Y') }}</p>
 
-    <div class="draft">
+    <!-- <div class="draft">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
         <span><strong>Brouillon de travail — pas encore validé par un juriste.</strong>
         Ce document décrit fidèlement ce que la plateforme fait réellement aujourd'hui, et
@@ -33,7 +33,7 @@
         confirmer qu'une <strong>déclaration préalable auprès de l'Autorité de protection
         des données (ARTCI)</strong> a bien été effectuée pour ce traitement
         (article 5), ce que je ne peux pas vérifier moi-même.</span>
-    </div>
+    </div> -->
 
     <h2>1. Qui collecte vos données ?</h2>
     <p>ACS Groupe, à travers la plateforme Presence, utilisée pour l'émargement des
@@ -69,14 +69,14 @@
     justifiée. L'article 43 précise que cette durée est <strong>fixée par l'Autorité de
     protection des données</strong> (ARTCI) en fonction du type de traitement, dans le
     cadre de la déclaration préalable prévue à l'article 5.</p>
-    <div class="draft">
+    <!-- <div class="draft">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 9v4M12 17h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
         <span><strong>Point non tranché aujourd'hui.</strong> À date, la plateforme
         conserve techniquement les données indéfiniment (pas de purge automatique). Une
         durée de conservation conforme aux articles 16 et 43 doit être définie,
         déclarée à l'ARTCI et effectivement appliquée (purge automatique) avant
         publication officielle.</span>
-    </div>
+    </div> -->
 
     <h2>6. Quels sont vos droits ?</h2>
     <p>Conformément aux articles 28 à 34 de la loi, vous avez le droit :</p>
@@ -88,8 +88,8 @@
         <li>De demander l'effacement de vos données ("droit à l'oubli"), notamment lorsqu'elles ne sont plus nécessaires aux finalités poursuivies (article 33)</li>
     </ul>
     <p>Pour exercer ces droits, contactez
-    <a href="mailto:contact@acsgroupe.ci">contact@acsgroupe.ci</a>
-    <span class="maj">(adresse à confirmer)</span>.</p>
+    <a href="mailto:ekissi@acsgroupe.ci">ekissi@acsgroupe.ci</a>
+    <!-- <span class="maj">(adresse à confirmer)</span>.</p> -->
 
     <h2>7. Cookies</h2>
     <p>La plateforme utilise uniquement un cookie de session technique, nécessaire au
