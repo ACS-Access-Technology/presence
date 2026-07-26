@@ -13,6 +13,22 @@
 
     var State = { geo: 'idle', coords: null, recurrent: false, overlap: null, departConfirmed: false };
 
+    /**
+     * Message d'erreur clair par cas, au lieu d'un générique qui ne dit rien
+     * (ni au visiteur, ni à qui doit diagnostiquer un signalement). Priorité
+     * au message du serveur (souvent précis : rate-limit, ticket expiré...) ;
+     * sinon un message dédié par code, avec le code affiché en dernier
+     * recours pour qu'un problème jamais vu reste au moins identifiable.
+     */
+    function describeError(res) {
+        if (res.data && res.data.message) return res.data.message;
+        if (res.status === 0) return 'Connexion impossible. Vérifiez votre réseau et réessayez.';
+        if (res.status === 404) return "Cet événement n'est plus disponible. Rescannez le QR pour continuer.";
+        if (res.status === 429) return 'Trop de tentatives. Réessayez dans une minute.';
+        if (res.status >= 500) return 'Le serveur a rencontré un problème. Réessayez dans un instant.';
+        return 'Une erreur est survenue (code ' + res.status + '). Réessayez.';
+    }
+
     function showScreen(name) {
         Object.keys(SCREENS).forEach(function (k) { $(SCREENS[k]).hidden = true; });
         $(SCREENS[name]).hidden = false;
@@ -216,7 +232,7 @@
                     // Échec de /recognize (ticket expiré, événement fermé/supprimé,
                     // réseau…) : rien à voir avec le format de l'email saisi, donc
                     // on ne marque pas le champ invalide — message dédié à la place.
-                    alert((res.data && res.data.message) || 'Une erreur est survenue. Rechargez la page et réessayez.');
+                    alert(describeError(res));
                     return;
                 }
                 var data = res.data;
@@ -303,7 +319,7 @@
                     }
                     Flow.expand(); Flow.markErrors(); btn.disabled = false; return;
                 }
-                alert('Une erreur est survenue. Veuillez réessayer.');
+                alert(describeError(res));
                 btn.disabled = false;
             });
         },
