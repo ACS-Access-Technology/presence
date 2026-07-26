@@ -4,6 +4,20 @@
 > revérifier après tout changement d'hébergement. Je ne peux pas exécuter ces
 > vérifications moi-même : pas d'accès SSH au serveur réel.
 
+## 0. Déclaration préalable auprès de l'ARTCI (article 5 de la Loi n°2013-450)
+
+Trouvé en lisant le texte officiel de la loi (`docs/gestion-projet/recette-metier.md`
+ne le couvrait pas encore) : **tout traitement de données à caractère personnel doit
+faire l'objet d'une déclaration préalable auprès de l'Autorité de protection
+(ARTCI)** avant sa mise en œuvre (article 5). Cette déclaration doit notamment
+préciser la durée de conservation envisagée (article 9), et c'est l'ARTCI qui fixe
+au final cette durée par type de traitement (article 43).
+
+**Point à vérifier / action à mener** : cette déclaration a-t-elle déjà été
+déposée pour Presence ? Si non, c'est une démarche administrative (pas
+technique) à faire auprès de l'ARTCI avant une ouverture large au grand public —
+au-delà de la simple relecture juridique de la page `/confidentialite`.
+
 ## 1. `APP_DEBUG` doit être `false`
 
 ```bash
