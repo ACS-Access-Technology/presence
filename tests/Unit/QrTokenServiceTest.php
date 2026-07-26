@@ -90,6 +90,27 @@ class QrTokenServiceTest extends TestCase
         $this->assertFalse($this->service->verifyScanTicket($this->event, $ticket));
     }
 
+    /**
+     * Non-régression : découvert en test de charge (voir
+     * docs/gestion-projet/test-de-charge.md). Le payload du ticket était
+     * `event_id|seconde`, déterministe — deux visiteurs scannant le même
+     * événement dans la même seconde recevaient un ticket IDENTIQUE, que
+     * l'anti-rejeu par ticket (`attendance-store-ticket`, 5 usages max)
+     * confondait avec un seul ticket rejoué, bloquant à tort le 6e visiteur
+     * légitime d'une même seconde.
+     */
+    public function test_deux_tickets_emis_la_meme_seconde_sont_differents(): void
+    {
+        Carbon::setTestNow(Carbon::createFromTimestamp(2_000_000));
+
+        $tickets = array_map(fn () => $this->service->issueScanTicket($this->event), range(1, 20));
+
+        $this->assertCount(20, array_unique($tickets), 'Chaque émission doit produire un ticket unique, même à la même seconde.');
+        foreach ($tickets as $ticket) {
+            $this->assertTrue($this->service->verifyScanTicket($this->event, $ticket));
+        }
+    }
+
     public function test_ticket_de_scan_lie_a_un_evenement(): void
     {
         $ticket = $this->service->issueScanTicket($this->event);

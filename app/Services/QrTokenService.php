@@ -58,10 +58,21 @@ final class QrTokenService
         return false;
     }
 
-    /** Émet un ticket de scan signé (autonome, sans état) valable SCAN_TICKET_TTL. */
+    /**
+     * Émet un ticket de scan signé (autonome, sans état) valable SCAN_TICKET_TTL.
+     *
+     * Le nonce aléatoire garantit un ticket UNIQUE par émission, même pour deux
+     * scans du même événement dans la même seconde : sans lui, le payload
+     * (`event_id|seconde`) est déterministe, donc identique pour toute une
+     * grappe de visiteurs scannant au même instant — l'anti-rejeu par ticket
+     * ({@see PublicAttendanceController::store()}, `attendance-store-ticket`)
+     * les confondrait alors avec un seul ticket rejoué et bloquerait à tort
+     * le 6e visiteur légitime d'une même seconde (repéré en test de charge).
+     */
     public function issueScanTicket(Event $event): string
     {
-        $payload = $event->id.'|'.Carbon::now()->getTimestamp();
+        $nonce = bin2hex(random_bytes(8));
+        $payload = $event->id.'|'.Carbon::now()->getTimestamp().'|'.$nonce;
         $signature = hash_hmac('sha256', $payload, $this->secret($event), true);
 
         return $this->base64UrlEncode($payload).'.'.$this->base64UrlEncode($signature);
@@ -86,7 +97,11 @@ final class QrTokenService
             return false;
         }
 
-        [$eventId, $issuedAt] = array_pad(explode('|', $payload, 2), 2, null);
+        // Le nonce (3e segment) n'est pas revalidé ici : sa seule fonction est de
+        // rendre chaque ticket unique à l'émission (voir issueScanTicket) ; limite
+        // à 3 segments pour tolérer, sans casser, un ticket 2 segments encore en
+        // circulation juste après un déploiement (fenêtre de 5 min max).
+        [$eventId, $issuedAt] = array_pad(explode('|', $payload, 3), 3, null);
         if ((int) $eventId !== $event->id || $issuedAt === null) {
             return false;
         }

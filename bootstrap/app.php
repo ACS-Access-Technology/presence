@@ -28,6 +28,17 @@ return Application::configure(basePath: dirname(__DIR__))
         // réponse web, admin ET publique.
         $middleware->append(SecurityHeaders::class);
 
+        // Prod tourne derrière le CDN Hostinger (hcdn) : sans ça, Request::ip()
+        // renvoie l'IP du CDN pour TOUS les visiteurs, pas la leur. Conséquence
+        // concrète : le rate-limit anti-fraude par IP (`attendance-store`,
+        // 10/60s) deviendrait "10/60s pour tout l'événement" au lieu de par
+        // visiteur — un vrai risque de blocage à tort pendant une ruée réelle.
+        // `'*'` : l'origine ne reçoit du trafic QUE via ce CDN, donc faire
+        // confiance à tout proxy en amont est le choix standard recommandé par
+        // Laravel pour les plateformes hébergées dont l'IP du load balancer
+        // n'est pas publiée (AWS ELB, Heroku, Hostinger...).
+        $middleware->trustProxies(at: '*');
+
         // Le cloisonnement doit être actif AVANT la résolution du route-model
         // binding (`{event}`), sinon un événement d'une autre filiale serait
         // résolu hors scope et fuiterait (200 au lieu de 404). On force donc
