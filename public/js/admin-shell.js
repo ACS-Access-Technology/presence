@@ -30,7 +30,7 @@
 
     document.addEventListener('click', function (event) {
         var link = event.target.closest('a[href]');
-        if (link) {
+        if (link && window.matchMedia('(max-width:767px)').matches) {
             var target = new URL(link.href, window.location.origin);
             var create = new URL(cfg.createUrl, window.location.origin);
             if (target.origin === create.origin && target.pathname === create.pathname
