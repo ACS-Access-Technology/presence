@@ -25,17 +25,17 @@
         while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
         return n.toFixed(i ? 1 : 0) + ' ' + u[i];
     }
-    /** Badge coloré par type de fichier (identification visuelle rapide, sans logo tiers). */
-    var FILE_BADGES = {
-        pdf: { label: 'PDF', bg: '#e5342e' },
-        doc: { label: 'DOC', bg: '#2b579a' }, docx: { label: 'DOC', bg: '#2b579a' },
-        xls: { label: 'XLS', bg: '#217346' }, xlsx: { label: 'XLS', bg: '#217346' }, csv: { label: 'CSV', bg: '#217346' },
-        ppt: { label: 'PPT', bg: '#d24726' }, pptx: { label: 'PPT', bg: '#d24726' },
-        txt: { label: 'TXT', bg: '#6b7280' }
+    /** Icône par type de fichier (identification visuelle rapide). */
+    var FILE_ICONS = {
+        pdf: 'pdf.png',
+        doc: 'docx.png', docx: 'docx.png',
+        xls: 'xls.png', xlsx: 'xls.png', csv: 'xls.png',
+        ppt: 'ppt.png', pptx: 'ppt.png',
+        txt: 'txt.png'
     };
-    function fileBadge(name) {
+    function fileIcon(name) {
         var ext = String(name || '').split('.').pop().toLowerCase();
-        return FILE_BADGES[ext] || { label: (ext.slice(0, 3) || 'DOC').toUpperCase(), bg: '#6b7280' };
+        return '/assets/filetypes/' + (FILE_ICONS[ext] || 'txt.png');
     }
 
     var Report = {
@@ -46,10 +46,9 @@
             var list = $('#doc-list'); if (!list) return;
             $('#doc-cnt').textContent = this.docs.length;
             list.innerHTML = this.docs.map(function (d) {
-                var badge = fileBadge(d.name);
                 return '<div class="doc-item">'
                     + '<div class="doc-item__row">'
-                    + '<span class="doc-item__ic" style="background:' + badge.bg + '">' + esc(badge.label) + '</span>'
+                    + '<img class="doc-item__ic" src="' + fileIcon(d.name) + '" alt="">'
                     + '<div class="doc-item__meta"><div class="doc-item__n">' + esc(d.name) + '</div><div class="doc-item__m">' + esc(humanSize(d.size)) + '</div></div>'
                     + '</div>'
                     + '<div class="doc-item__actions">'
