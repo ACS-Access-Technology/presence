@@ -108,3 +108,18 @@ jobs:
             # sur cet hébergement Hostinger (mutualisé). Le cron doit être créé
             # une fois, à la main, via hPanel → Avancé → Cron Jobs. Voir
             # docs/gestion-projet/deploiement-hostinger.md.
+
+      # Smoke test : le déploiement précédent se terminait sur "Deploy
+      # terminé" sans jamais vérifier que le site répond réellement derrière
+      # (config cassée, .htaccess invalide, permissions storage...). `/up`
+      # est la route de santé native de Laravel 11+ (bootstrap/app.php).
+      - name: Smoke test — le site répond après déploiement
+        run: |
+          sleep 5
+          status=$(curl -s -o /dev/null -w "%{http_code}" --max-time 15 "${{ secrets.PROD_URL }}/up")
+          echo "Statut /up : $status"
+          if [ "$status" != "200" ]; then
+            echo "::error::Smoke test échoué — le site ne répond pas correctement après déploiement (HTTP $status)."
+            exit 1
+          fi
+          echo "✓ Smoke test OK — le site répond (HTTP 200)."
