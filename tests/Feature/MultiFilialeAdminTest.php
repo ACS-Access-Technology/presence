@@ -9,6 +9,7 @@ use App\Enums\UserRole;
 use App\Models\Event;
 use App\Models\EventType;
 use App\Models\Filiale;
+use App\Models\Scopes\FilialeScope;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -287,6 +288,19 @@ class MultiFilialeAdminTest extends TestCase
 
         $this->actingAs($super)->patchJson(route('admin.filiales.toggle', $id))->assertOk();
         $this->assertDatabaseHas('filiales', ['id' => $id, 'is_active' => false]);
+    }
+
+    public function test_la_creation_dune_filiale_instancie_les_types_devenement_par_defaut(): void
+    {
+        $super = User::factory()->superAdmin()->create();
+
+        $id = $this->actingAs($super)->postJson(route('admin.filiales.store'), ['name' => 'ACS Santé'])
+            ->assertStatus(201)->json('id');
+
+        $types = EventType::withoutGlobalScope(FilialeScope::class)
+            ->where('filiale_id', $id)->orderBy('position')->pluck('name')->all();
+
+        $this->assertSame(array_column(EventType::DEFAULTS, 'name'), $types);
     }
 
     public function test_la_filiale_par_defaut_ne_peut_pas_etre_desactivee(): void

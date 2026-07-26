@@ -14,15 +14,7 @@ class EventTypeSeeder extends Seeder
 {
     public function run(): void
     {
-        $types = [
-            ['name' => 'Atelier', 'color' => '#7c3aed'],
-            ['name' => 'Réunion', 'color' => '#2563eb'],
-            ['name' => 'Rencontre', 'color' => '#d6336c'],
-            ['name' => 'Formation', 'color' => '#0e9e86'],
-            ['name' => 'Conférence', 'color' => '#e0620d'],
-        ];
-
-        foreach ($types as $position => $type) {
+        foreach (EventType::DEFAULTS as $position => $type) {
             EventType::query()->updateOrCreate(
                 ['name' => $type['name']],
                 ['color' => $type['color'], 'is_active' => true, 'position' => $position],

@@ -28,8 +28,37 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class EventType extends Model
 {
+    /**
+     * Référentiel par défaut, instancié pour la filiale holding (seeder) et pour
+     * toute nouvelle filiale créée (voir {@see seedDefaultsFor}) : un organisateur
+     * dispose immédiatement de types utilisables, sans étape de paramétrage requise.
+     *
+     * @var list<array{name: string, color: string}>
+     */
+    public const array DEFAULTS = [
+        ['name' => 'Atelier', 'color' => '#7c3aed'],
+        ['name' => 'Réunion', 'color' => '#2563eb'],
+        ['name' => 'Rencontre', 'color' => '#d6336c'],
+        ['name' => 'Formation', 'color' => '#0e9e86'],
+        ['name' => 'Conférence', 'color' => '#e0620d'],
+    ];
+
     /** @var list<string> */
     protected $fillable = ['filiale_id', 'name', 'color', 'is_active', 'position'];
+
+    /** Instancie le référentiel {@see DEFAULTS} pour une filiale (à sa création). */
+    public static function seedDefaultsFor(Filiale $filiale): void
+    {
+        foreach (self::DEFAULTS as $position => $type) {
+            self::create([
+                'filiale_id' => $filiale->id,
+                'name' => $type['name'],
+                'color' => $type['color'],
+                'is_active' => true,
+                'position' => $position,
+            ]);
+        }
+    }
 
     /**
      * À la création, renseigne `filiale_id` s'il n'est pas fourni : filiale de

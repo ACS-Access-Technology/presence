@@ -9,6 +9,7 @@ use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Controller;
 use App\Models\Attendance;
 use App\Models\Event;
+use App\Models\EventType;
 use App\Models\Filiale;
 use App\Models\Scopes\FilialeScope;
 use App\Models\User;
@@ -75,6 +76,10 @@ class FilialeController extends Controller
             'slug' => $this->uniqueSlug($data['name']),
             'is_active' => true,
         ]);
+
+        // Référentiel de types utilisable immédiatement, sans étape de paramétrage
+        // requise avant de pouvoir créer un événement (D-ME-3).
+        EventType::seedDefaultsFor($filiale);
 
         return response()->json($this->payload($filiale->loadCount('users'), Filiale::defaultId()), 201);
     }
