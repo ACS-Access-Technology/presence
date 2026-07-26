@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 class EventReportTest extends TestCase
@@ -68,6 +69,30 @@ class EventReportTest extends TestCase
         $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
             'files' => [UploadedFile::fake()->create('malware.exe', 10)],
         ])->assertStatus(422);
+    }
+
+    /**
+     * Le badge visuel par type de fichier (front) se base sur l'extension du nom
+     * original — verrouille que chaque extension acceptée par la validation
+     * survit intacte jusqu'à la réponse JSON consommée par le badge.
+     */
+    public static function extensionsAcceptees(): array
+    {
+        return [
+            ['pdf'], ['doc'], ['docx'], ['xls'], ['xlsx'], ['ppt'], ['pptx'], ['csv'], ['txt'],
+        ];
+    }
+
+    #[DataProvider('extensionsAcceptees')]
+    public function test_upload_document_conserve_lextension_pour_le_badge_visuel(string $extension): void
+    {
+        $event = $this->event();
+
+        $resp = $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
+            'files' => [UploadedFile::fake()->create('fichier.'.$extension, 20)],
+        ])->assertStatus(201);
+
+        $this->assertStringEndsWith('.'.$extension, $resp->json('documents.0.name'));
     }
 
     public function test_upload_de_plusieurs_photos_en_une_requete(): void

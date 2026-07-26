@@ -25,6 +25,18 @@
         while (n >= 1024 && i < u.length - 1) { n /= 1024; i++; }
         return n.toFixed(i ? 1 : 0) + ' ' + u[i];
     }
+    /** Badge coloré par type de fichier (identification visuelle rapide, sans logo tiers). */
+    var FILE_BADGES = {
+        pdf: { label: 'PDF', bg: '#e5342e' },
+        doc: { label: 'DOC', bg: '#2b579a' }, docx: { label: 'DOC', bg: '#2b579a' },
+        xls: { label: 'XLS', bg: '#217346' }, xlsx: { label: 'XLS', bg: '#217346' }, csv: { label: 'CSV', bg: '#217346' },
+        ppt: { label: 'PPT', bg: '#d24726' }, pptx: { label: 'PPT', bg: '#d24726' },
+        txt: { label: 'TXT', bg: '#6b7280' }
+    };
+    function fileBadge(name) {
+        var ext = String(name || '').split('.').pop().toLowerCase();
+        return FILE_BADGES[ext] || { label: (ext.slice(0, 3) || 'DOC').toUpperCase(), bg: '#6b7280' };
+    }
 
     var Report = {
         docs: (CFG.documents || []).slice(),
@@ -34,11 +46,16 @@
             var list = $('#doc-list'); if (!list) return;
             $('#doc-cnt').textContent = this.docs.length;
             list.innerHTML = this.docs.map(function (d) {
+                var badge = fileBadge(d.name);
                 return '<div class="doc-item">'
-                    + '<span class="doc-item__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z"/><path d="M14 2v6h6"/></svg></span>'
-                    + '<div><div class="doc-item__n">' + esc(d.name) + '</div><div class="doc-item__m">' + esc(humanSize(d.size)) + '</div></div>'
+                    + '<div class="doc-item__row">'
+                    + '<span class="doc-item__ic" style="background:' + badge.bg + '">' + esc(badge.label) + '</span>'
+                    + '<div class="doc-item__meta"><div class="doc-item__n">' + esc(d.name) + '</div><div class="doc-item__m">' + esc(humanSize(d.size)) + '</div></div>'
+                    + '</div>'
+                    + '<div class="doc-item__actions">'
                     + '<a href="' + esc(d.url) + '" target="_blank" rel="noopener">Ouvrir</a>'
                     + '<button class="del" title="Supprimer" onclick="Report.removeDoc(' + d.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+                    + '</div>'
                     + '</div>';
             }).join('');
             this.updateTabCount();
