@@ -83,6 +83,10 @@ jobs:
           source: "public/build/"
           target: "${{ secrets.DEPLOY_PATH }}/public/build/"
           strip_components: 2
+          # Timeout de connexion par défaut (30s) trop court par intermittence
+          # côté Hostinger — plusieurs échecs "i/o timeout" observés alors que
+          # le site restait accessible en HTTP pendant ce temps.
+          timeout: 60s
 
       - name: Deploy sur serveur
         uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262  # v1.0.3
@@ -91,6 +95,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
           script: |
             set -e
             cd ${{ secrets.DEPLOY_PATH }}
