@@ -15,7 +15,7 @@ body.overlay-page .content{max-width:none;padding:20px}
 .app{display:flex;min-height:100vh}
 .side{width:248px;flex:0 0 248px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:sticky;top:0;height:100vh;padding:18px 14px;gap:4px}
 .side__brand{display:flex;align-items:center;gap:11px;padding:6px 8px 18px}
-.side__brand-ic{width:42px;height:42px;border-radius:12px;background:var(--accent);color:#fff;display:grid;place-items:center;font-weight:800;font-size:1.15rem;flex:0 0 auto}
+.side__brand-ic{height:44px;width:auto;max-width:140px;object-fit:contain;flex:0 0 auto}
 .side__brand-n{font-size:1.05rem;font-weight:800;letter-spacing:-.01em;line-height:1.2}
 .side__brand-s{font-size:.76rem;color:var(--faint);font-weight:600}
 .navlbl{font-size:.66rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);padding:14px 10px 6px}

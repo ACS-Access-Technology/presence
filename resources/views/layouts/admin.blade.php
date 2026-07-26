@@ -15,7 +15,7 @@
 <div class="app">
     <aside class="side" id="side" aria-label="Navigation principale">
         <div class="side__brand">
-            <div class="side__brand-ic">P</div>
+            <img src="{{ asset('assets/logo-acs-groupe.png') }}" alt="ACS Groupe" class="side__brand-ic">
             <div>
                 <div class="side__brand-n">Presence</div>
                 <div class="side__brand-s">ACS Groupe</div>
