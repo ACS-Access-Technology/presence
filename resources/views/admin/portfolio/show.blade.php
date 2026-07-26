@@ -31,7 +31,7 @@
         <div class="pfg-grid">
             @foreach ($photos as $i => $p)
                 <button type="button" class="pfg-cell" onclick="PortfolioGallery.open({{ $i }})">
-                    <img src="{{ $p['url'] }}" alt="Photo de l'activité" loading="lazy">
+                    <img src="{{ $p['url'] }}" alt="Photo de l'activité" loading="lazy" onerror="this.closest('.pfg-cell').classList.add('pfg-cell--broken')">
                 </button>
             @endforeach
         </div>
@@ -45,7 +45,8 @@
         <button type="button" class="pfg-lightbox__nav pfg-lightbox__nav--prev" aria-label="Photo précédente" onclick="PortfolioGallery.prev()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
         </button>
-        <img class="pfg-lightbox__img" id="pfg-lightbox-img" src="" alt="Photo de l'activité">
+        <img class="pfg-lightbox__img" id="pfg-lightbox-img" src="" alt="Photo de l'activité" onerror="this.hidden=true;document.getElementById('pfg-lightbox-error').hidden=false" onload="this.hidden=false;document.getElementById('pfg-lightbox-error').hidden=true">
+        <div class="pfg-lightbox__error" id="pfg-lightbox-error" hidden>Photo introuvable.</div>
         <button type="button" class="pfg-lightbox__nav pfg-lightbox__nav--next" aria-label="Photo suivante" onclick="PortfolioGallery.next()">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg>
         </button>
@@ -57,5 +58,5 @@
 <script>
     window.PORTFOLIO_GALLERY = { photos: @json($photos) };
 </script>
-<script src="{{ versioned_asset('js/portfolio-gallery.js') }}"></script>
+<script src="{{ versioned_asset('js/portfolio-gallery.js') }}" defer></script>
 @endpush

@@ -37,7 +37,13 @@ class PortfolioController extends Controller
                 'type_color' => $event->type->color,
                 'date' => $event->starts_at->translatedFormat('j M Y'),
                 'location' => $event->location,
-                'url' => route('admin.portfolio.show', $event),
+                // Une activité sans photo n'a rien à montrer dans la galerie : le
+                // clic mène directement à son contenu (compte-rendu legacy et/ou
+                // documents) plutôt que vers une galerie vide et trompeuse.
+                'url' => $event->photos_count > 0
+                    ? route('admin.portfolio.show', $event)
+                    : route('admin.events.show', $event).'#cr',
+                'has_photos' => $event->photos_count > 0,
                 'cover' => $cover?->url(),
                 'excerpt' => $this->excerpt($event),
                 'photos_count' => $event->photos_count,

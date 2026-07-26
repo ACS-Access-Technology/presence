@@ -266,4 +266,167 @@ class AttendanceServiceTest extends TestCase
         $this->service->undoDeparture($attendance);
         $this->assertNull($attendance->refresh()->departed_at);
     }
+
+    // =====================================================================
+    // Anti-doublon : normalisation de l'email (casse / espaces)
+    // =====================================================================
+
+    /**
+     * Deux soumissions du MÊME email avec une casse différente ne doivent créer
+     * qu'UNE personne et UNE présence : la clé de reconnaissance est l'email
+     * normalisé (minuscules), pas la chaîne brute. Sinon un même visiteur émargeant
+     * « Awa@Exemple.CI » puis « awa@exemple.ci » compterait double.
+     */
+    public function test_anti_doublon_insensible_a_la_casse_de_lemail(): void
+    {
+        $event = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+
+        $premier = $this->service->register($event, $this->input('Awa.Kone@Exemple.CI'));
+        $second = $this->service->register($event, $this->input('awa.kone@exemple.ci'));
+
+        $this->assertDatabaseCount('people', 1);
+        $this->assertDatabaseCount('attendances', 1);
+        $this->assertSame($premier->id, $second->id);
+        $this->assertSame($premier->reference, $second->reference);
+    }
+
+    /** Même exigence avec des espaces parasites autour de l'email (copier-coller). */
+    public function test_anti_doublon_insensible_aux_espaces_de_lemail(): void
+    {
+        $event = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+
+        $premier = $this->service->register($event, $this->input('visiteur@exemple.ci'));
+        $second = $this->service->register($event, $this->input('  visiteur@exemple.ci  '));
+
+        $this->assertDatabaseCount('people', 1);
+        $this->assertDatabaseCount('attendances', 1);
+        $this->assertSame($premier->id, $second->id);
+    }
+
+    /** La reconnaissance retrouve une fiche quelle que soit la casse fournie. */
+    public function test_find_person_by_email_normalise_la_casse(): void
+    {
+        Person::create(['email' => 'connu@acs.ci', 'last_name' => 'Bamba', 'first_name' => 'Ali']);
+
+        $this->assertNotNull($this->service->findPersonByEmail('CONNU@ACS.CI'));
+        $this->assertNotNull($this->service->findPersonByEmail('  Connu@Acs.Ci  '));
+        $this->assertNull($this->service->findPersonByEmail('inconnu@acs.ci'));
+    }
+
+    // =====================================================================
+    // activeOverlap : conditions d'exclusion (le cœur anti-chevauchement)
+    // =====================================================================
+
+    /** Un événement ANNULÉ ne compte jamais comme chevauchement, même « en cours ». */
+    public function test_active_overlap_ignore_un_evenement_annule(): void
+    {
+        $annule = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+        $cible = $this->makeEvent(Carbon::now()->subMinutes(30), Carbon::now()->addHours(2));
+
+        $this->service->register($annule, $this->input('k.ndri@acs.ci'));
+        $annule->update(['cancelled_at' => Carbon::now()]);
+
+        $person = Person::where('email', 'k.ndri@acs.ci')->firstOrFail();
+        $this->assertNull(
+            $this->service->activeOverlap($person, $cible),
+            'Une présence sur un événement annulé ne doit pas bloquer un autre émargement.'
+        );
+    }
+
+    /** Une présence déjà clôturée (departed_at renseigné) ne chevauche plus. */
+    public function test_active_overlap_ignore_une_presence_deja_cloturee(): void
+    {
+        $eventA = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+        $cible = $this->makeEvent(Carbon::now()->subMinutes(30), Carbon::now()->addHours(2));
+
+        $onA = $this->service->register($eventA, $this->input('k.ndri@acs.ci'));
+        $this->service->markDeparture($onA);
+
+        $person = Person::where('email', 'k.ndri@acs.ci')->firstOrFail();
+        $this->assertNull($this->service->activeOverlap($person, $cible));
+    }
+
+    /** Un événement dont la fenêtre ne couvre PAS l'instant (passé/futur) n'est pas un chevauchement. */
+    public function test_active_overlap_ignore_un_evenement_hors_fenetre(): void
+    {
+        // Présence sur un événement déjà terminé : plus « en cours » → pas de chevauchement.
+        $termine = $this->makeEvent(Carbon::now()->subDays(1), Carbon::now()->subDays(1)->addHours(2));
+        $cible = $this->makeEvent(Carbon::now()->subMinutes(30), Carbon::now()->addHours(2));
+
+        $this->service->register($termine, $this->input('k.ndri@acs.ci'));
+        $person = Person::where('email', 'k.ndri@acs.ci')->firstOrFail();
+
+        $this->assertNull($this->service->activeOverlap($person, $cible));
+    }
+
+    /** La détection de chevauchement inclut les bornes exactes de la fenêtre (starts_at / ends_at). */
+    public function test_active_overlap_inclut_les_bornes_de_fenetre(): void
+    {
+        $autre = $this->makeEvent(Carbon::parse('2026-07-25 09:00:00'), Carbon::parse('2026-07-25 11:00:00'));
+        $cible = $this->makeEvent(Carbon::parse('2026-07-25 08:00:00'), Carbon::parse('2026-07-25 12:00:00'));
+
+        $this->service->register($autre, $this->input('k.ndri@acs.ci'));
+        $person = Person::where('email', 'k.ndri@acs.ci')->firstOrFail();
+
+        // À l'instant exact de ends_at de l'autre événement : encore en cours (borne incluse).
+        $this->assertNotNull($this->service->activeOverlap($person, $cible, Carbon::parse('2026-07-25 11:00:00')));
+        // Une seconde après ends_at : la fenêtre ne couvre plus l'instant.
+        $this->assertNull($this->service->activeOverlap($person, $cible, Carbon::parse('2026-07-25 11:00:01')));
+    }
+
+    /**
+     * Symétrique du backfill : enregistrer une présence sur un événement FUTUR ne
+     * doit pas clôturer une présence réellement en cours (la garde ne s'applique
+     * que si la cible couvre l'instant courant).
+     */
+    public function test_register_sur_evenement_futur_ne_cloture_pas_une_presence_en_cours(): void
+    {
+        $enCours = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+        $futur = $this->makeEvent(Carbon::now()->addDays(1), Carbon::now()->addDays(1)->addHours(2));
+
+        $actuel = $this->service->register($enCours, $this->input('k.ndri@acs.ci'));
+        $this->service->register($futur, $this->input('k.ndri@acs.ci'));
+
+        $this->assertNull(
+            $actuel->refresh()->departed_at,
+            'Un émargement sur un événement futur ne doit pas clôturer une présence en cours.'
+        );
+    }
+
+    // =====================================================================
+    // markDeparture : idempotence (ne réécrit jamais un départ déjà posé)
+    // =====================================================================
+
+    public function test_marquer_un_depart_est_idempotent(): void
+    {
+        $event = $this->makeEvent(Carbon::now()->subHours(3), Carbon::now()->addHour());
+        $attendance = $this->service->register($event, $this->input());
+
+        $premierDepart = Carbon::now()->subHours(2);
+        $this->service->markDeparture($attendance, $premierDepart);
+        $pose = $attendance->refresh()->departed_at;
+        $this->assertNotNull($pose);
+
+        // Un second marquage avec un autre horodatage ne doit PAS écraser le premier.
+        $this->service->markDeparture($attendance, Carbon::now());
+        $this->assertTrue(
+            $pose->equalTo($attendance->refresh()->departed_at),
+            'Un départ déjà posé ne doit jamais être réécrit par un nouvel appel.'
+        );
+    }
+
+    // =====================================================================
+    // Verrouillage du mode QR dès la première présence
+    // =====================================================================
+
+    public function test_le_mode_qr_se_verrouille_des_la_premiere_presence(): void
+    {
+        $event = $this->makeEvent(Carbon::now()->subHour(), Carbon::now()->addHour());
+
+        $this->assertFalse($event->isQrModeLocked(), 'Sans présence, le mode reste modifiable.');
+
+        $this->service->register($event, $this->input());
+
+        $this->assertTrue($event->isQrModeLocked(), 'Dès la première présence, le mode est verrouillé.');
+    }
 }

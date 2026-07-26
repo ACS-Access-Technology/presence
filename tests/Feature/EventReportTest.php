@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Tests\TestCase;
@@ -67,6 +68,88 @@ class EventReportTest extends TestCase
         $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
             'files' => [UploadedFile::fake()->create('malware.exe', 10)],
         ])->assertStatus(422);
+    }
+
+    public function test_upload_de_plusieurs_photos_en_une_requete(): void
+    {
+        $event = $this->event();
+
+        $resp = $this->actingAs($this->user)->postJson(route('admin.events.report.photos.store', $event), [
+            'files' => [
+                UploadedFile::fake()->image('a.jpg', 100, 100),
+                UploadedFile::fake()->image('b.jpg', 100, 100),
+                UploadedFile::fake()->image('c.jpg', 100, 100),
+            ],
+        ])->assertStatus(201);
+
+        $resp->assertJsonCount(3, 'photos');
+        $this->assertSame(3, $event->photos()->count());
+        // Positions séquentielles et sans collision : ordre stable de la galerie.
+        $this->assertSame([1, 2, 3], $event->photos()->orderBy('position')->pluck('position')->all());
+    }
+
+    public function test_uploads_photo_successifs_incrementent_la_position(): void
+    {
+        $event = $this->event();
+        // Une photo préexistante (position 1) : le prochain lot repart de 2.
+        $event->photos()->create(['path' => 'reports/'.$event->id.'/photos/seed.jpg', 'position' => 1]);
+
+        $this->actingAs($this->user)->postJson(route('admin.events.report.photos.store', $event), [
+            'files' => [
+                UploadedFile::fake()->image('x.jpg', 100, 100),
+                UploadedFile::fake()->image('y.jpg', 100, 100),
+            ],
+        ])->assertStatus(201);
+
+        $this->assertSame([1, 2, 3], $event->photos()->orderBy('position')->pluck('position')->all());
+    }
+
+    public function test_upload_document_conserve_un_nom_unicode(): void
+    {
+        $event = $this->event();
+        // Nom hostile : accents, tiret cadratin, parenthèses, apostrophe.
+        $name = "Compte-rendu réunion — été 2026 (café, l'équipe).pdf";
+
+        $this->actingAs($this->user)->postJson(route('admin.events.report.documents.store', $event), [
+            'files' => [UploadedFile::fake()->create($name, 50, 'application/pdf')],
+        ])->assertStatus(201);
+
+        $doc = $event->documents()->firstOrFail();
+        // Le nom d'origine (unicode) est conservé tel quel en base.
+        $this->assertSame($name, $doc->original_name);
+
+        // Et le fichier reste servi correctement depuis le disque privé.
+        $this->actingAs($this->user)
+            ->get(route('admin.events.report.documents.show', [$event, $doc]))
+            ->assertOk()
+            ->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_upload_photo_avec_nom_unicode(): void
+    {
+        $event = $this->event();
+
+        $this->actingAs($this->user)->postJson(route('admin.events.report.photos.store', $event), [
+            'files' => [UploadedFile::fake()->image('séminaire équipe — été.jpg', 200, 150)],
+        ])->assertStatus(201);
+
+        $photo = $event->photos()->firstOrFail();
+        Storage::disk('local')->assertExists($photo->path);
+    }
+
+    /**
+     * Non-régression : la saisie manuelle du compte-rendu (ReportController::saveText)
+     * a été retirée. Aucune route nommée ne doit subsister, et l'ancienne URL doit
+     * répondre 404 (route inexistante) — jamais une 500.
+     */
+    public function test_la_route_denregistrement_du_texte_du_compte_rendu_nexiste_plus(): void
+    {
+        $this->assertFalse(Route::has('admin.events.report.save'));
+
+        $event = $this->event();
+        $this->actingAs($this->user)
+            ->post("/admin/events/{$event->id}/report", ['body' => 'Texte manuel supprimé'])
+            ->assertNotFound();
     }
 
     public function test_upload_et_suppression_photo(): void

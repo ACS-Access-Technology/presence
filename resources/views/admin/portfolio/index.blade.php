@@ -53,7 +53,7 @@
                         </div>
                         <div class="pf__t">{{ $c['title'] }}</div>
                         @if($c['excerpt'])<p class="pf__ex">{{ $c['excerpt'] }}</p>@endif
-                        <div class="pf__foot">Voir les photos <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
+                        <div class="pf__foot">{{ $c['has_photos'] ? 'Voir les photos' : 'Voir le contenu' }} <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg></div>
                     </div>
                 </a>
             @endforeach
