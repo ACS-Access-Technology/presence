@@ -23,7 +23,7 @@ use Illuminate\Notifications\Notifiable;
  * @property UserRole $role
  * @property bool $is_active
  */
-#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'last_login_at', 'filiale_id'])]
+#[Fillable(['name', 'email', 'password', 'role', 'is_active', 'last_login_at', 'filiale_id', 'phone', 'direction', 'service', 'position', 'person_id'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
@@ -48,6 +48,17 @@ class User extends Authenticatable
     public function filiale(): BelongsTo
     {
         return $this->belongsTo(Filiale::class);
+    }
+
+    /** @return BelongsTo<Person, $this> */
+    public function person(): BelongsTo
+    {
+        return $this->belongsTo(Person::class);
+    }
+
+    public function isAgent(): bool
+    {
+        return $this->role === UserRole::Agent;
     }
 
     public function isSuperAdmin(): bool
