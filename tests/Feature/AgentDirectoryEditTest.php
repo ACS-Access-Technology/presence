@@ -43,6 +43,20 @@ class AgentDirectoryEditTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_un_admin_filiale_ne_peut_pas_editer_un_agent_d_une_autre_filiale(): void
+    {
+        $filialeA = Filiale::factory()->create();
+        $filialeB = Filiale::factory()->create();
+        $admin = User::factory()->filialeAdmin()->forFiliale($filialeA)->create();
+        $agentB = User::factory()->agent()->forFiliale($filialeB)->create(['direction' => 'Original']);
+
+        $this->actingAs($admin)->patch(route('admin.annuaire.update', $agentB), [
+            'direction' => 'Piraté',
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('users', ['id' => $agentB->id, 'direction' => 'Original']);
+    }
+
     public function test_un_admin_filiale_orphelin_sans_filiale_ne_peut_editer_personne(): void
     {
         // En production, `users.filiale_id` est en nullOnDelete() sur la FK
