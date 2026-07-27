@@ -39,4 +39,16 @@ class AgentDirectoryTest extends TestCase
 
         $response->assertOk()->assertSee('Agent Alpha')->assertSee('Agent Beta');
     }
+
+    public function test_un_compte_non_super_admin_sans_filiale_ne_voit_aucun_agent(): void
+    {
+        $filiale = Filiale::factory()->create();
+
+        $orphelin = User::factory()->filialeAdmin()->create(['filiale_id' => null]);
+        User::factory()->agent()->forFiliale($filiale)->create(['name' => 'Agent Alpha']);
+
+        $response = $this->actingAs($orphelin)->get(route('admin.annuaire.index'));
+
+        $response->assertOk()->assertDontSee('Agent Alpha');
+    }
 }

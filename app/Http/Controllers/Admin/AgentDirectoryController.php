@@ -27,9 +27,17 @@ final class AgentDirectoryController extends Controller
             ->orderBy('name');
 
         // Le SuperAdmin (filiale_id NULL, au-dessus des filiales) voit tout ;
-        // tout autre compte est borné à sa propre filiale.
+        // tout autre compte est borné à sa propre filiale. Fail-closed (RME-7,
+        // voir ApplyFilialeScope::denyAll) : un compte non-SuperAdmin dont le
+        // filiale_id est NULL (donnée incohérente) ne doit RIEN voir plutôt que
+        // de tomber sur `WHERE filiale_id IS NULL`, qui exposerait les comptes
+        // SuperAdmin (eux aussi à filiale_id NULL).
         if (! $actor->isSuperAdmin()) {
-            $query->where('filiale_id', $actor->filiale_id);
+            if ($actor->filiale_id === null) {
+                $query->whereRaw('1 = 0');
+            } else {
+                $query->where('filiale_id', $actor->filiale_id);
+            }
         }
 
         return view('admin.annuaire.index', [
