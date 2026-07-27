@@ -165,6 +165,8 @@ Rôles réels de Presence : **`SuperAdmin` | `AdminFiliale` | `Organisateur`** (
 
 Le nouveau rôle `Agent` = moindre privilège : voit et exécute ses tâches, ne gère ni événements ni Paramètres. « Qui valide » ne dépend pas du rôle mais du champ `assigned_by` (l'émetteur de la tâche).
 
+> **À imposer dans l'épic qui rend `Agent` créable** (provisioning de comptes + UI des tâches) : au pilote actuel `Agent` n'est **pas** créable via l'app (`AccountController::ASSIGNABLE_ROLES` ne liste que `AdminFiliale`/`Organisateur`), donc aucun compte Agent ne peut se connecter et l'absence de garde de rôle sur les routes événement/présence est **latente**. Dès que le provisioning d'un compte `Agent` sera ouvert, il faudra **dans le même lot** garder les surfaces opérationnelles (événements, participants, statistiques, portfolio, rapports) contre le rôle `Agent` (ex. `role:organisateur,admin_filiale,super_admin`) et rediriger la page d'accueil d'un Agent vers l'annuaire/ses tâches — sinon l'engagement « moindre privilège » ci-dessus n'est pas tenu. (Finding de revue finale Épic 1, parké car latent.)
+
 Contrôles côté serveur systématiques ; **tests des interdits obligatoires** dès la première story : auto-validation refusée, soumission sans livrable refusée, transition hors machine à états → 409, écriture hors rôle → 403. (Presence a déjà `SecurityGateAuditTest` / `GateIntegrationCrossAgentTest` comme modèles.)
 
 ---
