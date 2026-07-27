@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\UpdateAgentDirectoryRequest;
 use App\Models\User;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
@@ -43,5 +45,25 @@ final class AgentDirectoryController extends Controller
         return view('admin.annuaire.index', [
             'agents' => $query->get(),
         ]);
+    }
+
+    public function update(UpdateAgentDirectoryRequest $request, User $agent): RedirectResponse
+    {
+        // Un AdminFiliale ne peut éditer qu'un agent de sa propre filiale.
+        // Fail-closed (même logique que index()) : `users.filiale_id` est en
+        // `nullOnDelete()` sur la FK filiale — un AdminFiliale/Agent orphelin
+        // après suppression de sa filiale se retrouve avec filiale_id NULL. Sans
+        // ce garde explicite, la comparaison `!==` laisserait passer un tel
+        // compte contre N'IMPORTE QUEL autre compte à filiale_id NULL, y compris
+        // un SuperAdmin (lui aussi à filiale_id NULL par conception).
+        $actor = $request->user();
+        if (! $actor->isSuperAdmin() && ($actor->filiale_id === null || $agent->filiale_id !== $actor->filiale_id)) {
+            abort(403);
+        }
+
+        $agent->update($request->validated());
+
+        return redirect()->route('admin.annuaire.index')
+            ->with('status', 'Fiche annuaire mise à jour.');
     }
 }

@@ -107,6 +107,13 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
     // Annuaire du personnel interne, cloisonné par filiale (lecture seule).
     Route::get('/annuaire', [AgentDirectoryController::class, 'index'])->name('annuaire.index');
 
+    // Édition des fiches d'annuaire : réservée aux managers (AdminFiliale/SuperAdmin).
+    // Hors du préfixe `settings` : le cloisonnement par filiale est vérifié dans le
+    // contrôleur (un AdminFiliale ne peut éditer qu'un agent de sa propre filiale).
+    Route::middleware('role:admin_filiale,super_admin')->group(function (): void {
+        Route::patch('/annuaire/{agent}', [AgentDirectoryController::class, 'update'])->name('annuaire.update');
+    });
+
     // Portfolio des activités documentées : galerie photo par activité.
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
     Route::get('/portfolio/{event}', [PortfolioController::class, 'show'])->name('portfolio.show');
