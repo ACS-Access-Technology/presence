@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AgentDirectoryController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
@@ -102,6 +103,9 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
     // Annuaire des participants (recherche, historique, stats).
     Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
     Route::get('/participants/{person}', [ParticipantController::class, 'show'])->name('participants.show');
+
+    // Annuaire du personnel interne, cloisonné par filiale (lecture seule).
+    Route::get('/annuaire', [AgentDirectoryController::class, 'index'])->name('annuaire.index');
 
     // Portfolio des activités documentées : galerie photo par activité.
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
