@@ -51,4 +51,16 @@ class AgentDirectoryTest extends TestCase
 
         $response->assertOk()->assertDontSee('Agent Alpha');
     }
+
+    public function test_le_lien_annuaire_est_visible_dans_la_navigation(): void
+    {
+        // `admin.dashboard` redirige toujours vers `admin.events.index` (il n'existe
+        // pas d'écran « dashboard » distinct) : on suit la redirection pour vérifier
+        // le lien sur la page réellement rendue avec le layout admin.
+        $admin = User::factory()->filialeAdmin()->create();
+
+        $this->actingAs($admin)->followingRedirects()->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee(route('admin.annuaire.index'));
+    }
 }
