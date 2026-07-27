@@ -1,0 +1,173 @@
+<meta charset="utf-8">
+<title>Presence — Suivi de projets & tâches · Vue d'ensemble</title>
+<style>
+  :root{
+    --bg:#f6f8fb; --card:#ffffff; --ink:#1f2937; --muted:#6b7280; --line:#e2e8f0;
+    --navy:#1f3864; --accent:#2e74b5; --soft:#eaf1fa;
+    --green:#548235; --green-soft:#e8f2e0; --gold:#bf8f00; --gold-soft:#fbf3d9;
+    --red:#c0392b; --grey-soft:#eef1f5;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0f141b; --card:#161d27; --ink:#e6edf5; --muted:#9aa7b6; --line:#26313f;
+      --navy:#7ea6d8; --accent:#5b9bd5; --soft:#18222f;
+      --green:#9cc77a; --green-soft:#1b2a17; --gold:#e0c15a; --gold-soft:#2c2410;
+      --red:#e07568; --grey-soft:#1b2530;}
+  }
+  :root[data-theme="dark"]{--bg:#0f141b;--card:#161d27;--ink:#e6edf5;--muted:#9aa7b6;--line:#26313f;
+    --navy:#7ea6d8;--accent:#5b9bd5;--soft:#18222f;--green:#9cc77a;--green-soft:#1b2a17;
+    --gold:#e0c15a;--gold-soft:#2c2410;--red:#e07568;--grey-soft:#1b2530;}
+  :root[data-theme="light"]{--bg:#f6f8fb;--card:#ffffff;--ink:#1f2937;--muted:#6b7280;--line:#e2e8f0;
+    --navy:#1f3864;--accent:#2e74b5;--soft:#eaf1fa;--green:#548235;--green-soft:#e8f2e0;
+    --gold:#bf8f00;--gold-soft:#fbf3d9;--red:#c0392b;--grey-soft:#eef1f5;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;padding:32px 20px 64px}
+  .wrap{max-width:960px;margin:0 auto}
+  header{text-align:center;margin-bottom:8px}
+  .kicker{color:var(--accent);font-weight:700;letter-spacing:.08em;text-transform:uppercase;font-size:.72rem}
+  h1{font-size:1.85rem;font-weight:800;color:var(--navy);margin:6px 0 4px}
+  .sub{color:var(--muted);font-size:.98rem;max-width:640px;margin:0 auto}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 22px;margin:20px 0;
+    box-shadow:0 1px 2px rgba(0,0,0,.04)}
+  h2{font-size:1.12rem;color:var(--navy);margin:0 0 4px;display:flex;align-items:center;gap:10px}
+  h2 .n{background:var(--navy);color:#fff;width:26px;height:26px;border-radius:50%;
+    display:inline-flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:800;flex:0 0 auto}
+  .lead{color:var(--muted);font-size:.92rem;margin:0 0 16px}
+  /* hierarchy */
+  .flow{display:flex;flex-direction:column;align-items:center;gap:0}
+  .row{display:flex;gap:14px;justify-content:center;flex-wrap:wrap}
+  .box{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 16px;text-align:center;min-width:150px}
+  .box .role{font-weight:800;color:var(--navy);font-size:.95rem}
+  .box .who{color:var(--muted);font-size:.82rem;margin-top:2px}
+  .arrow{color:var(--accent);font-size:1.3rem;line-height:1;margin:6px 0}
+  .caption{color:var(--muted);font-size:.82rem;text-align:center;margin-top:10px;font-style:italic}
+  /* lifecycle */
+  .life{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center}
+  .step{border-radius:999px;padding:9px 16px;font-weight:700;font-size:.9rem;border:1px solid var(--line)}
+  .s-grey{background:var(--grey-soft);color:var(--ink)}
+  .s-gold{background:var(--gold-soft);color:var(--gold)}
+  .s-green{background:var(--green-soft);color:var(--green)}
+  .sep{color:var(--accent);font-weight:800}
+  .note{font-size:.82rem;color:var(--muted);margin-top:12px;padding-left:14px;border-left:3px solid var(--accent)}
+  /* two views */
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid2{grid-template-columns:1fr}}
+  .view{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--soft)}
+  .view h3{margin:0 0 4px;font-size:.98rem;color:var(--navy)}
+  .view p{margin:0;font-size:.86rem;color:var(--muted)}
+  .view .tag{display:inline-block;margin-top:8px;font-size:.72rem;font-weight:700;color:var(--accent);
+    background:var(--card);border:1px solid var(--line);border-radius:6px;padding:2px 8px}
+  /* cycle */
+  .cycle{display:flex;gap:10px;flex-wrap:wrap;justify-content:center}
+  .cbox{flex:1;min-width:150px;background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:12px 14px}
+  .cbox .t{font-weight:700;color:var(--navy);font-size:.9rem;margin-bottom:3px}
+  .cbox .d{color:var(--muted);font-size:.82rem}
+  /* now vs later */
+  .cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.cols{grid-template-columns:1fr}}
+  .col{border-radius:12px;padding:14px 16px;border:1px solid var(--line)}
+  .col.now{background:var(--green-soft)}
+  .col.later{background:var(--gold-soft)}
+  .col h3{margin:0 0 8px;font-size:.95rem}
+  .col.now h3{color:var(--green)} .col.later h3{color:var(--gold)}
+  .col ul{margin:0;padding-left:18px} .col li{font-size:.86rem;margin:4px 0}
+  .pill{display:inline-block;background:var(--soft);border:1px solid var(--line);border-radius:999px;
+    padding:4px 12px;font-size:.8rem;color:var(--muted);margin:3px 4px 0 0}
+  footer{text-align:center;color:var(--muted);font-size:.78rem;margin-top:26px}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="kicker">ACS Groupe · Presence</div>
+    <h1>Suivi de projets &amp; tâches</h1>
+    <p class="sub">Une nouvelle fonctionnalité ajoutée à Presence — l'outil déjà en service — pour piloter en temps réel « ce qui est fait et ce qui ne l'est pas ». Remplace le fichier Excel de suivi.</p>
+  </header>
+
+  <section>
+    <h2><span class="n">1</span> Qui confie le travail à qui</h2>
+    <p class="lead">Le travail se distribue en cascade, exactement comme aujourd'hui — l'outil épouse le fonctionnement réel, il ne le change pas.</p>
+    <div class="flow">
+      <div class="row"><div class="box"><div class="role">PDG</div><div class="who">Holding</div></div></div>
+      <div class="arrow">▼ confie</div>
+      <div class="row">
+        <div class="box"><div class="role">Direction (DG)</div><div class="who">Entité</div></div>
+        <div class="box"><div class="role">PMO</div><div class="who">Entité</div></div>
+      </div>
+      <div class="arrow">▼ confient</div>
+      <div class="row"><div class="box"><div class="role">Agents</div><div class="who">Équipe de l'entité</div></div></div>
+    </div>
+    <p class="caption">Chacun ne voit que ce qui le concerne. Le PDG voit tout ; un responsable voit son entité ; un agent voit ses tâches.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">2</span> La vie d'une tâche</h2>
+    <p class="lead">Règle d'or : <strong>celui qui confie une tâche est celui qui la valide</strong>. Personne ne valide son propre travail.</p>
+    <div class="life">
+      <span class="step s-grey">Confiée</span><span class="sep">→</span>
+      <span class="step s-gold">En cours</span><span class="sep">→</span>
+      <span class="step s-gold">Soumis</span><span class="sep">→</span>
+      <span class="step s-green">Résolu ✓</span>
+    </div>
+    <p class="note">« Soumis » exige toujours un <strong>lien vers le livrable</strong> (le document produit). L'émetteur coche « Résolu » — ou renvoie la tâche avec un motif. Une tâche résolue sort des écrans actifs mais reste dans l'historique et les revues.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">3</span> Les données restent toujours à jour</h2>
+    <p class="lead">Le fichier Excel mourait parce que personne ne le mettait à jour (30 tâches sur 31 « Réalisé », zéro « En cours »). L'outil relance automatiquement.</p>
+    <div class="cycle">
+      <div class="cbox"><div class="t">Tâche silencieuse</div><div class="d">Rien ne bouge depuis 7 jours → rappel à l'agent.</div></div>
+      <div class="cbox"><div class="t">Échéance proche</div><div class="d">2 jours avant la date → rappel automatique.</div></div>
+      <div class="cbox"><div class="t">Soumis sans réponse</div><div class="d">Attente de validation &gt; 48 h → rappel au responsable.</div></div>
+    </div>
+    <p class="note">Répondre à un rappel prend <strong>un clic</strong> depuis l'e-mail. Mettre à jour doit coûter 5 secondes, pas une corvée.</p>
+  </section>
+
+  <section>
+    <h2><span class="n">4</span> La business review tous les 10 jours</h2>
+    <p class="lead">Le cœur du pilotage. À chaque cycle, un dossier de séance est <strong>généré tout seul en moins d'une minute</strong>.</p>
+    <div class="grid2">
+      <div class="view"><h3>Le pack de revue</h3><p>Ce qui a été livré, les retards, les blocages, les décisions de la fois précédente et leur suivi. Projeté en séance.</p><span class="tag">Auto-généré</span></div>
+      <div class="view"><h3>Décisions → tâches</h3><p>Chaque décision prise en réunion devient une tâche suivie. La revue suivante vérifie toute seule si elle a été tenue.</p><span class="tag">Rien ne se perd</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">5</span> On retrouve le fichier Excel — en vivant</h2>
+    <p class="lead">Les deux onglets de votre fichier de suivi sont reproduits, exportables, mais tenus à jour en continu.</p>
+    <div class="grid2">
+      <div class="view"><h3>Journal des tâches</h3><p>Date · projet · tâche · responsable · état · livrable · commentaire. La trace de tout ce qui est fait, jour après jour.</p><span class="tag">Exportable Excel</span></div>
+      <div class="view"><h3>Suivi global par projet</h3><p>Chaque projet par phases, avancement calculé automatiquement, retard par rapport à l'engagement de départ.</p><span class="tag">Plus de formules cassées</span></div>
+    </div>
+  </section>
+
+  <section>
+    <h2><span class="n">6</span> Ce qu'on livre maintenant, ce qui vient après</h2>
+    <div class="cols">
+      <div class="col now">
+        <h3>✓ Dès le pilote (Access Security)</h3>
+        <ul>
+          <li>Annuaire des agents par filiale</li>
+          <li>Tâches, projets, phases, états</li>
+          <li>Validation par l'émetteur + livrable</li>
+          <li>Rappels automatiques</li>
+          <li>Business review + décisions suivies</li>
+          <li>Écran PDG « ce qui est / ce qui n'est pas »</li>
+        </ul>
+      </div>
+      <div class="col later">
+        <h3>◷ Plus tard</h3>
+        <ul>
+          <li><strong>Le Greffier</strong> : la réunion s'enregistre et se transforme toute seule en tâches (après 3 revues)</li>
+          <li>Proposition automatique du bon responsable</li>
+          <li>Déploiement à toutes les entités de la holding</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    ACS Groupe — Presence · Vue d'ensemble pour la direction · 27 juillet 2026<br>
+    Pilote : Access Security, puis extension à toute la holding.
+  </footer>
+</div>
