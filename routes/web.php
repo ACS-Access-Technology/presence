@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\PersonSearchController;
 use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RecruitmentCandidatureController;
 use App\Http\Controllers\Admin\RecruitmentTestController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
@@ -136,6 +137,16 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
         Route::get('/', [RecruitmentTestController::class, 'index'])->name('index');
         Route::patch('/tests/{test}/toggle', [RecruitmentTestController::class, 'toggleActif'])->name('toggle');
     });
+
+    // Candidatures d'un poste de recrutement : liste + détail, scopées au poste de
+    // l'URL. `scopeBindings()` contraint {candidature} à appartenir au {test} (via sa
+    // relation `test()`) : une candidature d'un autre poste renvoie 404 automatiquement.
+    Route::middleware('role:admin_filiale,organisateur,super_admin')
+        ->prefix('recrutement/tests/{test:slug}')->name('recrutement.candidatures.')
+        ->scopeBindings()->group(function (): void {
+            Route::get('/candidatures', [RecruitmentCandidatureController::class, 'index'])->name('index');
+            Route::get('/candidatures/{candidature}', [RecruitmentCandidatureController::class, 'show'])->name('show');
+        });
 
     // Portfolio des activités documentées : galerie photo par activité.
     Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
