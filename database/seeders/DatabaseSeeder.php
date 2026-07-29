@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             PersonSeeder::class,
             EventSeeder::class,
+            RecruitmentFiscalisteSeeder::class,
         ]);
     }
 }
