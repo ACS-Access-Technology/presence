@@ -54,42 +54,66 @@ final class RecruitmentService
     }
 
     /**
+     * Verrouillée comme {@see submit()}/{@see closeExpired()} : sans ce verrou,
+     * une réponse pourrait s'écrire après qu'un `submit()`/`closeExpired()`
+     * concurrent a déjà noté et notifié la candidature (réponse orpheline sur
+     * une candidature déjà scorée).
+     *
      * @param  array{classement?: ?string, ajustement_tva?: ?int, retenue_attendue?: ?int}  $data
      */
     public function saveReponse(RecruitmentCandidature $candidature, RecruitmentQuestion $question, array $data): ?RecruitmentReponse
     {
-        if (! $candidature->estEnCours()) {
-            return null;
-        }
+        return DB::transaction(function () use ($candidature, $question, $data): ?RecruitmentReponse {
+            $locked = RecruitmentCandidature::whereKey($candidature->id)->lockForUpdate()->first();
 
-        return RecruitmentReponse::updateOrCreate(
-            [
-                'recruitment_candidature_id' => $candidature->id,
-                'recruitment_question_id' => $question->id,
-            ],
-            [
-                'classement_saisi' => $data['classement'] ?? null,
-                'ajustement_tva_saisi' => $data['ajustement_tva'] ?? null,
-                'retenue_saisie' => $data['retenue_attendue'] ?? null,
-            ],
-        );
+            if ($locked === null || ! $locked->estEnCours()) {
+                return null;
+            }
+
+            return RecruitmentReponse::updateOrCreate(
+                [
+                    'recruitment_candidature_id' => $locked->id,
+                    'recruitment_question_id' => $question->id,
+                ],
+                [
+                    'classement_saisi' => $data['classement'] ?? null,
+                    'ajustement_tva_saisi' => $data['ajustement_tva'] ?? null,
+                    'retenue_saisie' => $data['retenue_attendue'] ?? null,
+                ],
+            );
+        });
     }
 
+    /**
+     * Verrouillée comme {@see closeExpired()} (même motif : lecture-puis-écriture
+     * sans verrou serait une course avec la clôture planifiée). Un candidat qui
+     * soumet au même instant où `closeExpired()` clôture la même ligne pour
+     * dépassement de délai ne doit JAMAIS écraser le statut `Expire` déjà noté
+     * et notifié — l'horloge serveur fait foi, pas l'ordre d'arrivée des requêtes.
+     */
     public function submit(RecruitmentCandidature $candidature): ?RecruitmentCandidature
     {
-        if ($candidature->statut !== RecruitmentCandidatureStatus::EnCours) {
-            return null;
+        $submitted = DB::transaction(function () use ($candidature): ?RecruitmentCandidature {
+            $locked = RecruitmentCandidature::whereKey($candidature->id)->lockForUpdate()->first();
+
+            if ($locked === null || $locked->statut !== RecruitmentCandidatureStatus::EnCours) {
+                return null;
+            }
+
+            $locked->forceFill([
+                'statut' => RecruitmentCandidatureStatus::Soumis,
+                'submitted_at' => Carbon::now(),
+                'score' => $this->scoring->scoreCandidature($locked),
+            ])->save();
+
+            return $locked;
+        });
+
+        if ($submitted !== null) {
+            $this->notifyManagers($submitted);
         }
 
-        $candidature->forceFill([
-            'statut' => RecruitmentCandidatureStatus::Soumis,
-            'submitted_at' => Carbon::now(),
-            'score' => $this->scoring->scoreCandidature($candidature),
-        ])->save();
-
-        $this->notifyManagers($candidature);
-
-        return $candidature;
+        return $submitted;
     }
 
     /**
