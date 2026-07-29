@@ -1,0 +1,147 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Services;
+
+use App\Console\Commands\CloseDueEvents;
+use App\Enums\RecruitmentCandidatureStatus;
+use App\Enums\UserRole;
+use App\Mail\RecruitmentCandidatureSubmittedMail;
+use App\Models\RecruitmentCandidature;
+use App\Models\RecruitmentQuestion;
+use App\Models\RecruitmentReponse;
+use App\Models\RecruitmentTest;
+use App\Models\User;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
+
+/**
+ * Orchestration d'une candidature au test de recrutement en ligne. Renvoie
+ * `null` (jamais d'exception) quand une précondition métier échoue — le
+ * contrôleur public traduit `null` en réponse HTTP adaptée (422/410).
+ */
+final class RecruitmentService
+{
+    public function __construct(private readonly RecruitmentScoringService $scoring) {}
+
+    /**
+     * @param  array{nom: string, prenom: string, email: string, telephone: ?string}  $identite
+     */
+    public function startCandidature(RecruitmentTest $test, array $identite): ?RecruitmentCandidature
+    {
+        $exists = RecruitmentCandidature::where('recruitment_test_id', $test->id)
+            ->where('email', $identite['email'])
+            ->exists();
+
+        if ($exists) {
+            return null;
+        }
+
+        return RecruitmentCandidature::create([
+            'recruitment_test_id' => $test->id,
+            'nom' => $identite['nom'],
+            'prenom' => $identite['prenom'],
+            'email' => $identite['email'],
+            'telephone' => $identite['telephone'] ?? null,
+            'token' => Str::random(40),
+            'started_at' => Carbon::now(),
+            'expires_at' => Carbon::now()->addMinutes($test->duree_minutes),
+            'statut' => RecruitmentCandidatureStatus::EnCours,
+        ]);
+    }
+
+    /**
+     * @param  array{classement?: ?string, ajustement_tva?: ?int, retenue_attendue?: ?int}  $data
+     */
+    public function saveReponse(RecruitmentCandidature $candidature, RecruitmentQuestion $question, array $data): ?RecruitmentReponse
+    {
+        if (! $candidature->estEnCours()) {
+            return null;
+        }
+
+        return RecruitmentReponse::updateOrCreate(
+            [
+                'recruitment_candidature_id' => $candidature->id,
+                'recruitment_question_id' => $question->id,
+            ],
+            [
+                'classement_saisi' => $data['classement'] ?? null,
+                'ajustement_tva_saisi' => $data['ajustement_tva'] ?? null,
+                'retenue_saisie' => $data['retenue_attendue'] ?? null,
+            ],
+        );
+    }
+
+    public function submit(RecruitmentCandidature $candidature): ?RecruitmentCandidature
+    {
+        if ($candidature->statut !== RecruitmentCandidatureStatus::EnCours) {
+            return null;
+        }
+
+        $candidature->forceFill([
+            'statut' => RecruitmentCandidatureStatus::Soumis,
+            'submitted_at' => Carbon::now(),
+            'score' => $this->scoring->scoreCandidature($candidature),
+        ])->save();
+
+        $this->notifyManagers($candidature);
+
+        return $candidature;
+    }
+
+    /**
+     * Clôture et note toute candidature `en_cours` dont le délai est dépassé.
+     * Idempotente : verrou par ligne (comme {@see CloseDueEvents}),
+     * un deuxième passage sur une candidature déjà traitée est un no-op.
+     */
+    public function closeExpired(): int
+    {
+        $count = 0;
+
+        $expired = RecruitmentCandidature::where('statut', RecruitmentCandidatureStatus::EnCours)
+            ->where('expires_at', '<', Carbon::now())
+            ->get();
+
+        foreach ($expired as $candidature) {
+            $justClosed = DB::transaction(function () use ($candidature): bool {
+                $locked = RecruitmentCandidature::whereKey($candidature->id)->lockForUpdate()->first();
+
+                if ($locked === null || $locked->statut !== RecruitmentCandidatureStatus::EnCours) {
+                    return false;
+                }
+
+                $locked->forceFill([
+                    'statut' => RecruitmentCandidatureStatus::Expire,
+                    'submitted_at' => Carbon::now(),
+                    'score' => $this->scoring->scoreCandidature($locked),
+                ])->save();
+
+                return true;
+            });
+
+            if ($justClosed) {
+                $count++;
+                $this->notifyManagers($candidature->fresh());
+            }
+        }
+
+        return $count;
+    }
+
+    /** Notifie les managers (AdminFiliale de la filiale du poste + tout SuperAdmin). */
+    private function notifyManagers(RecruitmentCandidature $candidature): void
+    {
+        $test = $candidature->test;
+
+        $managers = User::where(function ($query) use ($test): void {
+            $query->where('filiale_id', $test->filiale_id)->where('role', UserRole::AdminFiliale);
+        })->orWhere('role', UserRole::SuperAdmin)->get();
+
+        foreach ($managers as $manager) {
+            Mail::to($manager->email)->queue(new RecruitmentCandidatureSubmittedMail($candidature));
+        }
+    }
+}
