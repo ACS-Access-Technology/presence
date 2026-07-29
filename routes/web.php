@@ -17,6 +17,7 @@ use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\PersonSearchController;
 use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RecruitmentTestController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StatisticsController;
@@ -128,6 +129,12 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
     // contrôleur (un AdminFiliale ne peut éditer qu'un agent de sa propre filiale).
     Route::middleware('role:admin_filiale,super_admin')->group(function (): void {
         Route::patch('/annuaire/{agent}', [AgentDirectoryController::class, 'update'])->name('annuaire.update');
+    });
+
+    // Recrutement : postes de test en ligne, candidatures et résultats (Lot Recrutement).
+    Route::middleware('role:admin_filiale,organisateur,super_admin')->prefix('recrutement')->name('recrutement.')->group(function (): void {
+        Route::get('/', [RecruitmentTestController::class, 'index'])->name('index');
+        Route::patch('/tests/{test}/toggle', [RecruitmentTestController::class, 'toggleActif'])->name('toggle');
     });
 
     // Portfolio des activités documentées : galerie photo par activité.
