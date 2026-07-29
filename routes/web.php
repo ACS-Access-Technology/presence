@@ -23,6 +23,7 @@ use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Public\FeedbackController;
 use App\Http\Controllers\Public\PublicAttendanceController;
+use App\Http\Controllers\Public\RecruitmentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -66,6 +67,21 @@ Route::prefix('avis')->name('public.feedback.')->group(function (): void {
     // la protection anti-énumération pour tout accès sur une référence invalide.
     Route::get('/{attendance:reference}', [FeedbackController::class, 'show'])->name('show')->middleware('throttle:30,1');
     Route::post('/{attendance:reference}', [FeedbackController::class, 'store'])->name('store')->middleware('throttle:10,1');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Test de recrutement en ligne (sans compte)
+|--------------------------------------------------------------------------
+| /recrutement/{slug} : présentation + démarrage ; /test/{token} : questions,
+| autosave, soumission. Corrigé jamais chargé côté public (RecruitmentService).
+*/
+Route::prefix('recrutement')->name('public.recruitment.')->group(function (): void {
+    Route::get('/{test:slug}', [RecruitmentController::class, 'show'])->name('show');
+    Route::post('/{test:slug}', [RecruitmentController::class, 'store'])->name('store');
+    Route::get('/{test:slug}/test/{token}', [RecruitmentController::class, 'test'])->name('test');
+    Route::patch('/{test:slug}/test/{token}/questions/{question}', [RecruitmentController::class, 'answer'])->name('answer');
+    Route::post('/{test:slug}/test/{token}/soumettre', [RecruitmentController::class, 'submit'])->name('submit');
 });
 
 /*

@@ -1,0 +1,122 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Models\RecruitmentCandidature;
+use App\Models\RecruitmentQuestion;
+use App\Models\RecruitmentTest;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
+use Tests\TestCase;
+
+class PublicRecruitmentTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private function test(): RecruitmentTest
+    {
+        return RecruitmentTest::factory()->create(['slug' => 'fiscaliste-groupe', 'duree_minutes' => 45]);
+    }
+
+    public function test_la_page_du_poste_saffiche(): void
+    {
+        $test = $this->test();
+
+        $this->get(route('public.recruitment.show', $test->slug))
+            ->assertOk()
+            ->assertSee($test->titre);
+    }
+
+    public function test_un_poste_inactif_renvoie_404(): void
+    {
+        $test = RecruitmentTest::factory()->create(['slug' => 'inactif', 'actif' => false]);
+
+        $this->get(route('public.recruitment.show', $test->slug))->assertNotFound();
+    }
+
+    public function test_demarrer_le_test_redirige_vers_la_page_de_test(): void
+    {
+        $test = $this->test();
+
+        $response = $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'candidat@exemple.ci',
+        ]);
+
+        $candidature = RecruitmentCandidature::where('email', 'candidat@exemple.ci')->firstOrFail();
+        $response->assertRedirect(route('public.recruitment.test', ['test' => $test->slug, 'token' => $candidature->token]));
+    }
+
+    public function test_un_email_deja_utilise_est_rejete(): void
+    {
+        $test = $this->test();
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'deja@exemple.ci',
+        ]);
+
+        $response = $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Autre', 'prenom' => 'Personne', 'email' => 'deja@exemple.ci',
+        ]);
+
+        $response->assertSessionHasErrors('email');
+        $this->assertSame(1, RecruitmentCandidature::where('email', 'deja@exemple.ci')->count());
+    }
+
+    public function test_la_page_de_test_affiche_les_questions_et_accepte_lautosave(): void
+    {
+        $test = $this->test();
+        $question = RecruitmentQuestion::factory()->for($test)->create();
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'autosave@exemple.ci',
+        ]);
+        $candidature = RecruitmentCandidature::where('email', 'autosave@exemple.ci')->firstOrFail();
+
+        $this->get(route('public.recruitment.test', ['test' => $test->slug, 'token' => $candidature->token]))
+            ->assertOk()
+            ->assertSee($question->contexte['id']);
+
+        $answer = $this->patchJson(
+            route('public.recruitment.answer', ['test' => $test->slug, 'token' => $candidature->token, 'question' => $question->id]),
+            ['classement' => 'Majeur', 'ajustement_tva' => -168000, 'retenue_attendue' => 0],
+        );
+        $answer->assertOk()->assertJson(['saved' => true]);
+        $this->assertDatabaseHas('recruitment_reponses', [
+            'recruitment_candidature_id' => $candidature->id,
+            'recruitment_question_id' => $question->id,
+            'classement_saisi' => 'Majeur',
+        ]);
+    }
+
+    public function test_soumettre_affiche_la_page_de_confirmation_sans_score(): void
+    {
+        $test = $this->test();
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'soumis@exemple.ci',
+        ]);
+        $candidature = RecruitmentCandidature::where('email', 'soumis@exemple.ci')->firstOrFail();
+
+        $response = $this->post(route('public.recruitment.submit', ['test' => $test->slug, 'token' => $candidature->token]));
+
+        $response->assertOk();
+        $response->assertDontSee((string) $candidature->fresh()->score);
+    }
+
+    public function test_repondre_apres_expiration_renvoie_410(): void
+    {
+        $test = $this->test();
+        $question = RecruitmentQuestion::factory()->for($test)->create();
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'expire@exemple.ci',
+        ]);
+        $candidature = RecruitmentCandidature::where('email', 'expire@exemple.ci')->firstOrFail();
+        $candidature->forceFill(['expires_at' => Carbon::now()->subMinute()])->save();
+
+        $response = $this->patchJson(
+            route('public.recruitment.answer', ['test' => $test->slug, 'token' => $candidature->token, 'question' => $question->id]),
+            ['classement' => 'Majeur'],
+        );
+
+        $response->assertStatus(410);
+    }
+}
