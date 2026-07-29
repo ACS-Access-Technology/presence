@@ -904,15 +904,20 @@ git commit -m "feat(recrutement): service de notation pure (RecruitmentScoringSe
 
 ---
 
-### Task 3: `RecruitmentService` (orchestration candidature)
+### Task 3: `RecruitmentService` (orchestration candidature) + notification email des managers
+
+> Fusionné avec la notification email (initialement prévue en Task 8) : `RecruitmentService::submit()`/`closeExpired()` instancient `RecruitmentCandidatureSubmittedMail` directement — les deux ne peuvent pas être des tâches indépendamment révisables, l'une ne compile/teste pas sans l'autre.
 
 **Files:**
+- Create: `app/Mail/RecruitmentCandidatureSubmittedMail.php`
+- Create: `resources/views/emails/recruitment/candidature-submitted.blade.php`
 - Create: `app/Services/RecruitmentService.php`
 - Test: `tests/Feature/RecruitmentServiceTest.php`
+- Test: `tests/Feature/RecruitmentNotificationTest.php`
 
 **Interfaces:**
 - Consumes: `RecruitmentScoringService::scoreCandidature()` (Task 2) ; modèles Task 1.
-- Produces: `RecruitmentService::startCandidature(RecruitmentTest $test, array $identite): ?RecruitmentCandidature` (`null` si email déjà utilisé), `saveReponse(RecruitmentCandidature $candidature, RecruitmentQuestion $question, array $data): ?RecruitmentReponse` (`null` si session close/expirée), `submit(RecruitmentCandidature $candidature): ?RecruitmentCandidature` (`null` si déjà terminée), `closeExpired(): int` — tous consommés par Task 5 (contrôleur public) et Task 7 (commande planifiée).
+- Produces: `RecruitmentService::startCandidature(RecruitmentTest $test, array $identite): ?RecruitmentCandidature` (`null` si email déjà utilisé), `saveReponse(RecruitmentCandidature $candidature, RecruitmentQuestion $question, array $data): ?RecruitmentReponse` (`null` si session close/expirée), `submit(RecruitmentCandidature $candidature): ?RecruitmentCandidature` (`null` si déjà terminée), `closeExpired(): int` — tous consommés par Task 5 (contrôleur public) et Task 7 (commande planifiée). `RecruitmentCandidatureSubmittedMail` — aucune interface consommée par une tâche ultérieure.
 
 - [ ] **Step 1: Écrire le test (échoue, classe inexistante)**
 
@@ -1054,7 +1059,59 @@ class RecruitmentServiceTest extends TestCase
 Run: `php artisan test --filter=RecruitmentServiceTest`
 Expected: FAIL (classe `RecruitmentService` inexistante).
 
-- [ ] **Step 3: Implémenter**
+- [ ] **Step 3: Créer le mailable de notification (requis par `RecruitmentService`, écrit juste après)**
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace App\Mail;
+
+use App\Models\RecruitmentCandidature;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Mail\Mailable;
+use Illuminate\Mail\Mailables\Content;
+use Illuminate\Mail\Mailables\Envelope;
+use Illuminate\Queue\SerializesModels;
+
+/**
+ * Notifie un manager (AdminFiliale de la filiale du poste, ou tout SuperAdmin)
+ * qu'une candidature de recrutement est terminée (soumise ou expirée) et notée.
+ */
+class RecruitmentCandidatureSubmittedMail extends Mailable implements ShouldQueue
+{
+    use Queueable, SerializesModels;
+
+    public function __construct(public readonly RecruitmentCandidature $candidature) {}
+
+    public function envelope(): Envelope
+    {
+        return new Envelope(
+            subject: 'Candidature reçue — '.$this->candidature->test->titre,
+        );
+    }
+
+    public function content(): Content
+    {
+        return new Content(view: 'emails.recruitment.candidature-submitted');
+    }
+}
+```
+
+`resources/views/emails/recruitment/candidature-submitted.blade.php` :
+
+```blade
+<p>Une candidature vient d'être {{ $candidature->statut->label() }} pour le poste « {{ $candidature->test->titre }} ».</p>
+<ul>
+    <li>Candidat : {{ $candidature->prenom }} {{ $candidature->nom }} ({{ $candidature->email }})</li>
+    <li>Score : {{ $candidature->score }} / {{ $candidature->test->questions()->count() * 3 }}</li>
+</ul>
+<p>Consultez le détail dans Presence, rubrique Recrutement.</p>
+```
+
+- [ ] **Step 4: Implémenter `RecruitmentService`**
 
 ```php
 <?php
@@ -1205,21 +1262,74 @@ final class RecruitmentService
 }
 ```
 
-> Note : ce fichier référence `App\Mail\RecruitmentCandidatureSubmittedMail`, créé en Task 8. Le test de cette tâche (Task 3) exécute `submit()`/`closeExpired()` sans mailer configuré autre que le driver `array`/`log` par défaut des tests (`.env.testing` ou config par défaut du projet) — vérifier que `MAIL_MAILER=array` (ou équivalent) est actif en test ; sinon ajouter `Mail::fake();` en tête des méthodes de test concernées ci-dessus.
+> `submit()`/`closeExpired()` appellent `Mail::to(...)->queue(...)` : ajouter `use Illuminate\Support\Facades\Mail;` et `Mail::fake();` en première ligne de `setUp()` dans `RecruitmentServiceTest` pour éviter tout envoi réel pendant ce test (la notification elle-même est vérifiée en détail par `RecruitmentNotificationTest`, Step 6 ci-dessous).
 
-- [ ] **Step 4: Ajouter `Mail::fake()` si nécessaire et lancer le test**
-
-Si le test échoue à cause d'un envoi de mail réel (mailer non fake par défaut), ajouter `use Illuminate\Support\Facades\Mail;` et `Mail::fake();` en première ligne de `setUp()` dans `RecruitmentServiceTest`.
+- [ ] **Step 5: Lancer `RecruitmentServiceTest`, vérifier le succès**
 
 Run: `php artisan test --filter=RecruitmentServiceTest`
 Expected: PASS (7 tests).
 
-- [ ] **Step 5: Pint + commit**
+- [ ] **Step 6: Écrire le test de notification (échoue si la logique de ciblage des managers est absente)**
+
+```php
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Enums\UserRole;
+use App\Mail\RecruitmentCandidatureSubmittedMail;
+use App\Models\Filiale;
+use App\Models\RecruitmentQuestion;
+use App\Models\RecruitmentTest;
+use App\Models\User;
+use App\Services\RecruitmentService;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
+use Tests\TestCase;
+
+class RecruitmentNotificationTest extends TestCase
+{
+    use RefreshDatabase;
+
+    public function test_soumettre_notifie_ladminfiliale_de_la_filiale_et_le_superadmin_mais_pas_une_autre_filiale(): void
+    {
+        Mail::fake();
+
+        $filialeA = Filiale::factory()->create();
+        $filialeB = Filiale::factory()->create();
+        $adminA = User::factory()->filialeAdmin()->forFiliale($filialeA)->create();
+        $adminB = User::factory()->filialeAdmin()->forFiliale($filialeB)->create();
+        $superAdmin = User::factory()->superAdmin()->create();
+
+        $test = RecruitmentTest::factory()->create(['filiale_id' => $filialeA->id]);
+        RecruitmentQuestion::factory()->for($test)->create();
+        $recruitment = app(RecruitmentService::class);
+        $candidature = $recruitment->startCandidature($test, [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'x@exemple.ci', 'telephone' => null,
+        ]);
+
+        $recruitment->submit($candidature);
+
+        Mail::assertQueued(RecruitmentCandidatureSubmittedMail::class, fn ($mail) => $mail->hasTo($adminA->email));
+        Mail::assertQueued(RecruitmentCandidatureSubmittedMail::class, fn ($mail) => $mail->hasTo($superAdmin->email));
+        Mail::assertNotQueued(RecruitmentCandidatureSubmittedMail::class, fn ($mail) => $mail->hasTo($adminB->email));
+    }
+}
+```
+
+- [ ] **Step 7: Lancer le test de notification, vérifier le succès**
+
+Run: `php artisan test --filter=RecruitmentNotificationTest`
+Expected: PASS (1 test).
+
+- [ ] **Step 8: Pint + commit**
 
 ```bash
-./vendor/bin/pint app/Services/RecruitmentService.php
-git add app/Services/RecruitmentService.php tests/Feature/RecruitmentServiceTest.php
-git commit -m "feat(recrutement): orchestration des candidatures (RecruitmentService)"
+./vendor/bin/pint app/Mail/RecruitmentCandidatureSubmittedMail.php app/Services/RecruitmentService.php
+git add app/Mail/RecruitmentCandidatureSubmittedMail.php resources/views/emails/recruitment app/Services/RecruitmentService.php tests/Feature/RecruitmentServiceTest.php tests/Feature/RecruitmentNotificationTest.php
+git commit -m "feat(recrutement): orchestration des candidatures + notification email des managers"
 ```
 
 ---
@@ -2084,140 +2194,7 @@ git commit -m "feat(recrutement): commande planifiée de clôture des candidatur
 
 ---
 
-### Task 8: Notification email des managers
-
-**Files:**
-- Create: `app/Mail/RecruitmentCandidatureSubmittedMail.php`
-- Create: `resources/views/emails/recruitment/candidature-submitted.blade.php`
-- Test: `tests/Feature/RecruitmentNotificationTest.php`
-
-**Interfaces:**
-- Consumes: `RecruitmentCandidature` (Task 1), appelé depuis `RecruitmentService::notifyManagers()` (Task 3, déjà écrit — référence cette classe en avance).
-- Produces: `RecruitmentCandidatureSubmittedMail` — aucune interface consommée par une tâche ultérieure.
-
-- [ ] **Step 1: Écrire le test (échoue, classe Mail inexistante)**
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace Tests\Feature;
-
-use App\Enums\UserRole;
-use App\Mail\RecruitmentCandidatureSubmittedMail;
-use App\Models\Filiale;
-use App\Models\RecruitmentQuestion;
-use App\Models\RecruitmentTest;
-use App\Models\User;
-use App\Services\RecruitmentService;
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Mail;
-use Tests\TestCase;
-
-class RecruitmentNotificationTest extends TestCase
-{
-    use RefreshDatabase;
-
-    public function test_soumettre_notifie_ladminfiliale_de_la_filiale_et_le_superadmin_mais_pas_une_autre_filiale(): void
-    {
-        Mail::fake();
-
-        $filialeA = Filiale::factory()->create();
-        $filialeB = Filiale::factory()->create();
-        $adminA = User::factory()->filialeAdmin()->forFiliale($filialeA)->create();
-        $adminB = User::factory()->filialeAdmin()->forFiliale($filialeB)->create();
-        $superAdmin = User::factory()->superAdmin()->create();
-
-        $test = RecruitmentTest::factory()->create(['filiale_id' => $filialeA->id]);
-        RecruitmentQuestion::factory()->for($test)->create();
-        $recruitment = app(RecruitmentService::class);
-        $candidature = $recruitment->startCandidature($test, [
-            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'x@exemple.ci', 'telephone' => null,
-        ]);
-
-        $recruitment->submit($candidature);
-
-        Mail::assertQueued(RecruitmentCandidatureSubmittedMail::class, fn ($mail) => $mail->hasTo($adminA->email));
-        Mail::assertQueued(RecruitmentCandidatureSubmittedMail::class, fn ($mail) => $mail->hasTo($superAdmin->email));
-        Mail::assertNotQueued(RecruitmentCandidatureSubmittedMail::class, fn ($mail) => $mail->hasTo($adminB->email));
-    }
-}
-```
-
-- [ ] **Step 2: Lancer le test, vérifier l'échec**
-
-Run: `php artisan test --filter=RecruitmentNotificationTest`
-Expected: FAIL (classe `RecruitmentCandidatureSubmittedMail` inexistante).
-
-- [ ] **Step 3: Créer le mailable**
-
-```php
-<?php
-
-declare(strict_types=1);
-
-namespace App\Mail;
-
-use App\Models\RecruitmentCandidature;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
-use Illuminate\Queue\SerializesModels;
-
-/**
- * Notifie un manager (AdminFiliale de la filiale du poste, ou tout SuperAdmin)
- * qu'une candidature de recrutement est terminée (soumise ou expirée) et notée.
- */
-class RecruitmentCandidatureSubmittedMail extends Mailable implements ShouldQueue
-{
-    use Queueable, SerializesModels;
-
-    public function __construct(public readonly RecruitmentCandidature $candidature) {}
-
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Candidature reçue — '.$this->candidature->test->titre,
-        );
-    }
-
-    public function content(): Content
-    {
-        return new Content(view: 'emails.recruitment.candidature-submitted');
-    }
-}
-```
-
-`resources/views/emails/recruitment/candidature-submitted.blade.php` :
-
-```blade
-<p>Une candidature vient d'être {{ $candidature->statut->label() }} pour le poste « {{ $candidature->test->titre }} ».</p>
-<ul>
-    <li>Candidat : {{ $candidature->prenom }} {{ $candidature->nom }} ({{ $candidature->email }})</li>
-    <li>Score : {{ $candidature->score }} / {{ $candidature->test->questions()->count() * 3 }}</li>
-</ul>
-<p>Consultez le détail dans Presence, rubrique Recrutement.</p>
-```
-
-- [ ] **Step 4: Lancer le test, vérifier le succès**
-
-Run: `php artisan test --filter=RecruitmentNotificationTest`
-Expected: PASS (1 test).
-
-- [ ] **Step 5: Pint + commit**
-
-```bash
-./vendor/bin/pint app/Mail/RecruitmentCandidatureSubmittedMail.php
-git add app/Mail/RecruitmentCandidatureSubmittedMail.php resources/views/emails/recruitment tests/Feature/RecruitmentNotificationTest.php
-git commit -m "feat(recrutement): notification email des managers à la soumission"
-```
-
----
-
-### Task 9: Admin — liste des postes + toggle actif
+### Task 8: Admin — liste des postes + toggle actif
 
 **Files:**
 - Create: `app/Http/Controllers/Admin/RecruitmentTestController.php`
@@ -2228,7 +2205,7 @@ git commit -m "feat(recrutement): notification email des managers à la soumissi
 
 **Interfaces:**
 - Consumes: `RecruitmentTest` (Task 1), rôle `role:admin_filiale,organisateur,super_admin`, `FilialeScope` (déjà actif via `booted()` du modèle).
-- Produces: routes `admin.recrutement.index`, `admin.recrutement.toggle` — consommées par navigation (Task 11) et Task 10 (lien vers la liste des candidatures).
+- Produces: routes `admin.recrutement.index`, `admin.recrutement.toggle` — consommées par navigation (Task 10) et Task 9 (lien vers la liste des candidatures).
 
 - [ ] **Step 1: Écrire le test (échoue, routes inexistantes)**
 
@@ -2368,7 +2345,7 @@ Route::middleware('role:admin_filiale,organisateur,super_admin')->prefix('recrut
 @endsection
 ```
 
-> Référence `admin.recrutement.candidatures.index`, créée en Task 10.
+> Référence `admin.recrutement.candidatures.index`, créée en Task 9.
 
 - [ ] **Step 6: Lancer le test, vérifier le succès**
 
@@ -2385,7 +2362,7 @@ git commit -m "feat(recrutement): liste admin des postes + activation/désactiva
 
 ---
 
-### Task 10: Admin — liste et détail des candidatures
+### Task 9: Admin — liste et détail des candidatures
 
 **Files:**
 - Create: `app/Http/Controllers/Admin/RecruitmentCandidatureController.php`
@@ -2396,7 +2373,7 @@ git commit -m "feat(recrutement): liste admin des postes + activation/désactiva
 - Test: `tests/Feature/AdminRecruitmentCandidatureTest.php`
 
 **Interfaces:**
-- Consumes: `RecruitmentTest::candidatures()`, `RecruitmentScoringService::scoreReponse()` (Task 2, pour l'affichage correct/incorrect par champ), routes `admin.recrutement.index` (Task 9, lien retour).
+- Consumes: `RecruitmentTest::candidatures()`, `RecruitmentScoringService::scoreReponse()` (Task 2, pour l'affichage correct/incorrect par champ), routes `admin.recrutement.index` (Task 8, lien retour).
 - Produces: routes `admin.recrutement.candidatures.index`, `admin.recrutement.candidatures.show` — aucune interface consommée par une tâche ultérieure.
 
 - [ ] **Step 1: Écrire le test (échoue, routes inexistantes)**
@@ -2533,7 +2510,7 @@ class RecruitmentCandidatureController extends Controller
 
 - [ ] **Step 4: Ajouter les routes (nested, scopées au poste)**
 
-Dans `routes/web.php`, ajouter l'import `use App\Http\Controllers\Admin\RecruitmentCandidatureController;` et, à la suite du groupe `recrutement.` créé en Task 9 :
+Dans `routes/web.php`, ajouter l'import `use App\Http\Controllers\Admin\RecruitmentCandidatureController;` et, à la suite du groupe `recrutement.` créé en Task 8 :
 
 ```php
 Route::middleware('role:admin_filiale,organisateur,super_admin')
@@ -2621,14 +2598,14 @@ git commit -m "feat(recrutement): liste et détail admin des candidatures"
 
 ---
 
-### Task 11: Navigation admin
+### Task 10: Navigation admin
 
 **Files:**
 - Modify: `resources/views/layouts/admin.blade.php`
 - Test: `tests/Feature/AdminRecruitmentNavTest.php`
 
 **Interfaces:**
-- Consumes: route `admin.recrutement.index` (Task 9), `$user->role` (`App\Enums\UserRole`).
+- Consumes: route `admin.recrutement.index` (Task 8), `$user->role` (`App\Enums\UserRole`).
 - Produces: aucune (tâche terminale d'intégration UI).
 
 - [ ] **Step 1: Écrire le test (échoue, lien absent)**
@@ -2698,7 +2675,7 @@ git commit -m "feat(recrutement): lien de navigation vers le module Recrutement"
 
 ---
 
-### Task 12: Vérification finale
+### Task 11: Vérification finale
 
 **Files:** aucun fichier créé — validation transverse.
 
