@@ -55,7 +55,10 @@ class RecruitmentController extends Controller
             return view('public.recruitment.closed', ['candidature' => $candidature]);
         }
 
-        $questions = $test->questions()->orderBy('ordre')->get();
+        // Corrigé (`reponse_attendue`) jamais chargé en mémoire côté public : même
+        // sans fuite active dans la vue actuelle, une future erreur (dd(), exception,
+        // @json($question)) ne doit rien pouvoir exposer du corrigé au candidat.
+        $questions = $test->questions()->orderBy('ordre')->get(['id', 'recruitment_test_id', 'ordre', 'contexte']);
         $reponses = $candidature->reponses()->get()->keyBy('recruitment_question_id');
 
         return view('public.recruitment.test', compact('test', 'candidature', 'questions', 'reponses'));
