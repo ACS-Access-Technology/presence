@@ -38,6 +38,12 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="10" cy="10" r="2"/><path d="M7 16h6M15 8h2M15 12h2"/></svg>
                 Annuaire
             </a>
+            @unless ($user->role === \App\Enums\UserRole::Agent)
+                <a href="{{ route('admin.recrutement.index') }}" class="{{ ($nav ?? '') === 'recrutement' ? 'active' : '' }}" @if(($nav ?? '')==='recrutement') aria-current="page" @endif>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Recrutement
+                </a>
+            @endunless
             @if($user->isSuperAdmin())
                 <div class="navlbl">Holding</div>
                 <a href="{{ route('admin.filiales.index') }}" class="{{ ($nav ?? '') === 'filiales' ? 'active' : '' }}" @if(($nav ?? '')==='filiales') aria-current="page" @endif>
