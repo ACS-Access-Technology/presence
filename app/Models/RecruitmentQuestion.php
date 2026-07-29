@@ -34,7 +34,7 @@ class RecruitmentQuestion extends Model
      */
     protected function casts(): array
     {
-        return ['contexte' => 'array', 'reponse_attendue' => 'array'];
+        return ['contexte' => 'array', 'reponse_attendue' => 'array', 'tolerance' => 'integer'];
     }
 
     /** @return BelongsTo<RecruitmentTest, $this> */

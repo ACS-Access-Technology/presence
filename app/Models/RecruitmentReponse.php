@@ -27,6 +27,14 @@ class RecruitmentReponse extends Model
         'classement_saisi', 'ajustement_tva_saisi', 'retenue_saisie',
     ];
 
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return ['ajustement_tva_saisi' => 'integer', 'retenue_saisie' => 'integer'];
+    }
+
     /** @return BelongsTo<RecruitmentQuestion, $this> */
     public function question(): BelongsTo
     {
