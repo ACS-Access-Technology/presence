@@ -6,6 +6,12 @@
     var chrono = document.getElementById('chrono');
     var form = document.getElementById('recrutement-form');
 
+    /* Helper: null-safe field value read. Prevents TypeError if selector fails. */
+    function fieldValue(fieldset, name) {
+        var el = fieldset.querySelector('[name="' + name + '"]');
+        return el ? (el.value || null) : null;
+    }
+
     function tick() {
         var remaining = expiresAt - Date.now();
         if (remaining <= 0) {
@@ -27,9 +33,9 @@
         fieldset.querySelectorAll('.js-champ').forEach(function (field) {
             field.addEventListener('change', function () {
                 var payload = {
-                    classement: fieldset.querySelector('[name="classement"]').value || null,
-                    ajustement_tva: fieldset.querySelector('[name="ajustement_tva"]').value || null,
-                    retenue_attendue: fieldset.querySelector('[name="retenue_attendue"]').value || null,
+                    classement: fieldValue(fieldset, 'classement'),
+                    ajustement_tva: fieldValue(fieldset, 'ajustement_tva'),
+                    retenue_attendue: fieldValue(fieldset, 'retenue_attendue'),
                 };
 
                 fetch(url, {
@@ -44,6 +50,15 @@
                     if (response.status === 410) {
                         window.location.reload();
                     }
+                    if (!response.ok) {
+                        console.error('Autosave failed (HTTP ' + response.status + ')');
+                        field.setAttribute('data-unsaved', 'true');
+                    } else {
+                        field.removeAttribute('data-unsaved');
+                    }
+                }).catch(function (err) {
+                    console.error('Autosave network error:', err.message);
+                    field.setAttribute('data-unsaved', 'true');
                 });
             });
         });
