@@ -59,9 +59,27 @@
                         </div>
 
                         <div class="field {{ $errors->has('logo') ? 'invalid' : '' }}">
-                            <label for="pt-logo">Logo <span class="req" id="pt-logo-req">*</span></label>
-                            <input class="control" id="pt-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp">
-                            <div class="help">PNG, JPG ou WebP, 2 Mo maximum. Les couleurs du logo sont proposées automatiquement.</div>
+                            <span class="pt-label" id="pt-logo-label">Logo <span class="req" id="pt-logo-req">*</span></span>
+                            {{-- Zone de dépôt : l'input natif reste dans le label (clic, clavier,
+                                 lecteurs d'écran) mais est masqué visuellement. --}}
+                            <label class="pt-drop" id="pt-drop" for="pt-logo">
+                                <input class="pt-drop__input" id="pt-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="pt-logo-label" aria-describedby="pt-logo-help">
+                                <span class="pt-drop__empty" id="pt-drop-empty">
+                                    <span class="pt-drop__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                                    </span>
+                                    <span class="pt-drop__txt"><strong>Déposez le logo ici</strong> ou <span class="pt-drop__link">parcourir</span></span>
+                                </span>
+                                <span class="pt-drop__filled" id="pt-drop-filled" hidden>
+                                    <img class="pt-drop__thumb" id="pt-drop-thumb" alt="">
+                                    <span class="pt-drop__meta">
+                                        <span class="pt-drop__name" id="pt-drop-name"></span>
+                                        <span class="pt-drop__size" id="pt-drop-size"></span>
+                                    </span>
+                                    <span class="btn btn--ghost btn--sm pt-drop__change" aria-hidden="true">Changer</span>
+                                </span>
+                            </label>
+                            <div class="help" id="pt-logo-help">PNG, JPG ou WebP · 2 Mo maximum. Les couleurs du logo sont proposées automatiquement.</div>
                             <div class="err-msg">{{ $errors->first('logo') }}</div>
                         </div>
 

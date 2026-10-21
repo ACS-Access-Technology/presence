@@ -106,6 +106,10 @@ jobs:
             /opt/alt/php83/usr/bin/php artisan view:cache
             /opt/alt/php83/usr/bin/php artisan migrate --force
             chmod -R 775 storage bootstrap/cache
+            # Lien public/storage → storage/app/public (logos téléversés). Créé en
+            # shell : `artisan storage:link` échoue chez Hostinger, symlink() fait
+            # partie des fonctions PHP désactivées. Idempotent.
+            if [ ! -L public/storage ] && [ ! -e public/storage ]; then ln -s ../storage/app/public public/storage; fi
             echo "✓ Deploy terminé"
 
 

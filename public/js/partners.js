@@ -159,12 +159,61 @@
         img.src = src;
     }
 
+    /* Zone de dépôt : glisser-déposer + état « fichier choisi » (vignette, nom, poids). */
+    var drop = $('pt-drop');
+    var dropEmpty = $('pt-drop-empty');
+    var dropFilled = $('pt-drop-filled');
+    var ACCEPTED = ['image/png', 'image/jpeg', 'image/webp'];
+
+    function humanSize(bytes) {
+        return bytes < 1024 * 1024
+            ? Math.max(1, Math.round(bytes / 1024)) + ' Ko'
+            : (bytes / (1024 * 1024)).toFixed(1).replace('.', ',') + ' Mo';
+    }
+    function showFilled(src, name, meta) {
+        $('pt-drop-thumb').src = src;
+        $('pt-drop-name').textContent = name;
+        $('pt-drop-size').textContent = meta;
+        dropEmpty.hidden = true;
+        dropFilled.hidden = false;
+    }
+    function showEmpty() {
+        dropEmpty.hidden = false;
+        dropFilled.hidden = true;
+    }
+
     logoInput.addEventListener('change', function () {
         var file = logoInput.files && logoInput.files[0];
         if (!file) { return; }
         var reader = new FileReader();
-        reader.onload = function () { loadLogo(String(reader.result), true); };
+        reader.onload = function () {
+            var src = String(reader.result);
+            var tooBig = file.size > 2 * 1024 * 1024;
+            showFilled(src, file.name, humanSize(file.size) + (tooBig ? ' — trop lourd (2 Mo max)' : ''));
+            loadLogo(src, true);
+        };
         reader.readAsDataURL(file);
+    });
+
+    ['dragenter', 'dragover'].forEach(function (type) {
+        drop.addEventListener(type, function (e) { e.preventDefault(); drop.classList.add('is-over'); });
+    });
+    ['dragleave', 'drop'].forEach(function (type) {
+        drop.addEventListener(type, function () { drop.classList.remove('is-over'); });
+    });
+    drop.addEventListener('drop', function (e) {
+        e.preventDefault();
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (!file) { return; }
+        if (ACCEPTED.indexOf(file.type) === -1) {
+            showEmpty();
+            swatchBox.innerHTML = '<span class="mut">Format non accepté : déposez un PNG, JPG ou WebP.</span>';
+            return;
+        }
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        logoInput.files = dt.files;
+        logoInput.dispatchEvent(new Event('change'));
     });
 
     primaryPicker.addEventListener('input', function () { setColor('primary', primaryPicker.value); });
@@ -190,6 +239,11 @@
         if (filialeField) { filialeField.hidden = !!partner; }
         swatchBox.innerHTML = '<span class="mut">Déposez un logo pour voir ses couleurs.</span>';
         pvLogo.hidden = true;
+        if (partner) {
+            showFilled(partner.logo_url, 'Logo actuel', 'Déposez un autre fichier pour le remplacer');
+        } else {
+            showEmpty();
+        }
         setColor('primary', partner ? partner.primary_color : '#1e2a78');
         if (partner && partner.secondary_color) {
             setColor('secondary', partner.secondary_color);
