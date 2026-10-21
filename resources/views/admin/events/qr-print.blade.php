@@ -94,10 +94,14 @@
     <div class="bg noprint" aria-hidden="true"></div>
 
     <div class="sheet">
-        @if ($branding->hasCustomLogo)
-            <img class="sheet__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+        @if ($branding->isInstitutional)
+            @include('partials.institutional-header')
+        @else
+            @if ($branding->hasCustomLogo)
+                <img class="sheet__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+            @endif
+            <div class="sheet__brand">{{ $branding->orgName }}</div>
         @endif
-        <div class="sheet__brand">{{ $branding->orgName }}</div>
         <h1>{{ $event->title }}</h1>
         <div class="meta">
             <span>

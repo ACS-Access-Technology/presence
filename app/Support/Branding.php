@@ -50,7 +50,20 @@ final class Branding
         public readonly bool $hasCustomLogo,
         public readonly ?string $onBehalfOf = null,
         public readonly ?string $logoPublicPath = null,
+        public readonly bool $isInstitutional = false,
     ) {}
+
+    /** Armoiries de la Côte d'Ivoire (en-tête des partenaires institutionnels). */
+    public const string COAT_OF_ARMS = 'assets/armoiries-ci.svg';
+
+    /** Version raster des armoiries, pour dompdf (rendu SVG trop limité). */
+    public const string COAT_OF_ARMS_PNG = 'assets/armoiries-ci.png';
+
+    /** Armoiries encodées pour la feuille PDF (dompdf ne charge pas d'URL). */
+    public static function coatOfArmsDataUri(): string
+    {
+        return 'data:image/png;base64,'.base64_encode((string) file_get_contents(public_path(self::COAT_OF_ARMS_PNG)));
+    }
 
     /**
      * Branding d'un événement : celui de son partenaire s'il en a un, sinon celui
@@ -75,6 +88,7 @@ final class Branding
             hasCustomLogo: true,
             onBehalfOf: $partner->name,
             logoPublicPath: $partner->logo_path,
+            isInstitutional: $partner->is_institutional,
         );
     }
 

@@ -35,6 +35,7 @@ class SavePartnerRequest extends FormRequest
             'logo' => [$creating ? 'required' : 'nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'primary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'is_institutional' => ['sometimes', 'boolean'],
             'contact_name' => ['nullable', 'string', 'max:150'],
             'contact_email' => ['nullable', 'email:rfc', 'max:191'],
             'filiale_id' => ['nullable', 'integer'],

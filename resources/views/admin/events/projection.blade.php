@@ -30,7 +30,11 @@
     {{-- NOTE : habillage minimal fonctionnel ; l'écran de projection fidèle
          (dashboard.html) sera intégré ultérieurement. --}}
     <div class="proj">
-        <img class="proj__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+        @if ($branding->isInstitutional)
+            @include('partials.institutional-header')
+        @else
+            <img class="proj__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+        @endif
         <h1>{{ $event->title }}</h1>
         <div class="meta">{{ $event->starts_at->translatedFormat('j M Y · H:i') }}@if($event->location) · {{ $event->location }}@endif</div>
         <div class="qrbox"><img id="qr" alt="QR d'émargement"></div>
