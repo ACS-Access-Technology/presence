@@ -15,6 +15,8 @@
     @endif
     <style>
         body{min-height:100vh;display:grid;place-items:center;padding:24px}
+        body.has-backdrop{background:var(--bg) var(--backdrop) center/cover no-repeat fixed}
+        body.has-backdrop .proj{background:color-mix(in srgb,var(--surface) 92%,transparent);border-radius:24px;padding:28px 32px;box-shadow:var(--sh-3)}
         .proj{text-align:center;max-width:520px}
         .proj__logo{height:44px;width:auto;margin:0 auto 16px;display:block;object-fit:contain}
         .proj h1{font-size:1.6rem;font-weight:800;margin:0 0 4px}
@@ -26,7 +28,7 @@
         .hint{margin-top:10px;font-size:.85rem;color:var(--faint)}
     </style>
 </head>
-<body>
+<body class="{{ $branding->backgroundUrl ? 'has-backdrop' : '' }}" @if ($branding->backgroundUrl) style="--backdrop:url('{{ $branding->backgroundUrl }}')" @endif>
     {{-- NOTE : habillage minimal fonctionnel ; l'écran de projection fidèle
          (dashboard.html) sera intégré ultérieurement. --}}
     <div class="proj">

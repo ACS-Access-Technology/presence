@@ -45,6 +45,7 @@ final class PartnerController extends Controller
             'filiale_id' => $request->targetFilialeId(),
             'name' => $data['name'],
             'logo_path' => $request->file('logo')->store('partners', 'public'),
+            'background_path' => $request->hasFile('background') ? $request->file('background')->store('partners', 'public') : null,
             'primary_color' => strtolower($data['primary_color']),
             'secondary_color' => isset($data['secondary_color']) ? strtolower($data['secondary_color']) : null,
             'is_institutional' => $request->boolean('is_institutional'),
@@ -67,18 +68,26 @@ final class PartnerController extends Controller
             'contact_email' => $data['contact_email'] ?? null,
         ];
 
-        $old = null;
+        $obsolete = [];
         if ($request->hasFile('logo')) {
-            $old = $partner->logo_path;
+            $obsolete[] = $partner->logo_path;
             $attributes['logo_path'] = $request->file('logo')->store('partners', 'public');
+        }
+        if ($request->hasFile('background')) {
+            $obsolete[] = $partner->background_path;
+            $attributes['background_path'] = $request->file('background')->store('partners', 'public');
+        } elseif ($request->boolean('remove_background')) {
+            $obsolete[] = $partner->background_path;
+            $attributes['background_path'] = null;
         }
 
         $partner->update($attributes);
 
-        // Ancien logo supprimé seulement APRÈS la mise à jour réussie : un échec
-        // en base ne doit jamais laisser le partenaire pointer vers un fichier effacé.
-        if ($old !== null && $old !== $partner->logo_path) {
-            Storage::disk('public')->delete($old);
+        // Anciens fichiers supprimés seulement APRÈS la mise à jour réussie : un
+        // échec en base ne doit jamais laisser le partenaire pointer vers un
+        // fichier effacé.
+        foreach (array_filter($obsolete) as $path) {
+            Storage::disk('public')->delete($path);
         }
 
         return redirect()->route('admin.partners.index')->with('status', 'Partenaire mis à jour.');

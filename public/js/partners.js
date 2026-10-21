@@ -230,6 +230,46 @@
     nameInput.addEventListener('input', refreshPreview);
     if (instBox) { instBox.addEventListener('change', refreshPreview); }
 
+    /* Fond de scène : même zone de dépôt, sans extraction de couleurs. */
+    var bgInput = $('pt-bg');
+    var bgDrop = $('pt-bg-drop');
+    function bgShow(src, name, meta) {
+        $('pt-bg-thumb').src = src;
+        $('pt-bg-name').textContent = name;
+        $('pt-bg-size').textContent = meta;
+        $('pt-bg-empty').hidden = true;
+        $('pt-bg-filled').hidden = false;
+    }
+    function bgReset() {
+        $('pt-bg-empty').hidden = false;
+        $('pt-bg-filled').hidden = true;
+    }
+    bgInput.addEventListener('change', function () {
+        var file = bgInput.files && bgInput.files[0];
+        if (!file) { return; }
+        var reader = new FileReader();
+        reader.onload = function () {
+            bgShow(String(reader.result), file.name, humanSize(file.size) + (file.size > 5 * 1024 * 1024 ? ' — trop lourd (5 Mo max)' : ''));
+            $('pt-bg-remove').checked = false;
+        };
+        reader.readAsDataURL(file);
+    });
+    ['dragenter', 'dragover'].forEach(function (type) {
+        bgDrop.addEventListener(type, function (e) { e.preventDefault(); bgDrop.classList.add('is-over'); });
+    });
+    ['dragleave', 'drop'].forEach(function (type) {
+        bgDrop.addEventListener(type, function () { bgDrop.classList.remove('is-over'); });
+    });
+    bgDrop.addEventListener('drop', function (e) {
+        e.preventDefault();
+        var file = e.dataTransfer && e.dataTransfer.files[0];
+        if (!file || ACCEPTED.indexOf(file.type) === -1) { return; }
+        var dt = new DataTransfer();
+        dt.items.add(file);
+        bgInput.files = dt.files;
+        bgInput.dispatchEvent(new Event('change'));
+    });
+
     function open(partner) {
         form.hidden = false;
         $('pt-form-title').textContent = partner ? 'Modifier le partenaire' : 'Nouveau partenaire';
@@ -240,6 +280,14 @@
         $('pt-contact-name').value = partner ? (partner.contact_name || '') : '';
         $('pt-contact-email').value = partner ? (partner.contact_email || '') : '';
         instBox.checked = !!(partner && partner.is_institutional);
+        bgInput.value = '';
+        $('pt-bg-remove').checked = false;
+        $('pt-bg-remove-wrap').hidden = !(partner && partner.background_url);
+        if (partner && partner.background_url) {
+            bgShow(partner.background_url, 'Fond actuel', 'Déposez une autre image pour le remplacer');
+        } else {
+            bgReset();
+        }
         logoInput.value = '';
         var filialeField = $('pt-filiale-field');
         if (filialeField) { filialeField.hidden = !!partner; }

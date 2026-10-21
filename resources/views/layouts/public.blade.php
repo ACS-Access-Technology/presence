@@ -30,7 +30,8 @@
     @endif
     @stack('head')
 </head>
-<body>
+<body class="{{ $branding->isInstitutional ? 'theme-registre' : '' }}{{ $branding->backgroundUrl ? ' has-backdrop' : '' }}"
+      @if ($branding->backgroundUrl) style="--backdrop:url('{{ $branding->backgroundUrl }}')" @endif>
     <div class="phone">
         @include('partials.institutional-header', ['stacked' => true])
         <header class="appbar{{ $branding->isInstitutional ? ' appbar--centered' : '' }}">

@@ -53,14 +53,14 @@ class PartnerMeetingTest extends TestCase
     {
         Storage::disk('public')->put('partners/dgf.png', UploadedFile::fake()->image('dgf.png', 40, 40)->getContent());
 
-        return Partner::factory()->create([
+        return Partner::factory()->create($overrides + [
             'filiale_id' => $this->filiale->id,
             'name' => 'Direction générale des finances',
             'logo_path' => 'partners/dgf.png',
             'primary_color' => '#0b5e3c',
             'contact_name' => 'Awa Koné',
             'contact_email' => 'awa.kone@dgf.gouv.ci',
-        ] + $overrides);
+        ]);
     }
 
     private function meeting(Partner $partner, bool $ended = false, QrMode $mode = QrMode::Tournant): Event
@@ -310,5 +310,40 @@ class PartnerMeetingTest extends TestCase
         $this->get(route('public.attendance.show', ['event' => $event->public_slug]))
             ->assertOk()
             ->assertDontSee('armoiries-ci.svg', false);
+    }
+
+    public function test_le_design_registre_est_reserve_aux_partenaires_institutionnels(): void
+    {
+        $classique = $this->meeting($this->partner(), mode: QrMode::Statique);
+        $this->get(route('public.attendance.show', ['event' => $classique->public_slug]))
+            ->assertOk()->assertDontSee('theme-registre', false);
+
+        $institution = $this->meeting($this->partner(['name' => 'Trésor public', 'is_institutional' => true]), mode: QrMode::Statique);
+        $this->get(route('public.attendance.show', ['event' => $institution->public_slug]))
+            ->assertOk()->assertSee('theme-registre', false);
+    }
+
+    public function test_une_image_de_fond_de_scene_s_affiche_derriere_la_page(): void
+    {
+        $this->actingAs($this->organisateur)->post(route('admin.partners.store'), [
+            'name' => 'Port autonome',
+            'logo' => UploadedFile::fake()->image('logo.png', 80, 80),
+            'background' => UploadedFile::fake()->image('scene.jpg', 1600, 900),
+            'primary_color' => '#0b5e3c',
+        ])->assertSessionHasNoErrors();
+
+        $partner = Partner::where('name', 'Port autonome')->sole();
+        Storage::disk('public')->assertExists($partner->background_path);
+
+        $event = $this->meeting($partner, mode: QrMode::Statique);
+        $this->get(route('public.attendance.show', ['event' => $event->public_slug]))
+            ->assertOk()
+            ->assertSee('has-backdrop', false)
+            ->assertSee('storage/'.$partner->background_path, false);
+
+        $this->actingAs($this->organisateur)->post(route('admin.partners.update', $partner), [
+            'name' => 'Port autonome', 'primary_color' => '#0b5e3c', 'remove_background' => '1',
+        ])->assertSessionHasNoErrors();
+        $this->assertNull($partner->fresh()->background_path);
     }
 }

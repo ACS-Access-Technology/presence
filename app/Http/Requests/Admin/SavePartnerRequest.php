@@ -36,6 +36,10 @@ class SavePartnerRequest extends FormRequest
             'primary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'is_institutional' => ['sometimes', 'boolean'],
+            // Fond de scène : raster uniquement (même raison que le logo), plus
+            // lourd qu'un logo puisqu'il couvre l'écran.
+            'background' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:5120'],
+            'remove_background' => ['sometimes', 'boolean'],
             'contact_name' => ['nullable', 'string', 'max:150'],
             'contact_email' => ['nullable', 'email:rfc', 'max:191'],
             'filiale_id' => ['nullable', 'integer'],
@@ -99,6 +103,8 @@ class SavePartnerRequest extends FormRequest
             'logo.required' => 'Le logo du partenaire est requis.',
             'logo.mimes' => 'Le logo doit être une image PNG, JPG ou WebP.',
             'logo.max' => 'Le logo ne doit pas dépasser 2 Mo.',
+            'background.mimes' => "L'image de fond doit être un PNG, JPG ou WebP.",
+            'background.max' => "L'image de fond ne doit pas dépasser 5 Mo.",
             'primary_color.required' => 'La couleur principale est requise.',
             'primary_color.regex' => 'Couleur invalide (format #rrggbb).',
             'secondary_color.regex' => 'Couleur invalide (format #rrggbb).',
