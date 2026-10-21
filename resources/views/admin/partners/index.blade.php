@@ -95,6 +95,30 @@
                             <div class="err-msg">{{ $errors->first('logo') }}</div>
                         </div>
 
+                        <div class="field {{ $errors->has('background') ? 'invalid' : '' }}">
+                            <span class="pt-label" id="pt-bg-label">Image de fond de scène <span class="opt">(facultatif)</span></span>
+                            <label class="pt-drop pt-drop--bg" id="pt-bg-drop" for="pt-bg">
+                                <input class="pt-drop__input" id="pt-bg" name="background" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="pt-bg-label" aria-describedby="pt-bg-help">
+                                <span class="pt-drop__empty" id="pt-bg-empty">
+                                    <span class="pt-drop__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
+                                    </span>
+                                    <span class="pt-drop__txt"><strong>Déposez l'image de fond</strong> ou <span class="pt-drop__link">parcourir</span></span>
+                                </span>
+                                <span class="pt-drop__filled" id="pt-bg-filled" hidden>
+                                    <img class="pt-drop__thumb pt-drop__thumb--wide" id="pt-bg-thumb" alt="">
+                                    <span class="pt-drop__meta">
+                                        <span class="pt-drop__name" id="pt-bg-name"></span>
+                                        <span class="pt-drop__size" id="pt-bg-size"></span>
+                                    </span>
+                                    <span class="btn btn--ghost btn--sm pt-drop__change" aria-hidden="true">Changer</span>
+                                </span>
+                            </label>
+                            <div class="help" id="pt-bg-help">Affichée derrière la page des participants et l'écran de projection du QR. Photo ou visuel paysage, PNG, JPG ou WebP · 5 Mo maximum.</div>
+                            <label class="pt-remove" id="pt-bg-remove-wrap" hidden><input type="checkbox" name="remove_background" value="1" id="pt-bg-remove"> Retirer l'image de fond actuelle</label>
+                            <div class="err-msg">{{ $errors->first('background') }}</div>
+                        </div>
+
                         <div class="field">
                             <label>Couleurs trouvées dans le logo</label>
                             <div class="pt-swatches" id="pt-swatches" aria-live="polite">
@@ -207,6 +231,7 @@
                                         'primary_color' => $partner->primary_color,
                                         'secondary_color' => $partner->secondary_color,
                                         'is_institutional' => $partner->is_institutional,
+                                        'background_url' => $partner->background_path ? asset('storage/'.$partner->background_path) : null,
                                         'contact_name' => $partner->contact_name,
                                         'contact_email' => $partner->contact_email,
                                         'logo_url' => asset('storage/'.$partner->logo_path),

@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property int $filiale_id
  * @property string $name
  * @property string $logo_path
+ * @property ?string $background_path
  * @property string $primary_color
  * @property ?string $secondary_color
  * @property bool $is_institutional
@@ -37,7 +38,7 @@ class Partner extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'filiale_id', 'name', 'logo_path', 'primary_color', 'secondary_color', 'is_institutional',
+        'filiale_id', 'name', 'logo_path', 'background_path', 'primary_color', 'secondary_color', 'is_institutional',
         'contact_name', 'contact_email',
     ];
 

@@ -51,6 +51,7 @@ final class Branding
         public readonly ?string $onBehalfOf = null,
         public readonly ?string $logoPublicPath = null,
         public readonly bool $isInstitutional = false,
+        public readonly ?string $backgroundUrl = null,
     ) {}
 
     /** Armoiries de la Côte d'Ivoire (en-tête des partenaires institutionnels). */
@@ -89,6 +90,7 @@ final class Branding
             onBehalfOf: $partner->name,
             logoPublicPath: $partner->logo_path,
             isInstitutional: $partner->is_institutional,
+            backgroundUrl: $partner->background_path !== null ? asset('storage/'.$partner->background_path) : null,
         );
     }
 
