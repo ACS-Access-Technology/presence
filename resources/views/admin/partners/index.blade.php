@@ -27,16 +27,20 @@
         </div>
     @endif
 
-    {{-- Fiche partenaire (création / modification). Ouverte d'office si la
-         validation a échoué, pour ne pas perdre la saisie. --}}
-    <div class="card pt-form" id="pt-form" @unless ($errors->any()) hidden @endunless>
-        <div class="card__body">
-            <h2 id="pt-form-title">{{ old('_partner_id') ? 'Modifier le partenaire' : 'Nouveau partenaire' }}</h2>
+    {{-- Fiche partenaire (création / modification), en modale comme le reste de la
+         plateforme. Ouverte d'office si la validation a échoué (saisie conservée). --}}
+    <div class="scrim" id="pt-form" @unless ($errors->any()) hidden @endunless>
+        <div class="modal pt-modal" role="dialog" aria-modal="true" aria-labelledby="pt-form-title">
+            <div class="modal__hd">
+                <h3 id="pt-form-title">{{ old('_partner_id') ? 'Modifier le partenaire' : 'Nouveau partenaire' }}</h3>
+                <button type="button" class="modal__x" id="pt-close" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </div>
             <form method="POST" enctype="multipart/form-data" id="pt-form-el"
                   action="{{ old('_partner_id') ? route('admin.partners.update', old('_partner_id')) : route('admin.partners.store') }}"
                   data-store-url="{{ route('admin.partners.store') }}" novalidate>
                 @csrf
                 <input type="hidden" name="_partner_id" id="pt-id" value="{{ old('_partner_id') }}">
+                <div class="modal__body pt-modal__body">
                 <div class="pt-grid">
                     <div>
                         @if ($mustChooseFiliale)
@@ -59,9 +63,27 @@
                         </div>
 
                         <div class="field {{ $errors->has('logo') ? 'invalid' : '' }}">
-                            <label for="pt-logo">Logo <span class="req" id="pt-logo-req">*</span></label>
-                            <input class="control" id="pt-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp">
-                            <div class="help">PNG, JPG ou WebP, 2 Mo maximum. Les couleurs du logo sont proposées automatiquement.</div>
+                            <span class="pt-label" id="pt-logo-label">Logo <span class="req" id="pt-logo-req">*</span></span>
+                            {{-- Zone de dépôt : l'input natif reste dans le label (clic, clavier,
+                                 lecteurs d'écran) mais est masqué visuellement. --}}
+                            <label class="pt-drop" id="pt-drop" for="pt-logo">
+                                <input class="pt-drop__input" id="pt-logo" name="logo" type="file" accept="image/png,image/jpeg,image/webp" aria-labelledby="pt-logo-label" aria-describedby="pt-logo-help">
+                                <span class="pt-drop__empty" id="pt-drop-empty">
+                                    <span class="pt-drop__icon" aria-hidden="true">
+                                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/></svg>
+                                    </span>
+                                    <span class="pt-drop__txt"><strong>Déposez le logo ici</strong> ou <span class="pt-drop__link">parcourir</span></span>
+                                </span>
+                                <span class="pt-drop__filled" id="pt-drop-filled" hidden>
+                                    <img class="pt-drop__thumb" id="pt-drop-thumb" alt="">
+                                    <span class="pt-drop__meta">
+                                        <span class="pt-drop__name" id="pt-drop-name"></span>
+                                        <span class="pt-drop__size" id="pt-drop-size"></span>
+                                    </span>
+                                    <span class="btn btn--ghost btn--sm pt-drop__change" aria-hidden="true">Changer</span>
+                                </span>
+                            </label>
+                            <div class="help" id="pt-logo-help">PNG, JPG ou WebP · 2 Mo maximum. Les couleurs du logo sont proposées automatiquement.</div>
                             <div class="err-msg">{{ $errors->first('logo') }}</div>
                         </div>
 
@@ -130,10 +152,10 @@
                         </div>
                     </aside>
                 </div>
+                </div>
 
-                <div class="actionbar">
-                    <button type="button" class="cancel" id="pt-cancel">Annuler</button>
-                    <span class="sp"></span>
+                <div class="modal__foot">
+                    <button type="button" class="btn btn--ghost" id="pt-cancel">Annuler</button>
                     <button type="submit" class="btn btn--primary">Enregistrer le partenaire</button>
                 </div>
             </form>
@@ -151,7 +173,7 @@
                     <tr>
                         <td>
                             <span class="pt-name">
-                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($partner->logo_path) }}" alt="">
+                                <img src="{{ asset('storage/'.$partner->logo_path) }}" alt="">
                                 {{ $partner->name }}
                             </span>
                         </td>
@@ -171,7 +193,7 @@
                                         'secondary_color' => $partner->secondary_color,
                                         'contact_name' => $partner->contact_name,
                                         'contact_email' => $partner->contact_email,
-                                        'logo_url' => \Illuminate\Support\Facades\Storage::disk('public')->url($partner->logo_path),
+                                        'logo_url' => asset('storage/'.$partner->logo_path),
                                         'update_url' => route('admin.partners.update', $partner),
                                     ]) }}">Modifier</button>
                         </td>
