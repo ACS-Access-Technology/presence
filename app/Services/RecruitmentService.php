@@ -13,6 +13,7 @@ use App\Models\RecruitmentQuestion;
 use App\Models\RecruitmentReponse;
 use App\Models\RecruitmentTest;
 use App\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
@@ -28,29 +29,48 @@ final class RecruitmentService
     public function __construct(private readonly RecruitmentScoringService $scoring) {}
 
     /**
+     * Démarre une candidature, une seule par (poste, email). L'email est
+     * normalisé (trim + minuscules) : sans cela, `Jean@x.ci` et `jean@x.ci`
+     * contourneraient la contrainte unique et permettraient de repasser le test.
+     *
+     * Deux POST simultanés (double clic) passent tous deux le `exists()` : le
+     * second bute alors sur la contrainte UNIQUE(test, email) — on la traduit
+     * en `null` (même issue métier que le doublon détecté) plutôt qu'en 500.
+     *
      * @param  array{nom: string, prenom: string, email: string, telephone: ?string}  $identite
      */
     public function startCandidature(RecruitmentTest $test, array $identite): ?RecruitmentCandidature
     {
+        $email = self::normalizeEmail($identite['email']);
+
         $exists = RecruitmentCandidature::where('recruitment_test_id', $test->id)
-            ->where('email', $identite['email'])
+            ->where('email', $email)
             ->exists();
 
         if ($exists) {
             return null;
         }
 
-        return RecruitmentCandidature::create([
-            'recruitment_test_id' => $test->id,
-            'nom' => $identite['nom'],
-            'prenom' => $identite['prenom'],
-            'email' => $identite['email'],
-            'telephone' => $identite['telephone'] ?? null,
-            'token' => Str::random(40),
-            'started_at' => Carbon::now(),
-            'expires_at' => Carbon::now()->addMinutes($test->duree_minutes),
-            'statut' => RecruitmentCandidatureStatus::EnCours,
-        ]);
+        try {
+            return RecruitmentCandidature::create([
+                'recruitment_test_id' => $test->id,
+                'nom' => $identite['nom'],
+                'prenom' => $identite['prenom'],
+                'email' => $email,
+                'telephone' => $identite['telephone'] ?? null,
+                'token' => Str::random(40),
+                'started_at' => Carbon::now(),
+                'expires_at' => Carbon::now()->addMinutes($test->duree_minutes),
+                'statut' => RecruitmentCandidatureStatus::EnCours,
+            ]);
+        } catch (UniqueConstraintViolationException) {
+            return null;
+        }
+    }
+
+    public static function normalizeEmail(string $email): string
+    {
+        return mb_strtolower(trim($email));
     }
 
     /**

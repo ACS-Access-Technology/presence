@@ -16,7 +16,7 @@
             <p><strong>Attention</strong> : préparez {{ $test->duree_minutes }} minutes devant vous, sans être dérangé(e), avant de commencer. Une fois le test lancé, si vous changez de page, fermez cet onglet ou rechargez la page, l'exercice sera automatiquement clôturé et vos réponses jusque-là seront définitives — aucune reprise possible.</p>
         </div>
 
-        <form method="POST" action="{{ route('public.recruitment.store', $test->slug) }}">
+        <form method="POST" action="{{ route('public.recruitment.store', $test->slug) }}" onsubmit="this.querySelector('[type=submit]').disabled = true">
             @csrf
             <div class="rec-form-grid">
                 <div class="field">

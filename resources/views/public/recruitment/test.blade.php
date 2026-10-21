@@ -2,7 +2,7 @@
 
 @section('title', $test->titre.' — Test')
 
-@section('body-attributes')data-expires-at="{{ $candidature->expires_at->toIso8601String() }}"@endsection
+@section('body-attributes')data-remaining="{{ max(0, (int) now()->diffInSeconds($candidature->expires_at, false)) }}"@endsection
 
 @section('content')
 <div class="rec-shell rec-shell--wide">

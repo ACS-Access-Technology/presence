@@ -8,6 +8,7 @@ use App\Enums\RecruitmentCandidatureStatus;
 use App\Models\RecruitmentCandidature;
 use App\Models\RecruitmentQuestion;
 use App\Models\RecruitmentTest;
+use App\Services\RecruitmentService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Tests\TestCase;
@@ -56,12 +57,42 @@ class PublicRecruitmentTest extends TestCase
             'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'deja@exemple.ci',
         ]);
 
+        // Autre navigateur (session vierge) : aucun jeton récupérable.
+        $this->flushSession();
         $response = $this->post(route('public.recruitment.store', $test->slug), [
-            'nom' => 'Autre', 'prenom' => 'Personne', 'email' => 'deja@exemple.ci',
+            'nom' => 'Autre', 'prenom' => 'Personne', 'email' => 'DEJA@exemple.ci ',
         ]);
 
         $response->assertSessionHasErrors('email');
         $this->assertSame(1, RecruitmentCandidature::where('email', 'deja@exemple.ci')->count());
+    }
+
+    public function test_un_double_envoi_du_formulaire_renvoie_vers_la_meme_candidature(): void
+    {
+        $test = $this->test();
+        $identite = ['nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'double@exemple.ci'];
+
+        $this->post(route('public.recruitment.store', $test->slug), $identite);
+        $response = $this->post(route('public.recruitment.store', $test->slug), $identite);
+
+        $candidature = RecruitmentCandidature::where('email', 'double@exemple.ci')->sole();
+        $response->assertRedirect(route('public.recruitment.test', ['test' => $test->slug, 'token' => $candidature->token]));
+    }
+
+    public function test_la_session_ne_rend_pas_le_jeton_pour_un_autre_email(): void
+    {
+        $test = $this->test();
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'premier@exemple.ci',
+        ]);
+        // Second candidat sur le même poste/navigateur, email déjà pris par ailleurs.
+        app(RecruitmentService::class)->startCandidature($test, [
+            'nom' => 'Autre', 'prenom' => 'Poste', 'email' => 'second@exemple.ci', 'telephone' => null,
+        ]);
+
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Roe', 'prenom' => 'Jim', 'email' => 'second@exemple.ci',
+        ])->assertSessionHasErrors('email');
     }
 
     public function test_la_page_de_test_affiche_les_questions_et_accepte_lautosave(): void

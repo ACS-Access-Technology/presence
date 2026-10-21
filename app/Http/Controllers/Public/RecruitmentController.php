@@ -36,11 +36,25 @@ class RecruitmentController extends Controller
     {
         abort_unless($test->actif, 404);
 
-        $candidature = $this->recruitment->startCandidature($test, $request->validated());
+        $identite = $request->validated();
+        $candidature = $this->recruitment->startCandidature($test, $identite);
+
+        // Clé de session liée au poste ET à l'email : un double POST (double clic,
+        // réseau lent) renvoie le navigateur vers le lien de la candidature créée
+        // par le premier POST. Jamais une clé « poste seul » : sur un poste
+        // partagé, un 2e candidat récupérerait le jeton du premier.
+        $sessionKey = 'recrutement.'.$test->id.'.'.hash('sha256', RecruitmentService::normalizeEmail($identite['email']));
 
         if ($candidature === null) {
+            $token = $request->session()->get($sessionKey);
+            if (is_string($token) && $token !== '') {
+                return redirect()->route('public.recruitment.test', ['test' => $test->slug, 'token' => $token]);
+            }
+
             return back()->withErrors(['email' => 'Vous avez déjà passé ce test.'])->withInput();
         }
+
+        $request->session()->put($sessionKey, $candidature->token);
 
         return redirect()->route('public.recruitment.test', ['test' => $test->slug, 'token' => $candidature->token]);
     }
