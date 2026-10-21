@@ -17,7 +17,8 @@ use Illuminate\Support\Facades\Storage;
  * les emails. {@see Setting::branding()} renvoie des valeurs BRUTES (chemin de
  * logo dans le disque `public`, couleur nullable) ; ce presenter les transforme
  * en valeurs directement consommables par une vue ou un email :
- *  - `logoUrl` : URL absolue du logo (logo de la filiale, ou repli logo holding) ;
+ *  - `logoUrl` : URL absolue du logo (logo de la filiale, ou repli logo holding),
+ *    construite via asset() : suit l'hôte de la requête (APP_URL hors requête, ex. emails en file) ;
  *  - `accentColor` : couleur d'accent VALIDÉE (`#rrggbb`) ou `null` ;
  *  - `orgName` : nom affiché de la filiale (repli holding « ACS Groupe »).
  *
@@ -69,7 +70,7 @@ final class Branding
     {
         return new self(
             orgName: $partner->name,
-            logoUrl: Storage::disk('public')->url($partner->logo_path),
+            logoUrl: asset('storage/'.$partner->logo_path),
             accentColor: self::sanitizeHex($partner->primary_color),
             hasCustomLogo: true,
             onBehalfOf: $partner->name,
@@ -108,7 +109,7 @@ final class Branding
         return new self(
             orgName: $branding['org_name'],
             logoUrl: $hasCustomLogo
-                ? Storage::disk('public')->url($logoPath)
+                ? asset('storage/'.$logoPath)
                 : asset(self::FALLBACK_LOGO),
             accentColor: self::sanitizeHex($branding['accent_color']),
             hasCustomLogo: $hasCustomLogo,

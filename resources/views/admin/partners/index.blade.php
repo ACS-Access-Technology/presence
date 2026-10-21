@@ -173,7 +173,7 @@
                     <tr>
                         <td>
                             <span class="pt-name">
-                                <img src="{{ \Illuminate\Support\Facades\Storage::disk('public')->url($partner->logo_path) }}" alt="">
+                                <img src="{{ asset('storage/'.$partner->logo_path) }}" alt="">
                                 {{ $partner->name }}
                             </span>
                         </td>
@@ -193,7 +193,7 @@
                                         'secondary_color' => $partner->secondary_color,
                                         'contact_name' => $partner->contact_name,
                                         'contact_email' => $partner->contact_email,
-                                        'logo_url' => \Illuminate\Support\Facades\Storage::disk('public')->url($partner->logo_path),
+                                        'logo_url' => asset('storage/'.$partner->logo_path),
                                         'update_url' => route('admin.partners.update', $partner),
                                     ]) }}">Modifier</button>
                         </td>

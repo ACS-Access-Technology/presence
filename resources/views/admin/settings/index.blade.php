@@ -84,7 +84,7 @@
                     <div class="field">
                         <label>Logo {{ $brandingIsHolding ? "de l'organisation" : 'de la filiale' }}</label>
                         <div class="logorow">
-                            <div class="logobox"><img src="{{ $branding['logo_path'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($branding['logo_path']) : asset('assets/logo-acs-groupe.png') }}" alt="Logo actuel"></div>
+                            <div class="logobox"><img src="{{ $branding['logo_path'] ? asset('storage/'.$branding['logo_path']) : asset('assets/logo-acs-groupe.png') }}" alt="Logo actuel"></div>
                             <div>
                                 <input class="control" type="file" name="logo" accept="image/png,image/svg+xml,image/jpeg,image/webp">
                                 <div class="help">PNG ou SVG, fond transparent recommandé. Max 2 Mo. Affiché sur la page d'émargement et les exports de vos événements.</div>
