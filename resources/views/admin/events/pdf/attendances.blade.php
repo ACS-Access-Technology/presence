@@ -4,14 +4,18 @@
     <meta charset="utf-8">
     <style>
         body{font-family:sans-serif;font-size:10px;color:#12141a}
-        h1{font-size:16px;margin:0 0 2px;color:#1E2A78}
+        h1{font-size:16px;margin:0 0 2px;color:{{ $branding->accentColorOrDefault() }}}
+        .head{width:100%;border-bottom:3px solid {{ $branding->accentColorOrDefault() }};padding-bottom:8px;margin-bottom:10px}
+        .head td{border:none;padding:0;vertical-align:middle}
+        .head__logo{height:46px;max-width:180px}
+        .head__org{font-size:13px;font-weight:700;color:{{ $branding->accentColorOrDefault() }};text-align:right}
         .meta{color:#565d6b;font-size:10px;margin:0 0 14px}
         table{width:100%;border-collapse:collapse;table-layout:fixed}
         th,td{padding:5px 6px;border-bottom:1px solid #e3e6ec;text-align:left;overflow:hidden;word-wrap:break-word}
         th{background:#f7f8fa;font-size:8px;text-transform:uppercase;letter-spacing:.03em;color:#565d6b}
         thead{display:table-header-group}
         tr{page-break-inside:avoid}
-        tfoot td{font-weight:700;border-top:2px solid #1E2A78;border-bottom:none}
+        tfoot td{font-weight:700;border-top:2px solid {{ $branding->accentColorOrDefault() }};border-bottom:none}
         .sig{height:34px;max-width:70px;display:block}
         .col-name{width:10%}.col-first{width:9%}.col-email{width:15%}.col-phone{width:9%}
         .col-company{width:11%}.col-dir{width:9%}.col-pos{width:9%}
@@ -19,6 +23,12 @@
     </style>
 </head>
 <body>
+    <table class="head">
+        <tr>
+            <td>@if ($logoDataUri)<img class="head__logo" src="{{ $logoDataUri }}" alt="">@endif</td>
+            <td class="head__org">{{ $branding->orgName }}</td>
+        </tr>
+    </table>
     <h1>{{ $event->title }}</h1>
     <p class="meta">
         {{ $event->starts_at->translatedFormat('j F Y') }} · {{ $event->starts_at->format('H:i') }} – {{ $event->ends_at->format('H:i') }}

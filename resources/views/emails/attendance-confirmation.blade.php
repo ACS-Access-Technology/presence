@@ -6,7 +6,7 @@
         <tr><td align="center">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background:#ffffff;border-radius:16px;overflow:hidden;border:1px solid #e3e6ec">
                 <tr><td style="background:{{ $accentColor }};padding:22px 28px;color:#fff;font-weight:800;font-size:1.1rem;letter-spacing:-.02em">
-                    {{ $orgName }} · Presence
+                    {{ $orgName }}{{ ($whiteLabel ?? false) ? '' : ' · Presence' }}
                 </td></tr>
                 <tr><td style="padding:28px">
                     <h1 style="font-size:1.25rem;margin:0 0 6px">Présence confirmée</h1>

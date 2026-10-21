@@ -67,6 +67,7 @@ class EventInvitationMail extends Mailable implements ShouldQueue
                 'eventDate' => $event->starts_at->translatedFormat('j F Y à H:i'),
                 'location' => $event->location,
                 'orgName' => $branding->orgName,
+                'whiteLabel' => $branding->onBehalfOf !== null,
                 'accentColor' => $branding->accentColorOrDefault(),
             ],
         );

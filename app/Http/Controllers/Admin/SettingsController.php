@@ -97,7 +97,10 @@ class SettingsController extends Controller
         $rules = [
             'org_name' => ['required', 'string', 'max:120'],
             'accent_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
-            'logo' => ['nullable', 'image', 'mimes:png,svg,jpg,jpeg,webp', 'max:2048'],
+            // Pas de SVG : un SVG peut embarquer du <script>, exécuté sous le domaine
+            // de l'application quand l'URL publique du logo est ouverte directement
+            // (XSS stockée). Formats raster uniquement.
+            'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
         ];
 
         if ($isHolding) {

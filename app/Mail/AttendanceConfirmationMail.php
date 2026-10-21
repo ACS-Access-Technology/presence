@@ -53,6 +53,7 @@ class AttendanceConfirmationMail extends Mailable
                 'reference' => $this->attendance->reference,
                 'feedbackUrl' => route('public.feedback.show', ['attendance' => $this->attendance->reference]),
                 'orgName' => $branding->orgName,
+                'whiteLabel' => $branding->onBehalfOf !== null,
                 'accentColor' => $branding->accentColorOrDefault(),
             ],
         );

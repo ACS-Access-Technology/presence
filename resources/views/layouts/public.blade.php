@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Émargement — {{ $branding->orgName }} · Presence</title>
+    <title>Émargement — {{ $branding->orgName }}{{ $branding->onBehalfOf ? '' : ' · Presence' }}</title>
     <meta name="theme-color" content="{{ $branding->accentColorOrDefault() }}">
     <link rel="stylesheet" href="{{ versioned_asset('css/tokens.css') }}">
     <link rel="stylesheet" href="{{ versioned_asset('css/participant.css') }}">

@@ -62,6 +62,7 @@ class EventRescheduledMail extends Mailable implements ShouldQueue
                 'location' => $event->location,
                 'reason' => $this->reschedule->reason,
                 'orgName' => $branding->orgName,
+                'whiteLabel' => $branding->onBehalfOf !== null,
                 'accentColor' => $branding->accentColorOrDefault(),
             ],
         );

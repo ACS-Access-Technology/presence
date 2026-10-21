@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\EventTypeController;
 use App\Http\Controllers\Admin\FilialeContextController;
 use App\Http\Controllers\Admin\FilialeController;
 use App\Http\Controllers\Admin\ParticipantController;
+use App\Http\Controllers\Admin\PartnerController;
 use App\Http\Controllers\Admin\PersonSearchController;
 use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\ProfileController;
@@ -168,6 +169,13 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
         Route::post('/events', [EventController::class, 'store'])->name('events.store');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
         Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::patch('/events/{event}/destinataire-partenaire', [EventController::class, 'updatePartnerRecipient'])->name('events.partner-recipient');
+
+        // Rencontres partenaires : référentiel des partenaires (marque blanche) et
+        // leurs rencontres. Cloisonné par filiale (global scope sur Partner).
+        Route::get('/partenaires', [PartnerController::class, 'index'])->name('partners.index');
+        Route::post('/partenaires', [PartnerController::class, 'store'])->name('partners.store');
+        Route::post('/partenaires/{partner}', [PartnerController::class, 'update'])->name('partners.update');
 
         // Recherche du référentiel « Personnel ACS Groupe » (combobox d'invitation).
         Route::get('/people/search', [PersonSearchController::class, 'search'])->name('people.search');

@@ -1,3 +1,15 @@
+# Fichiers téléversés servis en statique (/storage, hors Laravel donc hors
+# SecurityHeaders) : jamais de « sniffing » de type, et un ancien logo SVG ne
+# peut exécuter aucun script.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(png|jpe?g|webp|gif|svg)$">
+        Header set X-Content-Type-Options "nosniff"
+    </FilesMatch>
+    <FilesMatch "\.svg$">
+        Header set Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'"
+    </FilesMatch>
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

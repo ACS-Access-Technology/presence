@@ -20,6 +20,10 @@ use Illuminate\Support\Carbon;
  * @property int $filiale_id
  * @property string $title
  * @property int $event_type_id
+ * @property ?int $partner_id
+ * @property ?string $partner_recipient_name
+ * @property ?string $partner_recipient_email
+ * @property ?Carbon $partner_sheet_sent_at
  * @property Carbon $starts_at
  * @property Carbon $ends_at
  * @property bool $grace_check_in_enabled
@@ -40,7 +44,8 @@ class Event extends Model
     /** @var list<string> */
     protected $fillable = [
         'filiale_id',
-        'title', 'event_type_id', 'starts_at', 'ends_at', 'grace_check_in_enabled', 'location',
+        'title', 'event_type_id', 'partner_id', 'partner_recipient_name', 'partner_recipient_email',
+        'starts_at', 'ends_at', 'grace_check_in_enabled', 'location',
         'geofence_latitude', 'geofence_longitude', 'geofence_radius_m',
         'qr_mode', 'qr_secret', 'public_slug',
         'closed_at', 'report_email_queued_at', 'cancelled_at', 'cancellation_reason',
@@ -86,6 +91,7 @@ class Event extends Model
             'grace_check_in_enabled' => 'boolean',
             'closed_at' => 'datetime',
             'report_email_queued_at' => 'datetime',
+            'partner_sheet_sent_at' => 'datetime',
             'cancelled_at' => 'datetime',
             'qr_mode' => QrMode::class,
             'geofence_latitude' => 'float',
@@ -113,6 +119,23 @@ class Event extends Model
     {
         return $this->belongsTo(EventType::class, 'event_type_id')
             ->withoutGlobalScope(FilialeScope::class);
+    }
+
+    /**
+     * @return BelongsTo<Partner, $this>
+     *
+     * Résolu sans le global scope (même raison que {@see type()}) : l'identité du
+     * partenaire d'un événement visible ne dépend pas du contexte de filiale.
+     */
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(Partner::class)->withoutGlobalScope(FilialeScope::class);
+    }
+
+    /** Rencontre organisée pour le compte d'un partenaire. */
+    public function isPartnerMeeting(): bool
+    {
+        return $this->partner_id !== null;
     }
 
     /** @return BelongsTo<EventSeries, $this> */

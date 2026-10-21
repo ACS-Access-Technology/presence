@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Console\Commands;
 
 use App\Jobs\SendAttendanceConfirmation;
+use App\Jobs\SendPartnerAttendanceSheet;
 use App\Models\Attendance;
 use App\Models\Event;
 use App\Models\Scopes\FilialeScope;
@@ -142,6 +143,15 @@ class CloseDueEvents extends Command
                 }
 
                 $count = $this->queueEventBatch($locked);
+
+                // Rencontre partenaire : la feuille d'émargement part au destinataire
+                // choisi à la création — même transaction que le marqueur, donc mise
+                // en file exactement une fois.
+                if ($locked->partner_id !== null
+                    && $locked->partner_recipient_email !== null
+                    && $locked->partner_sheet_sent_at === null) {
+                    SendPartnerAttendanceSheet::dispatch($locked->id);
+                }
 
                 // Marqueur de batch posé dans LA MÊME transaction que les dispatch de
                 // jobs (file `database` en prod) : mise en file et marqueur commitent
