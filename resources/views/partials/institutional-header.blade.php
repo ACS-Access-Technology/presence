@@ -31,7 +31,7 @@
         .inst-hd--stacked{grid-template-columns:1fr;justify-items:center;gap:14px;padding-block:20px 16px}
         .inst-hd--stacked .inst-hd__state{justify-self:center}
         .inst-hd--stacked .inst-hd__arms{height:64px}
-        .inst-hd--stacked .inst-hd__logo{height:52px;max-width:60%}
+        .inst-hd--stacked .inst-hd__logo{height:88px;max-width:75%}
         @media (max-width:420px){.inst-hd{gap:8px;padding:8px 10px}.inst-hd__arms{height:40px}.inst-hd__rep{font-size:.52rem}.inst-hd__motto{font-size:.5rem}.inst-hd__logo{height:34px}.inst-hd__name{font-size:.72rem}}
     </style>
 @endif
