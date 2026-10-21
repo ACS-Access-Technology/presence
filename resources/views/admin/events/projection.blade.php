@@ -16,6 +16,7 @@
     <style>
         body{min-height:100vh;display:grid;place-items:center;padding:24px}
         body.has-backdrop{background:var(--bg) var(--backdrop) center/cover no-repeat fixed}
+        body.theme-registre h1{font-family:"Iowan Old Style","Charter","Georgia","Noto Serif",serif;font-weight:700;letter-spacing:0}
         body.has-backdrop .proj{background:color-mix(in srgb,var(--surface) 92%,transparent);border-radius:24px;padding:28px 32px;box-shadow:var(--sh-3)}
         .proj{text-align:center;max-width:520px}
         .proj__logo{height:44px;width:auto;margin:0 auto 16px;display:block;object-fit:contain}
@@ -28,17 +29,23 @@
         .hint{margin-top:10px;font-size:.85rem;color:var(--faint)}
     </style>
 </head>
-<body class="{{ $branding->backgroundUrl ? 'has-backdrop' : '' }}" @if ($branding->backgroundUrl) style="--backdrop:url('{{ $branding->backgroundUrl }}')" @endif>
+<body class="{{ $branding->backgroundUrl ? 'has-backdrop' : '' }}{{ $branding->isInstitutional ? ' theme-registre' : '' }}" @if ($branding->backgroundUrl) style="--backdrop:url('{{ $branding->backgroundUrl }}')" @endif>
     {{-- NOTE : habillage minimal fonctionnel ; l'écran de projection fidèle
          (dashboard.html) sera intégré ultérieurement. --}}
     <div class="proj">
         @if ($branding->isInstitutional)
-            @include('partials.institutional-header')
+            @include('partials.institutional-header', ['stacked' => true])
         @else
             <img class="proj__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
         @endif
         <h1>{{ $event->title }}</h1>
-        <div class="meta">{{ $event->starts_at->translatedFormat('j M Y · H:i') }}@if($event->location) · {{ $event->location }}@endif</div>
+        <div class="meta">
+            @if ($branding->isInstitutional)
+                {{ ucfirst($event->starts_at->translatedFormat('l j F Y')) }}, de {{ $event->starts_at->format('H\\hi') }} à {{ $event->ends_at->format('H\\hi') }}@if($event->location)<br>{{ $event->location }}@endif
+            @else
+                {{ $event->starts_at->translatedFormat('j M Y · H:i') }}@if($event->location) · {{ $event->location }}@endif
+            @endif
+        </div>
         <div class="qrbox"><img id="qr" alt="QR d'émargement"></div>
         <div class="count" id="count"></div>
         <div class="hint">Scannez ce QR avec l'appareil photo de votre téléphone pour émarger.</div>
