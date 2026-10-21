@@ -23,7 +23,13 @@ return new class extends Migration
             $table->bigInteger('retenue_saisie')->nullable();
             $table->timestamps();
 
-            $table->unique(['recruitment_candidature_id', 'recruitment_question_id']);
+            // Nom explicite court : le nom auto-généré par Laravel (78 car.) dépasse la
+            // limite d'identifiant MySQL (64 car.) — passait inaperçu en test (SQLite
+            // n'impose pas cette limite), cassait au premier `migrate` réel sur MySQL.
+            $table->unique(
+                ['recruitment_candidature_id', 'recruitment_question_id'],
+                'recruitment_reponses_candidature_question_unique',
+            );
         });
     }
 

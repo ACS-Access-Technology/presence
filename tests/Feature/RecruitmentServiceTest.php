@@ -109,6 +109,49 @@ class RecruitmentServiceTest extends TestCase
         $this->assertNull($second);
     }
 
+    public function test_le_premier_chargement_de_la_page_de_test_reussit(): void
+    {
+        $test = RecruitmentTest::factory()->create();
+        $candidature = $this->recruitment->startCandidature($test, $this->identite());
+
+        $result = $this->recruitment->registerPageOpen($candidature);
+
+        $this->assertTrue($result);
+        $this->assertNotNull($candidature->fresh()->opened_at);
+        $this->assertSame(RecruitmentCandidatureStatus::EnCours, $candidature->fresh()->statut);
+    }
+
+    public function test_recharger_la_page_de_test_abandonne_la_candidature(): void
+    {
+        $test = RecruitmentTest::factory()->create();
+        $question = RecruitmentQuestion::factory()->for($test)->create([
+            'reponse_attendue' => ['classement' => 'Conforme', 'ajustement_tva' => 0, 'retenue_attendue' => 0, 'explication' => ''],
+        ]);
+        $candidature = $this->recruitment->startCandidature($test, $this->identite());
+        $this->recruitment->saveReponse($candidature, $question, ['classement' => 'Conforme', 'ajustement_tva' => 0, 'retenue_attendue' => 0]);
+        $this->recruitment->registerPageOpen($candidature);
+
+        $second = $this->recruitment->registerPageOpen($candidature->fresh());
+
+        $this->assertFalse($second);
+        $candidature->refresh();
+        $this->assertSame(RecruitmentCandidatureStatus::Abandonnee, $candidature->statut);
+        $this->assertSame(3, $candidature->score);
+        $this->assertNotNull($candidature->submitted_at);
+    }
+
+    public function test_registerpageopen_sur_candidature_deja_terminee_ne_reforfait_pas(): void
+    {
+        $test = RecruitmentTest::factory()->create();
+        $candidature = $this->recruitment->startCandidature($test, $this->identite());
+        $this->recruitment->submit($candidature);
+
+        $result = $this->recruitment->registerPageOpen($candidature->fresh());
+
+        $this->assertFalse($result);
+        $this->assertSame(RecruitmentCandidatureStatus::Soumis, $candidature->fresh()->statut);
+    }
+
     public function test_close_expired_cloture_et_note_les_candidatures_hors_delai(): void
     {
         $test = RecruitmentTest::factory()->create();

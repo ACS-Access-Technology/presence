@@ -12,6 +12,7 @@ enum RecruitmentCandidatureStatus: string
     case EnCours = 'en_cours';
     case Soumis = 'soumis';
     case Expire = 'expire';
+    case Abandonnee = 'abandonnee';
 
     public function label(): string
     {
@@ -19,6 +20,7 @@ enum RecruitmentCandidatureStatus: string
             self::EnCours => 'En cours',
             self::Soumis => 'Soumis',
             self::Expire => 'Expiré',
+            self::Abandonnee => 'Abandonnée',
         };
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tests\Feature;
 
+use App\Enums\RecruitmentCandidatureStatus;
 use App\Models\RecruitmentCandidature;
 use App\Models\RecruitmentQuestion;
 use App\Models\RecruitmentTest;
@@ -88,6 +89,25 @@ class PublicRecruitmentTest extends TestCase
         ]);
     }
 
+    public function test_recharger_la_page_de_test_abandonne_la_candidature(): void
+    {
+        $test = $this->test();
+        RecruitmentQuestion::factory()->for($test)->create();
+        $this->post(route('public.recruitment.store', $test->slug), [
+            'nom' => 'Doe', 'prenom' => 'Jane', 'email' => 'reload@exemple.ci',
+        ]);
+        $candidature = RecruitmentCandidature::where('email', 'reload@exemple.ci')->firstOrFail();
+
+        $testRoute = route('public.recruitment.test', ['test' => $test->slug, 'token' => $candidature->token]);
+        $this->get($testRoute)->assertOk();
+
+        // Deuxième chargement (rafraîchissement / réouverture du lien) : abandon.
+        $second = $this->get($testRoute);
+
+        $second->assertOk()->assertSeeText("n'est plus disponible");
+        $this->assertSame(RecruitmentCandidatureStatus::Abandonnee, $candidature->fresh()->statut);
+    }
+
     public function test_soumettre_affiche_la_page_de_confirmation_sans_score(): void
     {
         $test = $this->test();
@@ -99,7 +119,9 @@ class PublicRecruitmentTest extends TestCase
         $response = $this->post(route('public.recruitment.submit', ['test' => $test->slug, 'token' => $candidature->token]));
 
         $response->assertOk();
-        $response->assertDontSee((string) $candidature->fresh()->score);
+        $response->assertViewIs('public.recruitment.merci');
+        $response->assertViewMissing('score');
+        $response->assertViewMissing('candidature');
     }
 
     public function test_repondre_apres_expiration_renvoie_410(): void

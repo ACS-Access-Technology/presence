@@ -22,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property ?string $telephone
  * @property string $token
  * @property Carbon $started_at
+ * @property ?Carbon $opened_at
  * @property Carbon $expires_at
  * @property ?Carbon $submitted_at
  * @property RecruitmentCandidatureStatus $statut
@@ -32,7 +33,7 @@ class RecruitmentCandidature extends Model
     /** @var list<string> */
     protected $fillable = [
         'recruitment_test_id', 'nom', 'prenom', 'email', 'telephone',
-        'token', 'started_at', 'expires_at', 'submitted_at', 'statut', 'score',
+        'token', 'started_at', 'opened_at', 'expires_at', 'submitted_at', 'statut', 'score',
     ];
 
     /**
@@ -42,6 +43,7 @@ class RecruitmentCandidature extends Model
     {
         return [
             'started_at' => 'datetime',
+            'opened_at' => 'datetime',
             'expires_at' => 'datetime',
             'submitted_at' => 'datetime',
             'statut' => RecruitmentCandidatureStatus::class,

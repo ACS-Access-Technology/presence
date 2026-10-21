@@ -54,6 +54,54 @@ final class RecruitmentService
     }
 
     /**
+     * Enregistre le chargement de la page de test. Un candidat n'a droit qu'à
+     * une seule session continue : le premier chargement marque `opened_at` et
+     * renvoie `true` (le contrôleur affiche les questions). Tout chargement
+     * SUIVANT (rafraîchissement, réouverture du lien après avoir changé de
+     * page) est traité comme un abandon — la candidature est clôturée
+     * immédiatement (`Abandonnee`), notée sur les réponses déjà enregistrées,
+     * et `false` est renvoyé (le contrôleur affiche l'écran clos).
+     *
+     * Verrouillée comme {@see submit()}/{@see closeExpired()} : sans ce verrou,
+     * deux chargements simultanés du même lien pourraient tous les deux se
+     * croire "premiers".
+     */
+    public function registerPageOpen(RecruitmentCandidature $candidature): bool
+    {
+        $forfeited = null;
+
+        $canProceed = DB::transaction(function () use ($candidature, &$forfeited): bool {
+            $locked = RecruitmentCandidature::whereKey($candidature->id)->lockForUpdate()->first();
+
+            if ($locked === null || ! $locked->estEnCours()) {
+                return false;
+            }
+
+            if ($locked->opened_at !== null) {
+                $locked->forceFill([
+                    'statut' => RecruitmentCandidatureStatus::Abandonnee,
+                    'submitted_at' => Carbon::now(),
+                    'score' => $this->scoring->scoreCandidature($locked),
+                ])->save();
+
+                $forfeited = $locked;
+
+                return false;
+            }
+
+            $locked->forceFill(['opened_at' => Carbon::now()])->save();
+
+            return true;
+        });
+
+        if ($forfeited !== null) {
+            $this->notifyManagers($forfeited);
+        }
+
+        return $canProceed;
+    }
+
+    /**
      * Verrouillée comme {@see submit()}/{@see closeExpired()} : sans ce verrou,
      * une réponse pourrait s'écrire après qu'un `submit()`/`closeExpired()`
      * concurrent a déjà noté et notifié la candidature (réponse orpheline sur

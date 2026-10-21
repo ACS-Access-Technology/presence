@@ -4,6 +4,7 @@
     var body = document.body;
     var expiresAt = new Date(body.dataset.expiresAt).getTime();
     var chrono = document.getElementById('chrono');
+    var chronoText = chrono ? chrono.querySelector('span') : null;
     var form = document.getElementById('recrutement-form');
 
     /* Helper: null-safe field value read. Prevents TypeError if selector fails. */
@@ -12,20 +13,74 @@
         return el ? (el.value || null) : null;
     }
 
+    function setChronoText(text) {
+        (chronoText || chrono).textContent = text;
+    }
+
     function tick() {
         var remaining = expiresAt - Date.now();
         if (remaining <= 0) {
-            chrono.textContent = 'Temps écoulé — soumission en cours…';
+            setChronoText('Temps écoulé — soumission en cours…');
             form.submit();
             return;
         }
         var minutes = Math.floor(remaining / 60000);
         var seconds = Math.floor((remaining % 60000) / 1000);
-        chrono.textContent = 'Temps restant : ' + minutes + ' min ' + (seconds < 10 ? '0' : '') + seconds + ' s';
+        setChronoText('Temps restant : ' + minutes + ' min ' + (seconds < 10 ? '0' : '') + seconds + ' s');
+        chrono.setAttribute('data-low', remaining < 5 * 60000 ? 'true' : 'false');
         window.setTimeout(tick, 1000);
     }
 
     tick();
+
+    /* Wizard : une transaction affichée à la fois (navigation Précédent/Suivant),
+       aucune requête serveur — la clôture par rechargement (registerPageOpen)
+       ne se déclenche que sur un VRAI rechargement de page, pas un changement
+       d'étape. */
+    var steps = Array.prototype.slice.call(document.querySelectorAll('.rec-q[data-step]'));
+    var totalSteps = steps.length;
+    var currentStep = 1;
+    var stepLabel = document.getElementById('stepLabel');
+    var stepFill = document.getElementById('stepFill');
+    var btnPrev = document.getElementById('stepPrev');
+    var btnNext = document.getElementById('stepNext');
+    var btnSubmit = document.getElementById('stepSubmit');
+
+    function showStep(n) {
+        currentStep = n;
+        steps.forEach(function (fieldset) {
+            fieldset.hidden = Number(fieldset.dataset.step) !== n;
+        });
+        if (stepLabel) {
+            stepLabel.textContent = 'Transaction ' + n + ' / ' + totalSteps;
+        }
+        if (stepFill) {
+            stepFill.style.width = (n / totalSteps * 100) + '%';
+        }
+        if (btnPrev) {
+            btnPrev.hidden = n === 1;
+        }
+        if (btnNext) {
+            btnNext.hidden = n === totalSteps;
+        }
+        if (btnSubmit) {
+            btnSubmit.hidden = n !== totalSteps;
+        }
+    }
+
+    if (totalSteps > 0) {
+        showStep(1);
+        if (btnPrev) {
+            btnPrev.addEventListener('click', function () {
+                showStep(Math.max(1, currentStep - 1));
+            });
+        }
+        if (btnNext) {
+            btnNext.addEventListener('click', function () {
+                showStep(Math.min(totalSteps, currentStep + 1));
+            });
+        }
+    }
 
     document.querySelectorAll('fieldset[data-answer-url]').forEach(function (fieldset) {
         var url = fieldset.dataset.answerUrl;

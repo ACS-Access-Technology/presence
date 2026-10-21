@@ -11,6 +11,7 @@ use App\Models\RecruitmentCandidature;
 use App\Models\RecruitmentQuestion;
 use App\Models\RecruitmentTest;
 use App\Services\RecruitmentService;
+use App\Support\Branding;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
@@ -28,7 +29,7 @@ class RecruitmentController extends Controller
     {
         abort_unless($test->actif, 404);
 
-        return view('public.recruitment.show', ['test' => $test]);
+        return view('public.recruitment.show', ['test' => $test, 'branding' => Branding::forFiliale($test->filiale_id)]);
     }
 
     public function store(StartRecruitmentCandidatureRequest $request, RecruitmentTest $test): View|RedirectResponse
@@ -51,8 +52,10 @@ class RecruitmentController extends Controller
         $candidature = RecruitmentCandidature::where('recruitment_test_id', $test->id)
             ->where('token', $token)->firstOrFail();
 
-        if (! $candidature->estEnCours()) {
-            return view('public.recruitment.closed', ['candidature' => $candidature]);
+        $branding = Branding::forFiliale($test->filiale_id);
+
+        if (! $this->recruitment->registerPageOpen($candidature)) {
+            return view('public.recruitment.closed', ['candidature' => $candidature->fresh(), 'branding' => $branding]);
         }
 
         // Corrigé (`reponse_attendue`) jamais chargé en mémoire côté public : même
@@ -61,7 +64,7 @@ class RecruitmentController extends Controller
         $questions = $test->questions()->orderBy('ordre')->get(['id', 'recruitment_test_id', 'ordre', 'contexte']);
         $reponses = $candidature->reponses()->get()->keyBy('recruitment_question_id');
 
-        return view('public.recruitment.test', compact('test', 'candidature', 'questions', 'reponses'));
+        return view('public.recruitment.test', compact('test', 'candidature', 'questions', 'reponses', 'branding'));
     }
 
     public function answer(
@@ -90,11 +93,12 @@ class RecruitmentController extends Controller
             ->where('token', $token)->firstOrFail();
 
         $result = $this->recruitment->submit($candidature);
+        $branding = Branding::forFiliale($test->filiale_id);
 
         if ($result === null) {
-            return view('public.recruitment.closed', ['candidature' => $candidature]);
+            return view('public.recruitment.closed', ['candidature' => $candidature, 'branding' => $branding]);
         }
 
-        return view('public.recruitment.merci');
+        return view('public.recruitment.merci', ['branding' => $branding]);
     }
 }
