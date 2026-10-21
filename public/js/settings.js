@@ -48,7 +48,7 @@
         editingAccount: null,
         chosenColor: CFG.palette[0],
         lastPassword: '',
-        expandedTypes: {},
+        expandedTypes: new Map(),
 
         tab: function (name) {
             ['types', 'comptes', 'general', 'data'].forEach(function (n) {
@@ -75,25 +75,33 @@
             var aggregate = CFG.isSuper && !CFG.contextFilialeId;
             if (!aggregate) { body.innerHTML = this.types.map(function (t) { return typeRowHtml(t, false); }).join(''); return; }
 
-            var groups = {}; var order = [];
+            // Map plutôt qu'objet littéral : un type nommé « constructor » ou
+            // « toString » résoudrait sinon une méthode héritée de Object.prototype.
+            var groups = new Map(); var order = [];
             this.types.forEach(function (t) {
-                if (!groups[t.name]) { groups[t.name] = []; order.push(t.name); }
-                groups[t.name].push(t);
+                if (!groups.has(t.name)) { groups.set(t.name, []); order.push(t.name); }
+                groups.get(t.name).push(t);
             });
             var expanded = this.expandedTypes;
             body.innerHTML = order.map(function (name) {
-                var items = groups[name];
+                var items = groups.get(name);
                 var first = items[0];
                 var usage = items.reduce(function (s, x) { return s + x.usage; }, 0);
-                var anyActive = items.some(function (x) { return x.is_active; });
-                var isOpen = !!expanded[name];
+                // Ligne repliée : n'affiche une couleur/un statut que s'ils sont
+                // communs à toutes les filiales, sinon « mixte » / « n/N actifs »
+                // (le détail reste dans les lignes dépliées).
+                var activeCount = items.filter(function (x) { return x.is_active; }).length;
+                var sameColor = items.every(function (x) { return x.color === first.color; });
+                var isOpen = expanded.get(name) === true;
                 var badge = '<span class="tag tag--type" style="--tc:' + esc(first.color) + ';color:var(--tc);background:color-mix(in srgb, var(--tc) 15%, transparent)">' + esc(first.name) + '</span>';
-                var st = anyActive ? '<span class="st st--on">Actif</span>' : '<span class="st st--off">Désactivé</span>';
+                var st = activeCount === items.length ? '<span class="st st--on">Actif</span>'
+                    : activeCount === 0 ? '<span class="st st--off">Désactivé</span>'
+                    : '<span class="st st--on">' + activeCount + '/' + items.length + ' actifs</span>';
                 var chevron = isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>';
                 var head = '<tr class="tgroup" style="cursor:pointer" onclick="Settings.toggleTypeGroup(' + esc(JSON.stringify(name)) + ')">'
                     + '<td>' + badge + '</td>'
                     + '<td class="mut">' + items.length + ' filiale' + (items.length > 1 ? 's' : '') + '</td>'
-                    + '<td><span class="mono mut">' + esc(first.color) + '</span></td>'
+                    + '<td><span class="mono mut">' + (sameColor ? esc(first.color) : 'mixte') + '</span></td>'
                     + '<td>' + st + '</td>'
                     + '<td class="mut">' + usage + ' événement' + (usage > 1 ? 's' : '') + '</td>'
                     + '<td class="r-actions"><button class="mini" title="' + (isOpen ? 'Réduire' : 'Détailler par filiale') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' + chevron + '</svg></button></td>'
@@ -103,7 +111,7 @@
             }).join('');
         },
         toggleTypeGroup: function (name) {
-            this.expandedTypes[name] = !this.expandedTypes[name];
+            this.expandedTypes.set(name, this.expandedTypes.get(name) !== true);
             this.renderTypes();
         },
         renderSwatches: function () {

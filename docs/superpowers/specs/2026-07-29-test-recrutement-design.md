@@ -30,8 +30,10 @@ Décisions validées avec l'utilisateur :
 - Accès candidat : URL publique par poste (pas d'invitation nominative).
 - Durée : 45 minutes, chronométrées côté serveur.
 - Un seul essai par email et par poste.
-- Reprise possible via le lien personnel tant que le temps réel n'est pas écoulé
-  (fermeture de navigateur ≠ perte du travail).
+- Une seule session continue : le premier chargement de la page de test marque
+  `opened_at` ; tout rechargement ou réouverture du lien clôt la candidature
+  (`abandonnee`), notée sur les réponses déjà enregistrées. Pas de reprise
+  (révisé pendant l'implémentation — voir `RecruitmentService::registerPageOpen()`).
 - Candidat ne voit jamais son score — seul l'admin y a accès.
 - Recrutement cloisonné par filiale (même principe que les événements).
 - Modèle de données générique (réutilisable pour de futurs postes), mais **pas**
@@ -113,7 +115,8 @@ recruitment_questions
 recruitment_candidatures
   id, recruitment_test_id (FK), nom, prenom, email, telephone (nullable),
   token (string, unique, index), started_at, expires_at, submitted_at (nullable),
-  statut (enum: en_cours|soumis|expire), score (int, nullable),
+  opened_at (nullable), statut (enum: en_cours|soumis|expire|abandonnee),
+  score (int, nullable),
   timestamps
   UNIQUE(recruitment_test_id, email)
 
@@ -131,7 +134,7 @@ elles héritent du cloisonnement via `recruitment_test_id` (une requête admin
 scope toujours via le test parent, jamais en accès direct à la candidature par
 ID brut).
 
-Enum PHP natif `RecruitmentCandidatureStatus` (`en_cours|soumis|expire`), avec
+Enum PHP natif `RecruitmentCandidatureStatus` (`en_cours|soumis|expire|abandonnee`), avec
 `label()` FR comme les autres enums du projet (convention `mem:conventions`).
 
 ## 5. Sécurité et anti-triche
@@ -159,7 +162,7 @@ Enum PHP natif `RecruitmentCandidatureStatus` (`en_cours|soumis|expire`), avec
 - Suit les conventions existantes : `declare(strict_types=1)`, logique dans
   `App\Services\RecruitmentService` (démarrage candidature, autosave, calcul de
   score, finalisation), contrôleurs fins, validation dans
-  `App\Http\Requests\Recruitment\*`.
+  `App\Http\Requests\Public\*`.
 
 ## 7. Tests
 

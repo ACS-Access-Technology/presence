@@ -71,12 +71,12 @@
                 @unless ($brandingIsHolding)
                     <div class="optrow">
                         <div>
-                            <div class="optrow__t">Utiliser le branding de la holding</div>
-                            <p class="optrow__d">Logo, nom et couleur d'ACS Groupe. Décochez pour personnaliser l'identité de {{ $brandingFilialeName }}.</p>
+                            <div class="optrow__t" id="brandInheritLabel">Utiliser le branding de la holding</div>
+                            <p class="optrow__d" id="brandInheritDesc">Logo, nom et couleur d'ACS Groupe. Décochez pour personnaliser l'identité de {{ $brandingFilialeName }}.</p>
                         </div>
                         <label class="toggle">
-                            <input type="checkbox" name="brand_inherit" value="1" id="brandInherit" {{ $brandInherits ? 'checked' : '' }} onchange="Settings.toggleBrandInherit(this.checked)">
-                            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+                            <input type="checkbox" name="brand_inherit" value="1" id="brandInherit" aria-labelledby="brandInheritLabel" aria-describedby="brandInheritDesc" {{ $brandInherits ? 'checked' : '' }} onchange="Settings.toggleBrandInherit(this.checked)">
+                            <span class="toggle__track" aria-hidden="true"><span class="toggle__thumb"></span></span>
                         </label>
                     </div>
                 @endunless
