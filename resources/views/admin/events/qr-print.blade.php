@@ -21,7 +21,7 @@
         }
         .bg{
             position:fixed;inset:-20px;z-index:0;
-            background:url('{{ asset('images/qr-print-bg.jpg') }}') center/cover no-repeat;
+            background:url('{{ $branding->backgroundUrl ?? asset('images/qr-print-bg.jpg') }}') center/cover no-repeat;
             filter:blur(6px) saturate(92%);
             transform:scale(1.12);
         }
@@ -81,6 +81,9 @@
         .altlink a:hover{text-decoration:underline}
 
         button.btn{margin-top:22px;width:100%}
+        /* Partenaire institutionnel : même registre que la page des participants */
+        body.theme-registre h1{font-family:"Iowan Old Style","Charter","Georgia","Noto Serif",serif;font-weight:700;letter-spacing:0}
+        .inst-hd--stacked{margin:-6px -4px 18px}
 
         @media print{
             body{background:#fff;padding:0}
@@ -90,12 +93,12 @@
         }
     </style>
 </head>
-<body>
+<body class="{{ $branding->isInstitutional ? 'theme-registre' : '' }}">
     <div class="bg noprint" aria-hidden="true"></div>
 
     <div class="sheet">
         @if ($branding->isInstitutional)
-            @include('partials.institutional-header')
+            @include('partials.institutional-header', ['stacked' => true])
         @else
             @if ($branding->hasCustomLogo)
                 <img class="sheet__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
@@ -106,7 +109,11 @@
         <div class="meta">
             <span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-                {{ $event->starts_at->translatedFormat('j M Y · H:i') }}
+                @if ($branding->isInstitutional)
+                    {{ ucfirst($event->starts_at->translatedFormat('l j F Y')) }}, de {{ $event->starts_at->format('H\\hi') }} à {{ $event->ends_at->format('H\\hi') }}
+                @else
+                    {{ $event->starts_at->translatedFormat('j M Y · H:i') }}
+                @endif
             </span>
             @if($event->location)
             <span>
