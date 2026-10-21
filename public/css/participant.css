@@ -121,3 +121,84 @@ body{padding:24px 12px 64px;min-height:100vh}
   .sig-actions{align-items:flex-start;gap:8px}
   .ratepick{gap:5px}
 }
+
+/* ============================================================
+   Refonte « registre de présence » (2026-10-21)
+   Concept : on signe un registre officiel, pas une appli. Page pleine (pas de
+   carte flottante), titre en caractères de document, champs en lignes à
+   remplir, ligne de signature « × ____ ». Polices système uniquement
+   (CSP font-src 'self'). Le JS du parcours n'est pas concerné.
+   ============================================================ */
+:root{
+  --doc-serif:"Iowan Old Style","Charter","Georgia","Noto Serif",serif;
+  --sheet-margin:var(--accent);
+}
+body{padding:0;background:var(--bg)}
+.phone{
+  max-width:620px;min-height:100dvh;margin:0 auto;background:var(--surface);
+  border:0;border-radius:0;box-shadow:none;overflow:visible;position:relative;
+}
+/* Marge du registre : filet vertical à la couleur de l'organisateur */
+.phone::before{content:"";position:absolute;top:0;bottom:0;left:18px;width:2px;background:color-mix(in srgb,var(--sheet-margin) 55%,transparent);pointer-events:none}
+@media (min-width:640px){
+  body{padding:32px 16px 64px}
+  .phone{min-height:auto;border:1px solid var(--border);border-radius:4px}
+  .phone::before{left:30px}
+}
+
+/* En-tête de l'événement : un intitulé de document, pas une barre d'appli */
+.appbar{position:static;display:block;padding:26px 28px 18px 40px;border-bottom:1px solid var(--border);background:transparent}
+.appbar img{height:44px;margin-bottom:16px}
+.appbar__ev{display:block}
+.appbar__title{display:block;font-family:var(--doc-serif);font-weight:700;font-size:1.55rem;line-height:1.2;letter-spacing:0;text-wrap:balance}
+.appbar__meta{display:block;margin-top:6px;font-size:.88rem;color:var(--muted);white-space:normal;overflow:visible}
+.appbar__place{display:block;font-size:.88rem;color:var(--muted)}
+@media (min-width:640px){.appbar{padding-left:52px}}
+
+.screen{padding:22px 28px 28px 40px}
+@media (min-width:640px){.screen{padding-left:52px}}
+
+/* Intertitres : phrase normale en caractères de document, plus d'étiquette en capitales */
+.section-label{font-family:var(--doc-serif);font-size:1.08rem;font-weight:700;letter-spacing:0;text-transform:none;color:var(--text);margin:26px 0 12px}
+.screen > .section-label:first-child,#form > .section-label:first-child{margin-top:4px}
+
+/* Champs : une ligne à remplir */
+.field{margin-bottom:18px}
+.field > label{font-size:.8rem;font-weight:600;color:var(--muted);margin-bottom:2px}
+.control{
+  background:transparent;border:0;border-bottom:1.5px solid var(--border-strong);border-radius:0;
+  box-shadow:none;padding:8px 0 7px;min-height:40px;font-size:1.02rem;
+}
+.control:focus-visible,.control:focus{border-bottom-color:var(--accent);box-shadow:0 1.5px 0 0 var(--accent)}
+.control[aria-invalid="true"]{border-bottom-color:var(--error);box-shadow:0 1.5px 0 0 var(--error)}
+
+/* Bouton : plein, net, sans ombre ni dégradé */
+.btn{border-radius:6px}
+.btn--primary{box-shadow:none;font-weight:700;letter-spacing:.01em}
+.btn--lg{min-height:52px}
+
+/* Bandeaux d'état : une ligne d'information, pas une carte */
+.geo,.recog,.flash,.grace-banner{background:transparent;border:0;border-radius:0;padding:4px 0 14px;margin-bottom:10px;border-bottom:1px dashed var(--border-strong)}
+.geo--ok{background:transparent}
+.geo__ic{border-radius:50%}
+.recog .avatar{border-radius:50%}
+
+/* Ligne de signature : « × » puis le trait, comme sur un document officiel */
+.sigwrap{border:0;border-radius:0;box-shadow:none;background:var(--surface-2)}
+.sigwrap::before{content:"×";position:absolute;left:12px;bottom:30px;font-family:var(--doc-serif);font-size:1.5rem;line-height:1;color:var(--muted);pointer-events:none}
+.sigwrap::after{content:"";position:absolute;left:36px;right:14px;bottom:34px;border-bottom:1.5px solid var(--text);opacity:.55;pointer-events:none}
+.sig-ph{align-items:end;justify-items:start;padding:0 0 8px 36px;font-size:.8rem}
+
+.consent{font-size:.8rem}
+.foot{text-align:left;padding-left:0}
+
+/* Écrans de fin : même registre */
+.confirm,.errscreen{text-align:left;padding:30px 28px 30px 40px}
+.confirm__badge,.errscreen__ic{margin:0 0 16px}
+.confirm h1,.errscreen h1{font-family:var(--doc-serif);font-weight:700;font-size:1.5rem}
+.confirm .ref{border-radius:4px}
+@media (min-width:640px){.confirm,.errscreen{padding-left:52px}}
+
+/* En-tête institutionnel : intégré au registre (pas de bandeau flottant) */
+.phone .inst-hd{padding:16px 22px 12px 40px}
+@media (min-width:640px){.phone .inst-hd{padding-left:52px}}

@@ -40,8 +40,11 @@
             <div class="appbar__ev">
                 <span class="appbar__title">{{ $event->title }}</span>
                 <span class="appbar__meta">
-                    {{ $event->starts_at->translatedFormat('j M Y · H:i') }}@if($event->location) · {{ $event->location }}@endif
+                    {{ ucfirst($event->starts_at->translatedFormat('l j F Y')) }}, de {{ $event->starts_at->format('H\\hi') }} à {{ $event->ends_at->format('H\\hi') }}
                 </span>
+                @if ($event->location)
+                    <span class="appbar__place">{{ $event->location }}</span>
+                @endif
             </div>
         </header>
 
