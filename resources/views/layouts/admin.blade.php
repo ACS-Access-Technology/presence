@@ -34,6 +34,16 @@
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.8"/><path d="M21 15l-5-5L5 21"/></svg>
                 Portfolio
             </a>
+            <a href="{{ route('admin.annuaire.index') }}" class="{{ ($nav ?? '') === 'annuaire' ? 'active' : '' }}" @if(($nav ?? '')==='annuaire') aria-current="page" @endif>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="3" width="16" height="18" rx="2"/><circle cx="10" cy="10" r="2"/><path d="M7 16h6M15 8h2M15 12h2"/></svg>
+                Annuaire
+            </a>
+            @unless ($user->role === \App\Enums\UserRole::Agent)
+                <a href="{{ route('admin.recrutement.index') }}" class="{{ ($nav ?? '') === 'recrutement' ? 'active' : '' }}" @if(($nav ?? '')==='recrutement') aria-current="page" @endif>
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+                    Recrutement
+                </a>
+            @endunless
             @if($user->isSuperAdmin())
                 <div class="navlbl">Holding</div>
                 <a href="{{ route('admin.filiales.index') }}" class="{{ ($nav ?? '') === 'filiales' ? 'active' : '' }}" @if(($nav ?? '')==='filiales') aria-current="page" @endif>

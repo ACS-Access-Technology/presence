@@ -29,6 +29,7 @@ enum UserRole: string
     case SuperAdmin = 'super_admin';
     case AdminFiliale = 'admin_filiale';
     case Organisateur = 'organisateur';
+    case Agent = 'agent';
 
     public function label(): string
     {
@@ -36,6 +37,7 @@ enum UserRole: string
             self::SuperAdmin => 'Super administrateur',
             self::AdminFiliale => 'Administrateur de filiale',
             self::Organisateur => 'Organisateur',
+            self::Agent => 'Agent',
         };
     }
 

@@ -20,3 +20,5 @@ Schedule::command('events:close-due')->everyMinute()->withoutOverlapping();
 Schedule::command('queue:work --stop-when-empty --max-time=50')
     ->everyMinute()
     ->withoutOverlapping();
+
+Schedule::command('recruitment:close-expired')->everyMinute()->withoutOverlapping();

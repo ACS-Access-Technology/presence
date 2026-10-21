@@ -74,6 +74,12 @@ class UserFactory extends Factory
         return $this->state(fn (array $attributes): array => ['role' => UserRole::AdminFiliale]);
     }
 
+    /** Agent : exécutant de tâches, rattaché à une filiale, sans pouvoir d'admin. */
+    public function agent(): static
+    {
+        return $this->state(fn (array $attributes): array => ['role' => UserRole::Agent]);
+    }
+
     /** Rattache le compte à une filiale précise. */
     public function forFiliale(Filiale $filiale): static
     {

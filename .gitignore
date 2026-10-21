@@ -31,3 +31,9 @@ _ide_helper.php
 Homestead.json
 Homestead.yaml
 Thumbs.db
+
+# Outillage agents IA local (non versionné)
+/.agents
+/.serena
+/_bmad
+/_bmad-output

@@ -1,0 +1,139 @@
+/* ============================================================
+   Presence — Test de recrutement en ligne (public + admin)
+   S'appuie sur les tokens partagés (tokens.css) : .field/.control/.btn/
+   .tag/.pagehead/.tablewrap/.dt viennent de là. Ici : mise en page propre
+   à ce module (shell candidat, cartes de transaction, chrono, écrans
+   clos/merci, détail admin candidature).
+   ============================================================ */
+
+/* ---- Shell public (candidat, sans compte) ---- */
+.rec-appbar{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 20px;background:var(--surface);border-bottom:1px solid var(--border);
+}
+.rec-appbar img{height:32px;width:32px;object-fit:contain;border-radius:8px}
+.rec-appbar__org{font-weight:750;font-size:.95rem;line-height:1.2}
+.rec-appbar__sub{color:var(--muted);font-size:.78rem;line-height:1.2}
+
+.rec-shell{max-width:720px;margin:0 auto;padding:32px 20px 64px}
+.rec-shell--wide{max-width:880px}
+
+.rec-card{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--sh-1);padding:28px;
+}
+.rec-card + .rec-card{margin-top:16px}
+
+.rec-title{font-size:1.5rem;font-weight:820;letter-spacing:-.02em;margin:0 0 8px}
+.rec-lede{color:var(--muted);font-size:.92rem;line-height:1.55;margin:0 0 22px}
+
+.rec-meta{
+  display:flex;flex-wrap:wrap;gap:8px 18px;margin-bottom:20px;
+  color:var(--muted);font-size:.82rem;
+}
+.rec-meta strong{color:var(--text);font-weight:650}
+
+/* ---- Écran de démarrage (form identité) ---- */
+.rec-form-grid{display:grid;gap:14px}
+
+/* Avertissement fort (rouge) : session unique, pas de reprise. */
+.rec-warning{
+  display:flex;gap:12px;align-items:flex-start;
+  background:var(--error-soft);border-radius:var(--r-control);
+  padding:14px 16px;margin-bottom:22px;
+}
+.rec-warning svg{width:20px;height:20px;color:var(--error);flex:0 0 auto;margin-top:1px}
+.rec-warning strong{color:var(--error);display:block;margin-bottom:2px}
+.rec-warning p{margin:0;color:var(--text);font-size:.86rem;line-height:1.5}
+
+/* ---- Chrono (bandeau collant, temps restant) ---- */
+.rec-chrono{
+  position:sticky;top:0;z-index:10;display:flex;align-items:center;gap:10px;
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--r-control);
+  box-shadow:var(--sh-2);padding:12px 16px;margin-bottom:20px;font-weight:650;font-size:.9rem;
+}
+.rec-chrono svg{width:18px;height:18px;color:var(--accent);flex:0 0 auto}
+.rec-chrono[data-low="true"]{color:var(--error);border-color:var(--error-soft)}
+.rec-chrono[data-low="true"] svg{color:var(--error)}
+
+/* ---- Wizard : en-tête persistant + barre de progression ---- */
+.rec-wizard-head{
+  position:sticky;top:60px;z-index:9;background:var(--bg);padding:4px 0 14px;
+}
+.rec-wizard-title{font-size:1.1rem;font-weight:750;margin:0 0 10px}
+
+.rec-instructions{
+  background:var(--accent-soft);border-radius:var(--r-control);padding:10px 14px;margin-bottom:12px;
+}
+.rec-instructions summary{cursor:pointer;font-weight:650;font-size:.84rem;color:var(--accent);list-style:none}
+.rec-instructions summary::-webkit-details-marker{display:none}
+.rec-instructions summary::before{content:"▸ ";display:inline-block;transition:transform .15s}
+.rec-instructions[open] summary::before{transform:rotate(90deg)}
+.rec-instructions p{margin:8px 0 0;color:var(--text);font-size:.86rem;line-height:1.5}
+
+.rec-stepper__bar{height:6px;border-radius:var(--r-pill);background:var(--surface-3);overflow:hidden}
+.rec-stepper__fill{height:100%;background:var(--accent);border-radius:var(--r-pill);transition:width .25s ease}
+.rec-stepper__label{color:var(--muted);font-size:.78rem;font-weight:650;margin-top:6px}
+
+.rec-wizard-nav{
+  position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);
+  padding:16px 0;margin-top:8px;display:flex;justify-content:space-between;gap:12px;
+  box-shadow:0 -8px 20px -14px rgba(18,20,26,.18);
+}
+
+/* ---- Question / transaction (carte par ligne) ---- */
+.rec-q{
+  background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);
+  box-shadow:var(--sh-1);padding:20px 22px;margin-bottom:14px;
+}
+.rec-q__head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.rec-q__id{
+  font-weight:800;font-size:.78rem;letter-spacing:.03em;color:var(--accent);
+  background:var(--accent-soft);padding:2px 9px;border-radius:var(--r-pill);
+}
+.rec-q__title{font-weight:700;font-size:.98rem}
+.rec-q__sub{color:var(--muted);font-size:.82rem;margin:2px 0 12px}
+.rec-q__amounts{
+  display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--muted);font-size:.8rem;margin-bottom:14px;
+}
+.rec-q__amounts b{color:var(--text);font-weight:650}
+.rec-q__info{
+  background:var(--surface-2);border-radius:var(--r-control);padding:10px 13px;
+  color:var(--muted);font-size:.84rem;margin-bottom:16px;
+}
+.rec-q__fields{display:grid;grid-template-columns:repeat(3, 1fr);gap:12px}
+@media (max-width:640px){.rec-q__fields{grid-template-columns:1fr}}
+.rec-q__fields .field{margin-bottom:0}
+.rec-q__saved{
+  display:inline-flex;align-items:center;gap:5px;font-size:.72rem;font-weight:650;
+  color:var(--success);opacity:0;transition:opacity .2s;margin-top:8px;
+}
+.rec-q__fields[data-unsaved="true"] ~ .rec-q__saved{opacity:0}
+
+/* ---- Écrans clos / merci (état centré) ---- */
+.rec-status{
+  text-align:center;padding:48px 28px;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--sh-1);
+}
+.rec-status__ic{
+  width:56px;height:56px;border-radius:16px;margin:0 auto 18px;
+  display:grid;place-items:center;background:var(--accent-soft);color:var(--accent);
+}
+.rec-status--closed .rec-status__ic{background:var(--warning-soft);color:var(--warning)}
+.rec-status__ic svg{width:28px;height:28px}
+.rec-status h1{font-size:1.3rem;font-weight:800;margin:0 0 10px}
+.rec-status p{color:var(--muted);font-size:.92rem;line-height:1.55;margin:0;max-width:46ch;margin-inline:auto}
+
+/* ---- Admin : détail candidature (score + tableau réponses) ---- */
+.rec-scorehead{
+  display:flex;align-items:center;gap:20px;flex-wrap:wrap;margin-bottom:20px;
+}
+.rec-score{
+  display:flex;flex-direction:column;background:var(--surface);border:1px solid var(--border);
+  border-radius:var(--radius);box-shadow:var(--sh-1);padding:16px 22px;min-width:140px;
+}
+.rec-score__val{font-size:1.7rem;font-weight:820;letter-spacing:-.02em}
+.rec-score__lbl{color:var(--muted);font-size:.78rem;margin-top:2px}
+
+.rec-cell-ok{color:var(--success);font-weight:650}
+.rec-cell-ko{color:var(--error);font-weight:650}

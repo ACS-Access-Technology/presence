@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Admin\AccountController;
+use App\Http\Controllers\Admin\AgentDirectoryController;
 use App\Http\Controllers\Admin\AttendanceController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EventController;
@@ -16,12 +17,15 @@ use App\Http\Controllers\Admin\ParticipantController;
 use App\Http\Controllers\Admin\PersonSearchController;
 use App\Http\Controllers\Admin\PortfolioController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\RecruitmentCandidatureController;
+use App\Http\Controllers\Admin\RecruitmentTestController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\StatisticsController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Public\FeedbackController;
 use App\Http\Controllers\Public\PublicAttendanceController;
+use App\Http\Controllers\Public\RecruitmentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -69,6 +73,21 @@ Route::prefix('avis')->name('public.feedback.')->group(function (): void {
 
 /*
 |--------------------------------------------------------------------------
+| Test de recrutement en ligne (sans compte)
+|--------------------------------------------------------------------------
+| /recrutement/{slug} : présentation + démarrage ; /test/{token} : questions,
+| autosave, soumission. Corrigé jamais chargé côté public (RecruitmentService).
+*/
+Route::prefix('recrutement')->name('public.recruitment.')->group(function (): void {
+    Route::get('/{test:slug}', [RecruitmentController::class, 'show'])->name('show');
+    Route::post('/{test:slug}', [RecruitmentController::class, 'store'])->name('store');
+    Route::get('/{test:slug}/test/{token}', [RecruitmentController::class, 'test'])->name('test');
+    Route::patch('/{test:slug}/test/{token}/questions/{question}', [RecruitmentController::class, 'answer'])->name('answer');
+    Route::post('/{test:slug}/test/{token}/soumettre', [RecruitmentController::class, 'submit'])->name('submit');
+});
+
+/*
+|--------------------------------------------------------------------------
 | Authentification (comptes internes ACS Groupe)
 |--------------------------------------------------------------------------
 */
@@ -99,63 +118,97 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
     Route::get('/mon-compte', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/mon-compte/password', [ProfileController::class, 'updatePassword'])->name('profile.password');
 
-    // Annuaire des participants (recherche, historique, stats).
-    Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
-    Route::get('/participants/{person}', [ParticipantController::class, 'show'])->name('participants.show');
+    // Surfaces opérationnelles fermées au rôle Agent (moindre privilège, voir
+    // conception-suivi-projets-taches.md § 7) : l'Agent n'accède qu'à son compte
+    // et à l'annuaire. Garde serveur posée AVANT l'ouverture du provisioning Agent.
+    Route::middleware('role:super_admin,admin_filiale,organisateur')->group(function (): void {
+        // Annuaire des participants (recherche, historique, stats).
+        Route::get('/participants', [ParticipantController::class, 'index'])->name('participants.index');
+        Route::get('/participants/{person}', [ParticipantController::class, 'show'])->name('participants.show');
+    });
 
-    // Portfolio des activités documentées : galerie photo par activité.
-    Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
-    Route::get('/portfolio/{event}', [PortfolioController::class, 'show'])->name('portfolio.show');
+    // Annuaire du personnel interne, cloisonné par filiale (lecture seule).
+    Route::get('/annuaire', [AgentDirectoryController::class, 'index'])->name('annuaire.index');
 
-    // Statistiques globales (toutes activités confondues).
-    Route::get('/statistiques', [StatisticsController::class, 'index'])->name('statistics');
+    // Édition des fiches d'annuaire : réservée aux managers (AdminFiliale/SuperAdmin).
+    // Hors du préfixe `settings` : le cloisonnement par filiale est vérifié dans le
+    // contrôleur (un AdminFiliale ne peut éditer qu'un agent de sa propre filiale).
+    Route::middleware('role:admin_filiale,super_admin')->group(function (): void {
+        Route::patch('/annuaire/{agent}', [AgentDirectoryController::class, 'update'])->name('annuaire.update');
+    });
 
-    // Événements : liste + création + détail (liste de présence, stats).
-    Route::get('/events', [EventController::class, 'index'])->name('events.index');
-    Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
-    Route::post('/events', [EventController::class, 'store'])->name('events.store');
-    Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
-    Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
+    // Recrutement : postes de test en ligne, candidatures et résultats (Lot Recrutement).
+    Route::middleware('role:admin_filiale,organisateur,super_admin')->prefix('recrutement')->name('recrutement.')->group(function (): void {
+        Route::get('/', [RecruitmentTestController::class, 'index'])->name('index');
+        Route::patch('/tests/{test}/toggle', [RecruitmentTestController::class, 'toggleActif'])->name('toggle');
+    });
 
-    // Recherche du référentiel « Personnel ACS Groupe » (combobox d'invitation).
-    Route::get('/people/search', [PersonSearchController::class, 'search'])->name('people.search');
-
-    // Présences d'un événement (liaisons imbriquées vérifiées).
-    Route::prefix('events/{event}/attendances')->name('events.attendances.')
+    // Candidatures d'un poste de recrutement : liste + détail, scopées au poste de
+    // l'URL. `scopeBindings()` contraint {candidature} à appartenir au {test} (via sa
+    // relation `test()`) : une candidature d'un autre poste renvoie 404 automatiquement.
+    Route::middleware('role:admin_filiale,organisateur,super_admin')
+        ->prefix('recrutement/tests/{test:slug}')->name('recrutement.candidatures.')
         ->scopeBindings()->group(function (): void {
-            Route::get('/feed', [AttendanceController::class, 'feed'])->name('feed');
-            Route::get('/export', [AttendanceController::class, 'export'])->name('export');
-            Route::get('/export.xlsx', [AttendanceController::class, 'exportXlsx'])->name('export.xlsx');
-            Route::get('/export.pdf', [AttendanceController::class, 'exportPdf'])->name('export.pdf');
-            Route::get('/badges', [AttendanceController::class, 'badges'])->name('badges');
-            Route::post('/manual', [AttendanceController::class, 'storeManual'])->name('manual');
-            Route::post('/{attendance}/departure', [AttendanceController::class, 'departure'])->name('departure');
-            Route::post('/{attendance}/undo-departure', [AttendanceController::class, 'undoDeparture'])->name('undo-departure');
-            Route::get('/{attendance}/signature', [AttendanceController::class, 'signature'])->name('signature');
+            Route::get('/candidatures', [RecruitmentCandidatureController::class, 'index'])->name('index');
+            Route::get('/candidatures/{candidature}', [RecruitmentCandidatureController::class, 'show'])->name('show');
         });
 
-    // Cycle de vie d'un événement : annulation (réversible), report et mode QR.
-    Route::post('/events/{event}/cancel', [EventLifecycleController::class, 'cancel'])->name('events.cancel');
-    Route::post('/events/{event}/uncancel', [EventLifecycleController::class, 'uncancel'])->name('events.uncancel');
-    Route::post('/events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
-    Route::patch('/events/{event}/qr-mode', [EventLifecycleController::class, 'changeQrMode'])->name('events.qr-mode');
+    // Surfaces opérationnelles (suite) : même garde anti-Agent que ci-dessus.
+    Route::middleware('role:super_admin,admin_filiale,organisateur')->group(function (): void {
+        // Portfolio des activités documentées : galerie photo par activité.
+        Route::get('/portfolio', [PortfolioController::class, 'index'])->name('portfolio');
+        Route::get('/portfolio/{event}', [PortfolioController::class, 'show'])->name('portfolio.show');
 
-    // Documents et photos d'un événement (alimentent le Portfolio).
-    Route::prefix('events/{event}/report')->name('events.report.')
-        ->scopeBindings()->group(function (): void {
-            Route::post('/documents', [ReportController::class, 'uploadDocuments'])->name('documents.store');
-            // Service des médias depuis le disque PRIVÉ (jamais d'URL publique devinable).
-            Route::get('/documents/{document}', [ReportController::class, 'showDocument'])->name('documents.show');
-            Route::delete('/documents/{document}', [ReportController::class, 'destroyDocument'])->name('documents.destroy');
-            Route::post('/photos', [ReportController::class, 'uploadPhotos'])->name('photos.store');
-            Route::get('/photos/{photo}', [ReportController::class, 'showPhoto'])->name('photos.show');
-            Route::delete('/photos/{photo}', [ReportController::class, 'destroyPhoto'])->name('photos.destroy');
-        });
+        // Statistiques globales (toutes activités confondues).
+        Route::get('/statistiques', [StatisticsController::class, 'index'])->name('statistics');
 
-    // Diffusion du QR (projection tournante / impression statique / polling token).
-    Route::get('/events/{event}/projection', [EventQrController::class, 'projection'])->name('events.projection');
-    Route::get('/events/{event}/qr/current', [EventQrController::class, 'current'])->name('events.qr.current');
-    Route::get('/events/{event}/qr/print', [EventQrController::class, 'print'])->name('events.qr.print');
+        // Événements : liste + création + détail (liste de présence, stats).
+        Route::get('/events', [EventController::class, 'index'])->name('events.index');
+        Route::get('/events/create', [EventController::class, 'create'])->name('events.create');
+        Route::post('/events', [EventController::class, 'store'])->name('events.store');
+        Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
+        Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
+
+        // Recherche du référentiel « Personnel ACS Groupe » (combobox d'invitation).
+        Route::get('/people/search', [PersonSearchController::class, 'search'])->name('people.search');
+
+        // Présences d'un événement (liaisons imbriquées vérifiées).
+        Route::prefix('events/{event}/attendances')->name('events.attendances.')
+            ->scopeBindings()->group(function (): void {
+                Route::get('/feed', [AttendanceController::class, 'feed'])->name('feed');
+                Route::get('/export', [AttendanceController::class, 'export'])->name('export');
+                Route::get('/export.xlsx', [AttendanceController::class, 'exportXlsx'])->name('export.xlsx');
+                Route::get('/export.pdf', [AttendanceController::class, 'exportPdf'])->name('export.pdf');
+                Route::get('/badges', [AttendanceController::class, 'badges'])->name('badges');
+                Route::post('/manual', [AttendanceController::class, 'storeManual'])->name('manual');
+                Route::post('/{attendance}/departure', [AttendanceController::class, 'departure'])->name('departure');
+                Route::post('/{attendance}/undo-departure', [AttendanceController::class, 'undoDeparture'])->name('undo-departure');
+                Route::get('/{attendance}/signature', [AttendanceController::class, 'signature'])->name('signature');
+            });
+
+        // Cycle de vie d'un événement : annulation (réversible), report et mode QR.
+        Route::post('/events/{event}/cancel', [EventLifecycleController::class, 'cancel'])->name('events.cancel');
+        Route::post('/events/{event}/uncancel', [EventLifecycleController::class, 'uncancel'])->name('events.uncancel');
+        Route::post('/events/{event}/reschedule', [EventLifecycleController::class, 'reschedule'])->name('events.reschedule');
+        Route::patch('/events/{event}/qr-mode', [EventLifecycleController::class, 'changeQrMode'])->name('events.qr-mode');
+
+        // Documents et photos d'un événement (alimentent le Portfolio).
+        Route::prefix('events/{event}/report')->name('events.report.')
+            ->scopeBindings()->group(function (): void {
+                Route::post('/documents', [ReportController::class, 'uploadDocuments'])->name('documents.store');
+                // Service des médias depuis le disque PRIVÉ (jamais d'URL publique devinable).
+                Route::get('/documents/{document}', [ReportController::class, 'showDocument'])->name('documents.show');
+                Route::delete('/documents/{document}', [ReportController::class, 'destroyDocument'])->name('documents.destroy');
+                Route::post('/photos', [ReportController::class, 'uploadPhotos'])->name('photos.store');
+                Route::get('/photos/{photo}', [ReportController::class, 'showPhoto'])->name('photos.show');
+                Route::delete('/photos/{photo}', [ReportController::class, 'destroyPhoto'])->name('photos.destroy');
+            });
+
+        // Diffusion du QR (projection tournante / impression statique / polling token).
+        Route::get('/events/{event}/projection', [EventQrController::class, 'projection'])->name('events.projection');
+        Route::get('/events/{event}/qr/current', [EventQrController::class, 'current'])->name('events.qr.current');
+        Route::get('/events/{event}/qr/print', [EventQrController::class, 'print'])->name('events.qr.print');
+    });
 
     // Paramètres (administrateurs : AdminFiliale scopé à sa filiale, SuperAdmin
     // global/selon le contexte). Le cloisonnement par filiale des types, comptes
