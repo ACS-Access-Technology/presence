@@ -202,3 +202,12 @@ body{padding:0;background:var(--bg)}
 /* En-tête institutionnel : intégré au registre (pas de bandeau flottant) */
 .phone .inst-hd{padding:16px 22px 12px 40px}
 @media (min-width:640px){.phone .inst-hd{padding-left:52px}}
+
+/* Rencontre institutionnelle : en-tête empilé et centré (armoiries, logo,
+   puis intitulé et date), la marge de registre s'efface pour ne pas couper
+   l'axe central. */
+.phone:has(.inst-hd--stacked)::before{display:none}
+.phone .inst-hd--stacked{padding:22px 20px 14px}
+.appbar--centered{text-align:center;padding-inline:24px}
+.appbar--centered .appbar__title{text-wrap:balance}
+.phone:has(.inst-hd--stacked) .screen{padding-left:28px}

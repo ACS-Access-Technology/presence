@@ -32,8 +32,8 @@
 </head>
 <body>
     <div class="phone">
-        @include('partials.institutional-header')
-        <header class="appbar">
+        @include('partials.institutional-header', ['stacked' => true])
+        <header class="appbar{{ $branding->isInstitutional ? ' appbar--centered' : '' }}">
             @unless ($branding->isInstitutional)
                 <img src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
             @endunless
