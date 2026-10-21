@@ -47,6 +47,7 @@ final class PartnerController extends Controller
             'logo_path' => $request->file('logo')->store('partners', 'public'),
             'primary_color' => strtolower($data['primary_color']),
             'secondary_color' => isset($data['secondary_color']) ? strtolower($data['secondary_color']) : null,
+            'is_institutional' => $request->boolean('is_institutional'),
             'contact_name' => $data['contact_name'] ?? null,
             'contact_email' => $data['contact_email'] ?? null,
         ]);
@@ -59,6 +60,7 @@ final class PartnerController extends Controller
         $data = $request->validated();
         $attributes = [
             'name' => $data['name'],
+            'is_institutional' => $request->boolean('is_institutional'),
             'primary_color' => strtolower($data['primary_color']),
             'secondary_color' => isset($data['secondary_color']) ? strtolower($data['secondary_color']) : null,
             'contact_name' => $data['contact_name'] ?? null,

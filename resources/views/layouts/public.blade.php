@@ -32,8 +32,11 @@
 </head>
 <body>
     <div class="phone">
+        @include('partials.institutional-header')
         <header class="appbar">
-            <img src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+            @unless ($branding->isInstitutional)
+                <img src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
+            @endunless
             <div class="appbar__ev">
                 <span class="appbar__title">{{ $event->title }}</span>
                 <span class="appbar__meta">

@@ -24,6 +24,7 @@
     var pvLogo = $('pt-pv-logo');
     var pvName = $('pt-pv-name');
     var nameInput = $('pt-name');
+    var instBox = $('pt-institutional');
 
     var HEX = /^#[0-9a-f]{6}$/i;
 
@@ -78,6 +79,9 @@
             preview.style.setProperty('--pt-primary', primary.value);
         }
         pvName.textContent = nameInput.value.trim() || 'Nom du partenaire';
+        var inst = instBox && instBox.checked;
+        $('pt-pv-state').hidden = !inst;
+        pvName.parentNode.classList.toggle('is-inst', !!inst);
     }
 
     /* Couleurs dominantes : image réduite à 64 px, pixels regroupés par
@@ -224,6 +228,7 @@
         setColor('secondary', secondary.value.trim());
     });
     nameInput.addEventListener('input', refreshPreview);
+    if (instBox) { instBox.addEventListener('change', refreshPreview); }
 
     function open(partner) {
         form.hidden = false;
@@ -234,6 +239,7 @@
         nameInput.value = partner ? partner.name : '';
         $('pt-contact-name').value = partner ? (partner.contact_name || '') : '';
         $('pt-contact-email').value = partner ? (partner.contact_email || '') : '';
+        instBox.checked = !!(partner && partner.is_institutional);
         logoInput.value = '';
         var filialeField = $('pt-filiale-field');
         if (filialeField) { filialeField.hidden = !!partner; }

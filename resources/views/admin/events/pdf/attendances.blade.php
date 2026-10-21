@@ -8,6 +8,13 @@
         .head{width:100%;border-bottom:3px solid {{ $branding->accentColorOrDefault() }};padding-bottom:8px;margin-bottom:10px}
         .head td{border:none;padding:0;vertical-align:middle}
         .head__logo{height:46px;max-width:180px}
+        .head__arms{height:52px}
+        .state{display:inline-block;text-align:center}
+        .state__rep{font-size:7.5px;font-weight:700;letter-spacing:.04em}
+        .state__motto{font-size:7px;font-style:italic;color:#4d5a52}
+        .flag{width:54px;margin:3px auto 0;border-collapse:collapse;table-layout:fixed}
+        .flag td{height:3px;padding:0;border:none}
+        .flag .f1{background:#f77f00}.flag .f2{background:#fff;border-top:1px solid #d9ded9;border-bottom:1px solid #d9ded9}.flag .f3{background:#009e60}
         .head__org{font-size:13px;font-weight:700;color:{{ $branding->accentColorOrDefault() }};text-align:right}
         .meta{color:#565d6b;font-size:10px;margin:0 0 14px}
         table{width:100%;border-collapse:collapse;table-layout:fixed}
@@ -24,10 +31,26 @@
 </head>
 <body>
     <table class="head">
-        <tr>
-            <td>@if ($logoDataUri)<img class="head__logo" src="{{ $logoDataUri }}" alt="">@endif</td>
-            <td class="head__org">{{ $branding->orgName }}</td>
-        </tr>
+        @if ($branding->isInstitutional)
+            {{-- En-tête officiel : armoiries à gauche, logo au centre, nom à droite. --}}
+            <tr>
+                <td style="width:33%">
+                    <div class="state">
+                        <img class="head__arms" src="{{ \App\Support\Branding::coatOfArmsDataUri() }}" alt=""><br>
+                        <span class="state__rep">RÉPUBLIQUE DE CÔTE D'IVOIRE</span><br>
+                        <span class="state__motto">Union – Discipline – Travail</span><br>
+                        <table class="flag"><tr><td class="f1"></td><td class="f2"></td><td class="f3"></td></tr></table>
+                    </div>
+                </td>
+                <td style="width:34%;text-align:center">@if ($logoDataUri)<img class="head__logo" src="{{ $logoDataUri }}" alt="">@endif</td>
+                <td class="head__org" style="width:33%">{{ $branding->orgName }}</td>
+            </tr>
+        @else
+            <tr>
+                <td>@if ($logoDataUri)<img class="head__logo" src="{{ $logoDataUri }}" alt="">@endif</td>
+                <td class="head__org">{{ $branding->orgName }}</td>
+            </tr>
+        @endif
     </table>
     <h1>{{ $event->title }}</h1>
     <p class="meta">

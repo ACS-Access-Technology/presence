@@ -62,6 +62,14 @@
                             <div class="err-msg">{{ $errors->first('name') }}</div>
                         </div>
 
+                        <label class="pt-check" for="pt-institutional">
+                            <input type="checkbox" id="pt-institutional" name="is_institutional" value="1" @checked(old('is_institutional'))>
+                            <span>
+                                <strong>Partenaire institutionnel</strong>
+                                <span class="pt-check__help">Administration ivoirienne : toutes ses rencontres portent l'en-tête officiel, avec les armoiries de la Côte d'Ivoire à gauche, son logo au centre et son nom à droite.</span>
+                            </span>
+                        </label>
+
                         <div class="field {{ $errors->has('logo') ? 'invalid' : '' }}">
                             <span class="pt-label" id="pt-logo-label">Logo <span class="req" id="pt-logo-req">*</span></span>
                             {{-- Zone de dépôt : l'input natif reste dans le label (clic, clavier,
@@ -139,6 +147,12 @@
                         <div class="pt-preview__lbl">Aperçu de la feuille d'émargement</div>
                         <div class="pt-sheet">
                             <div class="pt-sheet__head">
+                                <span class="pt-sheet__state" id="pt-pv-state" hidden>
+                                    <img src="{{ asset(\App\Support\Branding::COAT_OF_ARMS) }}" alt="">
+                                    <small>République de Côte d'Ivoire</small>
+                                    <em>Union – Discipline – Travail</em>
+                                    <span class="pt-flag" aria-hidden="true"><i></i><i></i><i></i></span>
+                                </span>
                                 <img id="pt-pv-logo" alt="" hidden>
                                 <span id="pt-pv-name">Nom du partenaire</span>
                             </div>
@@ -175,6 +189,7 @@
                             <span class="pt-name">
                                 <img src="{{ asset('storage/'.$partner->logo_path) }}" alt="">
                                 {{ $partner->name }}
+                                @if ($partner->is_institutional)<span class="tag tag--type" style="--tc:#009e60;color:var(--tc);background:color-mix(in srgb, var(--tc) 14%, transparent)">Institutionnel</span>@endif
                             </span>
                         </td>
                         <td>
@@ -191,6 +206,7 @@
                                         'name' => $partner->name,
                                         'primary_color' => $partner->primary_color,
                                         'secondary_color' => $partner->secondary_color,
+                                        'is_institutional' => $partner->is_institutional,
                                         'contact_name' => $partner->contact_name,
                                         'contact_email' => $partner->contact_email,
                                         'logo_url' => asset('storage/'.$partner->logo_path),

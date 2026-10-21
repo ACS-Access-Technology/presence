@@ -278,4 +278,37 @@ class PartnerMeetingTest extends TestCase
         $this->assertContains($response->status(), [403, 404]);
         $this->assertSame('awa.kone@dgf.gouv.ci', $event->fresh()->partner_recipient_email);
     }
+
+    public function test_un_partenaire_institutionnel_affiche_l_en_tete_officiel(): void
+    {
+        $this->actingAs($this->organisateur)->post(route('admin.partners.store'), [
+            'name' => 'Direction générale des impôts',
+            'logo' => UploadedFile::fake()->image('dgi.png', 120, 120),
+            'primary_color' => '#0b5e3c',
+            'is_institutional' => '1',
+        ])->assertSessionHasNoErrors();
+
+        $partner = Partner::where('name', 'Direction générale des impôts')->sole();
+        $this->assertTrue($partner->is_institutional);
+
+        $event = $this->meeting($partner, mode: QrMode::Statique);
+        $this->assertTrue(Branding::forEvent($event)->isInstitutional);
+
+        $this->get(route('public.attendance.show', ['event' => $event->public_slug]))
+            ->assertOk()
+            ->assertSee('armoiries-ci.svg', false)
+            ->assertSee("République de Côte d'Ivoire", false)
+            ->assertSee('Union – Discipline – Travail');
+
+        $this->assertStringStartsWith('%PDF', app(AttendanceSheetPdf::class)->renderAll($event));
+    }
+
+    public function test_un_partenaire_non_institutionnel_n_a_pas_les_armoiries(): void
+    {
+        $event = $this->meeting($this->partner(), mode: QrMode::Statique);
+
+        $this->get(route('public.attendance.show', ['event' => $event->public_slug]))
+            ->assertOk()
+            ->assertDontSee('armoiries-ci.svg', false);
+    }
 }
