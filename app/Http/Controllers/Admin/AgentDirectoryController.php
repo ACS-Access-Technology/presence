@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\UserRole;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateAgentDirectoryRequest;
 use App\Models\User;
@@ -56,8 +57,17 @@ final class AgentDirectoryController extends Controller
         // ce garde explicite, la comparaison `!==` laisserait passer un tel
         // compte contre N'IMPORTE QUEL autre compte à filiale_id NULL, y compris
         // un SuperAdmin (lui aussi à filiale_id NULL par conception).
+        //
+        // Hiérarchie : un AdminFiliale n'édite que les comptes de rang inférieur
+        // (Organisateur, Agent) — jamais un autre AdminFiliale ni un SuperAdmin,
+        // même dans sa filiale. Seul le SuperAdmin édite toutes les fiches.
         $actor = $request->user();
-        if (! $actor->isSuperAdmin() && ($actor->filiale_id === null || $agent->filiale_id !== $actor->filiale_id)) {
+        if (! $actor->isSuperAdmin() && (
+            $actor->filiale_id === null
+            || $agent->filiale_id !== $actor->filiale_id
+            || $agent->isSuperAdmin()
+            || $agent->role === UserRole::AdminFiliale
+        )) {
             abort(403);
         }
 

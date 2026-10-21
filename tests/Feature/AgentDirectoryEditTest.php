@@ -73,4 +73,17 @@ class AgentDirectoryEditTest extends TestCase
             'phone' => '+225 0000000000',
         ])->assertForbidden();
     }
+
+    public function test_un_admin_filiale_ne_peut_pas_editer_un_autre_admin_de_sa_filiale(): void
+    {
+        $filiale = Filiale::factory()->create();
+        $admin = User::factory()->filialeAdmin()->forFiliale($filiale)->create();
+        $pair = User::factory()->filialeAdmin()->forFiliale($filiale)->create(['direction' => 'Original']);
+
+        $this->actingAs($admin)->patch(route('admin.annuaire.update', $pair), [
+            'direction' => 'Modifié',
+        ])->assertForbidden();
+
+        $this->assertDatabaseHas('users', ['id' => $pair->id, 'direction' => 'Original']);
+    }
 }
