@@ -141,6 +141,41 @@
                     </div>
                 </div>
 
+                {{-- Rencontre partenaire (facultatif) : identité visuelle du partenaire
+                     sur toutes les surfaces + envoi automatique de la feuille PDF au
+                     destinataire choisi ici, à la clôture. --}}
+                @if ($partners->isNotEmpty())
+                    @php($chosenPartner = old('partner_id', $selectedPartnerId))
+                    <div class="card" id="partner-card">
+                        <div class="card__body">
+                            <h2>Pour un partenaire <span class="opt" style="font-weight:400;font-size:.85rem">(facultatif)</span></h2>
+                            <p class="desc">QR code, page d'émargement et feuille PDF aux couleurs du partenaire. À la fin de la réunion, la feuille lui est envoyée automatiquement.</p>
+                            <div class="field {{ $errors->has('partner_id') ? 'invalid' : '' }}">
+                                <label for="partner-id">Partenaire</label>
+                                <select class="control" id="partner-id" name="partner_id">
+                                    <option value="">Aucun — réunion ACS</option>
+                                    @foreach ($partners as $p)
+                                        <option value="{{ $p->id }}" data-contact-name="{{ $p->contact_name }}" data-contact-email="{{ $p->contact_email }}" @selected((string) $chosenPartner === (string) $p->id)>{{ $p->name }}</option>
+                                    @endforeach
+                                </select>
+                                <div class="err-msg">{{ $errors->first('partner_id') }}</div>
+                            </div>
+                            <div class="grid2" id="partner-recipient" @if (! $chosenPartner) hidden @endif>
+                                <div class="field {{ $errors->has('partner_recipient_name') ? 'invalid' : '' }}">
+                                    <label for="partner-recipient-name">Destinataire de la feuille</label>
+                                    <input class="control" id="partner-recipient-name" name="partner_recipient_name" value="{{ old('partner_recipient_name') }}" placeholder="Nom et prénom" maxlength="150">
+                                    <div class="err-msg">{{ $errors->first('partner_recipient_name') }}</div>
+                                </div>
+                                <div class="field {{ $errors->has('partner_recipient_email') ? 'invalid' : '' }}">
+                                    <label for="partner-recipient-email">Son email <span class="req">*</span></label>
+                                    <input class="control" id="partner-recipient-email" name="partner_recipient_email" type="email" value="{{ old('partner_recipient_email') }}" maxlength="191">
+                                    <div class="err-msg">{{ $errors->first('partner_recipient_email') }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- 2. Mode QR --}}
                 <div class="card">
                     <div class="card__body">
@@ -263,4 +298,25 @@
         };
     </script>
     <script src="{{ versioned_asset('js/event-create.js') }}"></script>
+    <script>
+        /* Partenaire : affiche le destinataire et le pré-remplit avec le contact
+           habituel du partenaire (modifiable — c'est la valeur saisie ici qui fait foi). */
+        (function () {
+            var select = document.getElementById('partner-id');
+            if (!select) { return; }
+            var box = document.getElementById('partner-recipient');
+            var name = document.getElementById('partner-recipient-name');
+            var email = document.getElementById('partner-recipient-email');
+            function sync(prefill) {
+                var opt = select.options[select.selectedIndex];
+                box.hidden = select.value === '';
+                if (prefill && select.value !== '') {
+                    name.value = opt.dataset.contactName || '';
+                    email.value = opt.dataset.contactEmail || '';
+                }
+            }
+            select.addEventListener('change', function () { sync(true); });
+            sync(email.value === '');
+        })();
+    </script>
 @endpush

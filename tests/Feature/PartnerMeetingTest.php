@@ -1,0 +1,243 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Tests\Feature;
+
+use App\Enums\QrMode;
+use App\Jobs\SendPartnerAttendanceSheet;
+use App\Mail\PartnerAttendanceSheetMail;
+use App\Models\Event;
+use App\Models\EventType;
+use App\Models\Filiale;
+use App\Models\Partner;
+use App\Models\User;
+use App\Services\AttendanceSheetPdf;
+use App\Support\Branding;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use Tests\TestCase;
+
+/**
+ * Rencontres partenaires : référentiel des partenaires (marque blanche), choix du
+ * destinataire à la création de la rencontre, envoi automatique de la feuille
+ * d'émargement PDF à la clôture.
+ */
+class PartnerMeetingTest extends TestCase
+{
+    use RefreshDatabase;
+
+    private Filiale $filiale;
+
+    private User $organisateur;
+
+    private EventType $type;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Storage::fake('public');
+        $this->filiale = Filiale::factory()->create();
+        $this->organisateur = User::factory()->forFiliale($this->filiale)->create();
+        $this->type = EventType::create([
+            'filiale_id' => $this->filiale->id, 'name' => 'Réunion', 'color' => '#2563eb', 'position' => 0,
+        ]);
+    }
+
+    private function partner(array $overrides = []): Partner
+    {
+        Storage::disk('public')->put('partners/dgf.png', UploadedFile::fake()->image('dgf.png', 40, 40)->getContent());
+
+        return Partner::factory()->create([
+            'filiale_id' => $this->filiale->id,
+            'name' => 'Direction générale des finances',
+            'logo_path' => 'partners/dgf.png',
+            'primary_color' => '#0b5e3c',
+            'contact_name' => 'Awa Koné',
+            'contact_email' => 'awa.kone@dgf.gouv.ci',
+        ] + $overrides);
+    }
+
+    private function meeting(Partner $partner, bool $ended = false, QrMode $mode = QrMode::Tournant): Event
+    {
+        return Event::create([
+            'filiale_id' => $this->filiale->id,
+            'title' => 'Atelier DGF',
+            'event_type_id' => $this->type->id,
+            'partner_id' => $partner->id,
+            'partner_recipient_name' => 'Awa Koné',
+            'partner_recipient_email' => 'awa.kone@dgf.gouv.ci',
+            'starts_at' => $ended ? Carbon::now()->subHours(3) : Carbon::now()->subHour(),
+            'ends_at' => $ended ? Carbon::now()->subHours(2) : Carbon::now()->addHour(),
+            'qr_mode' => $mode->value,
+            'qr_secret' => Str::random(32),
+            'public_slug' => 'ev-'.Str::random(8),
+        ]);
+    }
+
+    // ---------- Référentiel partenaires ----------
+
+    public function test_un_organisateur_cree_un_partenaire_avec_son_logo(): void
+    {
+        $this->actingAs($this->organisateur)->post(route('admin.partners.store'), [
+            'name' => 'Direction générale des finances',
+            'logo' => UploadedFile::fake()->image('dgf.png', 120, 120),
+            'primary_color' => '#0B5E3C',
+            'contact_email' => 'awa.kone@dgf.gouv.ci',
+        ])->assertRedirect(route('admin.partners.index'));
+
+        $partner = Partner::sole();
+        $this->assertSame($this->filiale->id, $partner->filiale_id);
+        $this->assertSame('#0b5e3c', $partner->primary_color);
+        Storage::disk('public')->assertExists($partner->logo_path);
+    }
+
+    public function test_un_logo_svg_est_refuse(): void
+    {
+        $svg = UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+
+        $this->actingAs($this->organisateur)->post(route('admin.partners.store'), [
+            'name' => 'Partenaire piégé',
+            'logo' => $svg,
+            'primary_color' => '#0b5e3c',
+        ])->assertSessionHasErrors('logo');
+
+        $this->assertSame(0, Partner::count());
+    }
+
+    public function test_un_logo_svg_est_refuse_dans_les_parametres(): void
+    {
+        $admin = User::factory()->filialeAdmin()->forFiliale($this->filiale)->create();
+        $svg = UploadedFile::fake()->createWithContent('logo.svg', '<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>');
+
+        $this->actingAs($admin)->post(route('admin.settings.branding'), [
+            'org_name' => 'Filiale', 'logo' => $svg,
+        ])->assertSessionHasErrors('logo');
+    }
+
+    public function test_les_partenaires_sont_cloisonnes_par_filiale(): void
+    {
+        $this->partner();
+        $autre = User::factory()->forFiliale(Filiale::factory()->create())->create();
+
+        $this->actingAs($autre)->get(route('admin.partners.index'))
+            ->assertOk()
+            ->assertDontSee('awa.kone@dgf.gouv.ci');
+    }
+
+    public function test_un_agent_n_accede_pas_aux_rencontres_partenaires(): void
+    {
+        $agent = User::factory()->agent()->forFiliale($this->filiale)->create();
+
+        $this->actingAs($agent)->get(route('admin.partners.index'))->assertForbidden();
+    }
+
+    // ---------- Création d'une rencontre ----------
+
+    public function test_creer_une_rencontre_exige_le_destinataire_de_la_feuille(): void
+    {
+        $partner = $this->partner();
+        $payload = [
+            'title' => 'Atelier DGF', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'tournant', 'partner_id' => $partner->id,
+        ];
+
+        $this->actingAs($this->organisateur)->post(route('admin.events.store'), $payload)
+            ->assertSessionHasErrors('partner_recipient_email');
+
+        $this->actingAs($this->organisateur)->post(route('admin.events.store'), $payload + [
+            'partner_recipient_name' => 'Awa Koné', 'partner_recipient_email' => 'awa.kone@dgf.gouv.ci',
+        ])->assertSessionHasNoErrors();
+
+        $event = Event::sole();
+        $this->assertSame($partner->id, $event->partner_id);
+        $this->assertSame('awa.kone@dgf.gouv.ci', $event->partner_recipient_email);
+    }
+
+    public function test_un_partenaire_d_une_autre_filiale_est_refuse(): void
+    {
+        $etranger = Partner::factory()->create(['filiale_id' => Filiale::factory()->create()->id]);
+
+        $this->actingAs($this->organisateur)->post(route('admin.events.store'), [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'tournant', 'partner_id' => $etranger->id,
+            'partner_recipient_email' => 'x@exemple.ci',
+        ])->assertSessionHasErrors('partner_id');
+    }
+
+    public function test_le_formulaire_preselectionne_le_partenaire(): void
+    {
+        $partner = $this->partner();
+
+        $this->actingAs($this->organisateur)->get(route('admin.events.create', ['partner' => $partner->id]))
+            ->assertOk()
+            ->assertSee('value="'.$partner->id.'"', false)
+            ->assertSee('awa.kone@dgf.gouv.ci');
+    }
+
+    // ---------- Marque blanche ----------
+
+    public function test_la_page_d_emargement_est_aux_couleurs_du_partenaire(): void
+    {
+        $event = $this->meeting($this->partner(), mode: QrMode::Statique);
+
+        $branding = Branding::forEvent($event);
+        $this->assertSame('Direction générale des finances', $branding->orgName);
+        $this->assertSame('#0b5e3c', $branding->accentColor);
+
+        $this->get(route('public.attendance.show', ['event' => $event->public_slug]))
+            ->assertOk()
+            ->assertSee('<title>Émargement — Direction générale des finances</title>', false)
+            ->assertSee('pour le compte de Direction générale des finances')
+            ->assertDontSee('· Presence');
+    }
+
+    // ---------- Envoi automatique à la clôture ----------
+
+    public function test_la_cloture_met_en_file_l_envoi_de_la_feuille_une_seule_fois(): void
+    {
+        Queue::fake();
+        $event = $this->meeting($this->partner(), ended: true);
+
+        $this->artisan('events:close-due')->assertSuccessful();
+        $this->artisan('events:close-due')->assertSuccessful();
+
+        Queue::assertPushed(SendPartnerAttendanceSheet::class, 1);
+        Queue::assertPushed(SendPartnerAttendanceSheet::class, fn ($job) => $job->eventId === $event->id);
+    }
+
+    public function test_la_feuille_pdf_part_au_destinataire_choisi_et_une_seule_fois(): void
+    {
+        Mail::fake();
+        $event = $this->meeting($this->partner(), ended: true);
+        $event->forceFill(['closed_at' => Carbon::now()])->save();
+
+        (new SendPartnerAttendanceSheet($event->id))->handle(app(AttendanceSheetPdf::class));
+        (new SendPartnerAttendanceSheet($event->id))->handle(app(AttendanceSheetPdf::class));
+
+        Mail::assertSent(PartnerAttendanceSheetMail::class, 1);
+        Mail::assertSent(PartnerAttendanceSheetMail::class, fn (PartnerAttendanceSheetMail $mail): bool => $mail->hasTo('awa.kone@dgf.gouv.ci'));
+        $this->assertNotNull($event->fresh()->partner_sheet_sent_at);
+    }
+
+    public function test_le_mail_contient_le_pdf_aux_couleurs_du_partenaire(): void
+    {
+        $event = $this->meeting($this->partner(), ended: true);
+        $pdf = app(AttendanceSheetPdf::class)->renderAll($event);
+
+        $this->assertStringStartsWith('%PDF', $pdf);
+
+        $mail = new PartnerAttendanceSheetMail($event, $pdf);
+        $mail->assertHasSubject("Liste d'émargement — Atelier DGF");
+        $mail->assertSeeInHtml('Direction générale des finances');
+        $mail->assertDontSeeInHtml('Presence');
+        $this->assertCount(1, $mail->attachments());
+    }
+}

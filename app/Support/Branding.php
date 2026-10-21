@@ -6,6 +6,7 @@ namespace App\Support;
 
 use App\Http\Controllers\Admin\SettingsController;
 use App\Models\Event;
+use App\Models\Partner;
 use App\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 
@@ -26,6 +27,12 @@ use Illuminate\Support\Facades\Storage;
  * ou une page publique consultée par un visiteur anonyme n'a AUCUNE session admin
  * active ; se fier au contexte SuperAdmin qui aurait déclenché l'action donnerait
  * le mauvais branding (bug identité visuelle P1).
+ *
+ * Rencontre partenaire : quand l'événement est organisé pour le compte d'un
+ * partenaire, SON identité (nom, logo, couleur) remplace intégralement celle de
+ * la filiale (marque blanche, décision produit du 2026-10-21). `onBehalfOf`
+ * garde alors le nom du partenaire pour la seule mention RGPD, qui doit rester
+ * vraie : c'est ACS Groupe qui collecte et conserve les données.
  */
 final class Branding
 {
@@ -40,12 +47,49 @@ final class Branding
         public readonly string $logoUrl,
         public readonly ?string $accentColor,
         public readonly bool $hasCustomLogo,
+        public readonly ?string $onBehalfOf = null,
+        public readonly ?string $logoPublicPath = null,
     ) {}
 
-    /** Branding de la filiale à laquelle appartient l'événement. */
+    /**
+     * Branding d'un événement : celui de son partenaire s'il en a un, sinon celui
+     * de sa filiale.
+     */
     public static function forEvent(Event $event): self
     {
-        return self::forFiliale($event->filiale_id);
+        $partner = $event->partner_id !== null ? $event->partner : null;
+
+        return $partner instanceof Partner
+            ? self::forPartner($partner)
+            : self::forFiliale($event->filiale_id);
+    }
+
+    /** Identité visuelle d'un partenaire (marque blanche). */
+    public static function forPartner(Partner $partner): self
+    {
+        return new self(
+            orgName: $partner->name,
+            logoUrl: Storage::disk('public')->url($partner->logo_path),
+            accentColor: self::sanitizeHex($partner->primary_color),
+            hasCustomLogo: true,
+            onBehalfOf: $partner->name,
+            logoPublicPath: $partner->logo_path,
+        );
+    }
+
+    /**
+     * Logo encodé en data URI pour dompdf (qui ne charge pas d'URL distante en
+     * configuration par défaut). `null` si aucun logo propre n'est lisible.
+     */
+    public function logoDataUri(): ?string
+    {
+        if ($this->logoPublicPath === null || ! Storage::disk('public')->exists($this->logoPublicPath)) {
+            return null;
+        }
+
+        $mime = Storage::disk('public')->mimeType($this->logoPublicPath) ?: 'image/png';
+
+        return 'data:'.$mime.';base64,'.base64_encode((string) Storage::disk('public')->get($this->logoPublicPath));
     }
 
     /** Branding effectif d'une filiale (défaut : holding si `null`). */
@@ -63,6 +107,7 @@ final class Branding
                 : asset(self::FALLBACK_LOGO),
             accentColor: self::sanitizeHex($branding['accent_color']),
             hasCustomLogo: $hasCustomLogo,
+            logoPublicPath: $hasCustomLogo ? $logoPath : null,
         );
     }
 

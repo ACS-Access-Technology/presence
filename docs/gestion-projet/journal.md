@@ -5,6 +5,28 @@
 
 ---
 
+## 2026-10-21 — Rencontres partenaires (marque blanche) + faille logos SVG
+
+Besoin (Férié) : organiser des réunions **pour le compte d'un client** (1er : Direction
+générale des finances) et en faire un outil commercial pour tous les clients rencontrés.
+Cadrage en table ronde, décisions :
+- Rubrique **« Rencontres partenaires »** : partenaire enregistré une fois (nom, logo,
+  couleurs proposées automatiquement depuis le logo par une pipette côté navigateur,
+  contact habituel), cloisonné par filiale.
+- **Marque blanche totale** sur les surfaces vues par le client et les participants (QR
+  projeté/imprimé, page d'émargement, emails, feuille PDF) — aucune mention « Presence »
+  ni signature ACS (« propulsé par » refusé). Seule exception : la mention RGPD reste
+  vraie (« ACS Groupe collecte… pour le compte de <partenaire> »).
+- **Un destinataire** choisi à la création de la réunion ; à la clôture, la feuille PDF à
+  l'en-tête du partenaire lui part **automatiquement** (job en file, idempotent).
+- Logos : PNG/JPG/WebP uniquement. **Faille corrigée** : les Paramètres acceptaient des
+  logos SVG servis depuis le domaine de l'app (XSS stockée possible).
+
+Hors périmètre V1 : export XLSX aux couleurs du partenaire, modification du partenaire
+d'une réunion existante, suppression de partenaire.
+
+---
+
 ## 2026-07-25 — 11 anomalies d'audit corrigées, gate sécurité PASS
 
 Deux audits externes (client) ont livré 14 anomalies au total. Traitées en 2 vagues

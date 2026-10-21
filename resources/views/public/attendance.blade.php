@@ -171,7 +171,7 @@
                 <button class="modal__x" aria-label="Fermer" data-close><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" width="20" height="20" aria-hidden="true"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button>
             </div>
             <h2 id="m-men-t">Traitement de vos données</h2>
-            <p>ACS Groupe collecte ces informations (identité, coordonnées, structure, position et signature) dans le seul but d'établir la liste de présence de cet événement.</p>
+            <p>ACS Groupe collecte ces informations (identité, coordonnées, structure, position et signature)@if ($branding->onBehalfOf) pour le compte de {{ $branding->onBehalfOf }},@endif dans le seul but d'établir la liste de présence de cet événement.</p>
             <p style="margin-top:8px">Détail complet — collecte, conservation, droits — dans notre <a href="{{ route('legal.confidentialite') }}" target="_blank" rel="noopener">politique de confidentialité</a>.</p>
             <hr class="modal__sep">
             <div class="modal__foot"><button type="button" class="btn btn--primary" data-close>J'ai compris</button></div>

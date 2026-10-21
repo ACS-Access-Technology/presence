@@ -7,6 +7,7 @@ namespace App\Http\Requests\Admin;
 use App\Enums\QrMode;
 use App\Models\EventType;
 use App\Models\Filiale;
+use App\Models\Partner;
 use App\Models\Scopes\FilialeScope;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -50,6 +51,13 @@ class StoreEventRequest extends FormRequest
             'geofence_radius_m' => ['nullable', 'integer', 'min:10', 'max:5000', 'required_if:qr_mode,statique', 'required_with:geofence_latitude,geofence_longitude'],
 
             'qr_mode' => ['required', new Enum(QrMode::class)],
+            // Rencontre partenaire : le destinataire de la feuille d'émargement est
+            // obligatoire dès qu'un partenaire est choisi (sinon l'envoi automatique
+            // n'aurait nulle part où aller). Appartenance à la filiale vérifiée
+            // dans withValidator().
+            'partner_id' => ['nullable', 'integer'],
+            'partner_recipient_name' => ['nullable', 'string', 'max:150'],
+            'partner_recipient_email' => ['nullable', 'required_with:partner_id', 'email:rfc', 'max:191'],
             'invitees' => ['sometimes', 'array'],
             'invitees.*' => ['integer', 'exists:people,id'],
             // Séances additionnelles (sessions multiples, ex. formation sur 3 jours).
@@ -100,6 +108,15 @@ class StoreEventRequest extends FormRequest
                     ->exists()) {
                 $v->errors()->add('event_type_id', "Ce type d'événement n'appartient pas à la filiale sélectionnée.");
             }
+
+            $partnerId = $this->input('partner_id');
+            if ($partnerId !== null && $partnerId !== ''
+                && ! Partner::withoutGlobalScope(FilialeScope::class)
+                    ->whereKey($partnerId)
+                    ->where('filiale_id', $target)
+                    ->exists()) {
+                $v->errors()->add('partner_id', "Ce partenaire n'appartient pas à la filiale sélectionnée.");
+            }
         });
     }
 
@@ -132,6 +149,8 @@ class StoreEventRequest extends FormRequest
             'start.required' => 'L\'heure de début est requise.',
             'end.required' => 'L\'heure de fin est requise.',
             'end.after' => 'La fin doit être après le début.',
+            'partner_recipient_email.required_with' => "Indiquez l'email de la personne qui recevra la feuille d'émargement.",
+            'partner_recipient_email.email' => 'Adresse email invalide.',
             'geofence_latitude.required_if' => 'En mode QR statique, le périmètre anti-fraude est obligatoire (le QR fixe est photographiable) : renseignez la latitude.',
             'geofence_longitude.required_if' => 'En mode QR statique, le périmètre anti-fraude est obligatoire : renseignez la longitude.',
             'geofence_radius_m.required_if' => 'En mode QR statique, le périmètre anti-fraude est obligatoire : renseignez le rayon (en mètres).',

@@ -12,6 +12,7 @@ use App\Models\Event;
 use App\Models\EventSeries;
 use App\Models\EventType;
 use App\Models\Filiale;
+use App\Models\Partner;
 use App\Models\Scopes\FilialeScope;
 use App\Services\EventPresenceService;
 use App\Support\FilialeScoping;
@@ -110,6 +111,10 @@ class EventController extends Controller
             'filiales' => $mustChooseFiliale
                 ? Filiale::where('is_active', true)->orderBy('name')->get(['id', 'name'])
                 : collect(),
+            // Rencontres partenaires : `?partner=ID` (bouton « Nouvelle rencontre »)
+            // présélectionne le partenaire ; la liste est cloisonnée par le scope.
+            'partners' => Partner::orderBy('name')->get(['id', 'name', 'contact_name', 'contact_email']),
+            'selectedPartnerId' => $request->integer('partner') ?: null,
         ]);
     }
 
@@ -142,6 +147,9 @@ class EventController extends Controller
                     'filiale_id' => $filialeId,
                     'title' => $data['title'],
                     'event_type_id' => $data['event_type_id'],
+                    'partner_id' => $data['partner_id'] ?? null,
+                    'partner_recipient_name' => isset($data['partner_id']) ? ($data['partner_recipient_name'] ?? null) : null,
+                    'partner_recipient_email' => isset($data['partner_id']) ? ($data['partner_recipient_email'] ?? null) : null,
                     'starts_at' => Carbon::parse($seance['date'].' '.$seance['start']),
                     'ends_at' => Carbon::parse($seance['date'].' '.$seance['end']),
                     'grace_check_in_enabled' => $data['grace_check_in_enabled'] ?? false,
