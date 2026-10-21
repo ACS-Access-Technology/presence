@@ -266,4 +266,16 @@ class PartnerMeetingTest extends TestCase
 
         Mail::assertNothingSent();
     }
+
+    public function test_le_destinataire_d_une_reunion_d_une_autre_filiale_est_intouchable(): void
+    {
+        $event = $this->meeting($this->partner());
+        $intrus = User::factory()->forFiliale(Filiale::factory()->create())->create();
+
+        $response = $this->actingAs($intrus)
+            ->patch(route('admin.events.partner-recipient', $event), ['partner_recipient_email' => 'pirate@exemple.ci']);
+
+        $this->assertContains($response->status(), [403, 404]);
+        $this->assertSame('awa.kone@dgf.gouv.ci', $event->fresh()->partner_recipient_email);
+    }
 }

@@ -20,6 +20,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -125,6 +126,8 @@ class EventController extends Controller
      */
     public function updatePartnerRecipient(Request $request, Event $event): RedirectResponse
     {
+        // Seconde barrière (RME-1) après le global scope de filiale (binding → 404).
+        Gate::authorize('update', $event);
         abort_if($event->partner_id === null || $event->closed_at !== null || $event->partner_sheet_sent_at !== null, 403);
 
         $data = $request->validate([
