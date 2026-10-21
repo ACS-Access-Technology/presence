@@ -62,6 +62,39 @@
         </div>
     </div>
 
+    @if ($event->partner)
+        {{-- Rencontre partenaire : destinataire de la feuille visible et corrigeable
+             jusqu'à l'envoi (une faute de frappe enverrait les données à un inconnu). --}}
+        <div class="card" style="margin-bottom:16px">
+            <div class="card__body">
+                <h2 style="font-size:1rem;margin:0 0 6px">Rencontre pour {{ $event->partner->name }}</h2>
+                @if ($event->partner_sheet_sent_at)
+                    <p class="mut" style="margin:0">Feuille d'émargement envoyée le {{ $event->partner_sheet_sent_at->translatedFormat('j M Y à H:i') }} à <strong>{{ $event->partner_recipient_name }}</strong> <span class="mono">{{ $event->partner_recipient_email }}</span>.</p>
+                @elseif ($event->closed_at)
+                    <p class="mut" style="margin:0">Envoi de la feuille d'émargement en cours à <span class="mono">{{ $event->partner_recipient_email }}</span>.</p>
+                @else
+                    <form method="POST" action="{{ route('admin.events.partner-recipient', $event) }}" class="grid2" style="align-items:end" novalidate>
+                        @csrf
+                        @method('PATCH')
+                        <div class="field {{ $errors->has('partner_recipient_name') ? 'invalid' : '' }}" style="margin:0">
+                            <label for="pr-name">La feuille sera envoyée à la fin de la réunion à</label>
+                            <input class="control" id="pr-name" name="partner_recipient_name" value="{{ old('partner_recipient_name', $event->partner_recipient_name) }}" placeholder="Nom et prénom" maxlength="150">
+                            <div class="err-msg">{{ $errors->first('partner_recipient_name') }}</div>
+                        </div>
+                        <div class="field {{ $errors->has('partner_recipient_email') ? 'invalid' : '' }}" style="margin:0">
+                            <label for="pr-email">Email <span class="req">*</span></label>
+                            <div style="display:flex;gap:8px">
+                                <input class="control" id="pr-email" name="partner_recipient_email" type="email" value="{{ old('partner_recipient_email', $event->partner_recipient_email) }}" maxlength="191" required>
+                                <button type="submit" class="btn btn--ghost btn--sm">Enregistrer</button>
+                            </div>
+                            <div class="err-msg">{{ $errors->first('partner_recipient_email') }}</div>
+                        </div>
+                    </form>
+                @endif
+            </div>
+        </div>
+    @endif
+
     <div class="event-actions" aria-label="Actions de l'événement">
         <div class="event-actions__main">
             @if($event->qr_mode === QrMode::Tournant)

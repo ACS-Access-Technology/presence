@@ -113,9 +113,31 @@ class EventController extends Controller
                 : collect(),
             // Rencontres partenaires : `?partner=ID` (bouton « Nouvelle rencontre »)
             // présélectionne le partenaire ; la liste est cloisonnée par le scope.
-            'partners' => Partner::orderBy('name')->get(['id', 'name', 'contact_name', 'contact_email']),
+            'partners' => Partner::orderBy('name')->get(['id', 'filiale_id', 'name', 'contact_name', 'contact_email']),
             'selectedPartnerId' => $request->integer('partner') ?: null,
         ]);
+    }
+
+    /**
+     * Corrige le destinataire de la feuille d'émargement d'une rencontre
+     * partenaire. Possible seulement avant la clôture : après, l'envoi est parti
+     * (ou en file) et ne doit plus être redirigé.
+     */
+    public function updatePartnerRecipient(Request $request, Event $event): RedirectResponse
+    {
+        abort_if($event->partner_id === null || $event->closed_at !== null || $event->partner_sheet_sent_at !== null, 403);
+
+        $data = $request->validate([
+            'partner_recipient_name' => ['nullable', 'string', 'max:150'],
+            'partner_recipient_email' => ['required', 'email:rfc', 'max:191'],
+        ], [
+            'partner_recipient_email.required' => "Indiquez l'email de la personne qui recevra la feuille d'émargement.",
+            'partner_recipient_email.email' => 'Adresse email invalide.',
+        ]);
+
+        $event->update($data);
+
+        return redirect()->route('admin.events.show', $event)->with('status', 'Destinataire de la feuille mis à jour.');
     }
 
     public function store(StoreEventRequest $request): RedirectResponse

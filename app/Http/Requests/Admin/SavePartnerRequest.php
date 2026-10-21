@@ -57,6 +57,12 @@ class SavePartnerRequest extends FormRequest
                 return;
             }
 
+            if (! Filiale::whereKey($filialeId)->where('is_active', true)->exists()) {
+                $v->errors()->add('filiale_id', 'La filiale sélectionnée est introuvable ou désactivée.');
+
+                return;
+            }
+
             $duplicate = Partner::withoutGlobalScope(FilialeScope::class)
                 ->where('filiale_id', $filialeId)
                 ->where('name', (string) $this->input('name'))

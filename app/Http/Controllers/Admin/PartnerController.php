@@ -65,13 +65,19 @@ final class PartnerController extends Controller
             'contact_email' => $data['contact_email'] ?? null,
         ];
 
+        $old = null;
         if ($request->hasFile('logo')) {
             $old = $partner->logo_path;
             $attributes['logo_path'] = $request->file('logo')->store('partners', 'public');
-            Storage::disk('public')->delete($old);
         }
 
         $partner->update($attributes);
+
+        // Ancien logo supprimé seulement APRÈS la mise à jour réussie : un échec
+        // en base ne doit jamais laisser le partenaire pointer vers un fichier effacé.
+        if ($old !== null && $old !== $partner->logo_path) {
+            Storage::disk('public')->delete($old);
+        }
 
         return redirect()->route('admin.partners.index')->with('status', 'Partenaire mis à jour.');
     }

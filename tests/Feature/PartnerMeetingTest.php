@@ -240,4 +240,30 @@ class PartnerMeetingTest extends TestCase
         $mail->assertDontSeeInHtml('Presence');
         $this->assertCount(1, $mail->attachments());
     }
+
+    public function test_le_destinataire_est_corrigeable_avant_la_cloture_seulement(): void
+    {
+        $event = $this->meeting($this->partner());
+
+        $this->actingAs($this->organisateur)
+            ->patch(route('admin.events.partner-recipient', $event), ['partner_recipient_email' => 'bon@dgf.gouv.ci'])
+            ->assertRedirect(route('admin.events.show', $event));
+        $this->assertSame('bon@dgf.gouv.ci', $event->fresh()->partner_recipient_email);
+
+        $event->forceFill(['closed_at' => Carbon::now()])->save();
+        $this->actingAs($this->organisateur)
+            ->patch(route('admin.events.partner-recipient', $event), ['partner_recipient_email' => 'autre@exemple.ci'])
+            ->assertForbidden();
+        $this->assertSame('bon@dgf.gouv.ci', $event->fresh()->partner_recipient_email);
+    }
+
+    public function test_la_feuille_ne_part_pas_si_la_reunion_n_est_pas_close(): void
+    {
+        Mail::fake();
+        $event = $this->meeting($this->partner());
+
+        (new SendPartnerAttendanceSheet($event->id))->handle(app(AttendanceSheetPdf::class));
+
+        Mail::assertNothingSent();
+    }
 }

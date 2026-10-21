@@ -169,6 +169,7 @@ Route::middleware(['auth', 'session.active', 'filiale.scope'])->prefix('admin')-
         Route::post('/events', [EventController::class, 'store'])->name('events.store');
         Route::get('/events/{event}', [EventController::class, 'show'])->name('events.show');
         Route::patch('/events/{event}', [EventController::class, 'update'])->name('events.update');
+        Route::patch('/events/{event}/destinataire-partenaire', [EventController::class, 'updatePartnerRecipient'])->name('events.partner-recipient');
 
         // Rencontres partenaires : référentiel des partenaires (marque blanche) et
         // leurs rencontres. Cloisonné par filiale (global scope sur Partner).

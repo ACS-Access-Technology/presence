@@ -155,7 +155,7 @@
                                 <select class="control" id="partner-id" name="partner_id">
                                     <option value="">Aucun — réunion ACS</option>
                                     @foreach ($partners as $p)
-                                        <option value="{{ $p->id }}" data-contact-name="{{ $p->contact_name }}" data-contact-email="{{ $p->contact_email }}" @selected((string) $chosenPartner === (string) $p->id)>{{ $p->name }}</option>
+                                        <option value="{{ $p->id }}" data-filiale-id="{{ $p->filiale_id }}" data-contact-name="{{ $p->contact_name }}" data-contact-email="{{ $p->contact_email }}" @selected((string) $chosenPartner === (string) $p->id)>{{ $p->name }}</option>
                                     @endforeach
                                 </select>
                                 <div class="err-msg">{{ $errors->first('partner_id') }}</div>
@@ -316,6 +316,29 @@
                 }
             }
             select.addEventListener('change', function () { sync(true); });
+            /* SuperAdmin « toutes filiales » : seuls les partenaires de la filiale
+               choisie sont proposés (le serveur le revérifie de toute façon). */
+            var filiale = document.getElementById('event-filiale');
+            function filterByFiliale() {
+                if (!filiale) { return; }
+                Array.prototype.forEach.call(select.options, function (opt) {
+                    if (!opt.value) { return; }
+                    opt.hidden = opt.disabled = filiale.value === '' || opt.dataset.filialeId !== filiale.value;
+                });
+                if (select.selectedOptions[0] && select.selectedOptions[0].disabled) {
+                    select.value = '';
+                    sync(false);
+                }
+            }
+            if (filiale) {
+                // Partenaire présélectionné (« Nouvelle rencontre ») : sa filiale l'est aussi.
+                if (filiale.value === '' && select.value !== '') {
+                    filiale.value = select.selectedOptions[0].dataset.filialeId;
+                    filiale.dispatchEvent(new Event('change'));
+                }
+                filiale.addEventListener('change', filterByFiliale);
+                filterByFiliale();
+            }
             sync(email.value === '');
         })();
     </script>

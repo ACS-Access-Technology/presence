@@ -87,7 +87,12 @@ final class Branding
             return null;
         }
 
-        $mime = Storage::disk('public')->mimeType($this->logoPublicPath) ?: 'image/png';
+        // Raster uniquement : un ancien logo SVG (téléversé avant l'interdiction)
+        // ne doit jamais être injecté dans dompdf.
+        $mime = Storage::disk('public')->mimeType($this->logoPublicPath);
+        if (! in_array($mime, ['image/png', 'image/jpeg', 'image/webp'], true)) {
+            return null;
+        }
 
         return 'data:'.$mime.';base64,'.base64_encode((string) Storage::disk('public')->get($this->logoPublicPath));
     }

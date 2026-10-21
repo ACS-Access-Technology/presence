@@ -31,6 +31,12 @@ final class SendPartnerAttendanceSheet implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    /** Échec SMTP transitoire : rejoué (le marqueur de batch est déjà posé, le cron ne re-dispatchera pas). */
+    public int $tries = 3;
+
+    /** @var list<int> */
+    public array $backoff = [60, 300];
+
     public function __construct(public int $eventId) {}
 
     public function handle(AttendanceSheetPdf $sheet): void
@@ -40,6 +46,7 @@ final class SendPartnerAttendanceSheet implements ShouldQueue
 
         if ($event === null
             || $event->partner_sheet_sent_at !== null
+            || $event->closed_at === null
             || $event->cancelled_at !== null
             || $event->partner === null
             || $event->partner_recipient_email === null) {
