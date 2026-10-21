@@ -84,6 +84,9 @@
         /* Partenaire institutionnel : même registre que la page des participants */
         body.theme-registre h1{font-family:"Iowan Old Style","Charter","Georgia","Noto Serif",serif;font-weight:700;letter-spacing:0}
         .inst-hd--stacked{margin:-6px -4px 18px}
+        /* Institutionnel : angles droits obligatoires sur tous les éléments */
+        body.theme-registre .sheet,body.theme-registre .proj,body.theme-registre .qr-frame,body.theme-registre .qrbox,
+        body.theme-registre .cta,body.theme-registre .btn,body.theme-registre .inst-hd,body.theme-registre .inst-hd__flag{border-radius:0}
 
         @media print{
             body{background:#fff;padding:0}
