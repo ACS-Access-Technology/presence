@@ -27,16 +27,20 @@
         </div>
     @endif
 
-    {{-- Fiche partenaire (création / modification). Ouverte d'office si la
-         validation a échoué, pour ne pas perdre la saisie. --}}
-    <div class="card pt-form" id="pt-form" @unless ($errors->any()) hidden @endunless>
-        <div class="card__body">
-            <h2 id="pt-form-title">{{ old('_partner_id') ? 'Modifier le partenaire' : 'Nouveau partenaire' }}</h2>
+    {{-- Fiche partenaire (création / modification), en modale comme le reste de la
+         plateforme. Ouverte d'office si la validation a échoué (saisie conservée). --}}
+    <div class="scrim" id="pt-form" @unless ($errors->any()) hidden @endunless>
+        <div class="modal pt-modal" role="dialog" aria-modal="true" aria-labelledby="pt-form-title">
+            <div class="modal__hd">
+                <h3 id="pt-form-title">{{ old('_partner_id') ? 'Modifier le partenaire' : 'Nouveau partenaire' }}</h3>
+                <button type="button" class="modal__x" id="pt-close" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+            </div>
             <form method="POST" enctype="multipart/form-data" id="pt-form-el"
                   action="{{ old('_partner_id') ? route('admin.partners.update', old('_partner_id')) : route('admin.partners.store') }}"
                   data-store-url="{{ route('admin.partners.store') }}" novalidate>
                 @csrf
                 <input type="hidden" name="_partner_id" id="pt-id" value="{{ old('_partner_id') }}">
+                <div class="modal__body pt-modal__body">
                 <div class="pt-grid">
                     <div>
                         @if ($mustChooseFiliale)
@@ -148,10 +152,10 @@
                         </div>
                     </aside>
                 </div>
+                </div>
 
-                <div class="actionbar">
-                    <button type="button" class="cancel" id="pt-cancel">Annuler</button>
-                    <span class="sp"></span>
+                <div class="modal__foot">
+                    <button type="button" class="btn btn--ghost" id="pt-cancel">Annuler</button>
                     <button type="submit" class="btn btn--primary">Enregistrer le partenaire</button>
                 </div>
             </form>

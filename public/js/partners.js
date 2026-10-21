@@ -251,12 +251,21 @@
             secondary.value = '';
         }
         if (partner) { loadLogo(partner.logo_url, false); }
-        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.body.style.overflow = 'hidden';
         nameInput.focus({ preventScroll: true });
     }
 
+    function close() {
+        form.hidden = true;
+        document.body.style.overflow = '';
+    }
+
     $('pt-new').addEventListener('click', function () { open(null); });
-    $('pt-cancel').addEventListener('click', function () { form.hidden = true; });
+    $('pt-cancel').addEventListener('click', close);
+    $('pt-close').addEventListener('click', close);
+    form.addEventListener('click', function (e) { if (e.target === form) { close(); } });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !form.hidden) { close(); } });
+    if (!form.hidden) { document.body.style.overflow = 'hidden'; }
     document.querySelectorAll('.js-pt-edit').forEach(function (btn) {
         btn.addEventListener('click', function () { open(JSON.parse(btn.dataset.partner)); });
     });

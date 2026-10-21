@@ -1,5 +1,11 @@
 /* Rencontres partenaires — fiche partenaire, pipette, aperçu en direct. */
-.pt-form{margin-bottom:22px}
+/* Modale fiche partenaire : plus large que la modale standard (formulaire +
+   aperçu côte à côte), corps défilant pour rester dans la fenêtre. */
+.pt-modal{max-width:980px;display:flex;flex-direction:column;max-height:calc(100vh - 12vh)}
+.pt-modal form{display:flex;flex-direction:column;min-height:0}
+.pt-modal__body{overflow-y:auto;min-height:0;padding-top:12px;color:var(--text)}
+.pt-modal .modal__foot{border-top:1px solid var(--border)}
+#pt-form{padding-top:6vh}
 .pt-grid{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:24px}
 @media (max-width:900px){.pt-grid{grid-template-columns:1fr}}
 .pt-section{font-size:1rem;margin:22px 0 10px}
