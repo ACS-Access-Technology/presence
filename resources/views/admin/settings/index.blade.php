@@ -34,7 +34,7 @@
             </div>
             <div class="tscroll">
                 <table class="dt" aria-label="Types d'événement">
-                    <thead><tr><th>Type</th><th>Couleur</th><th>Statut</th><th>Utilisation</th><th class="r-actions">Actions</th></tr></thead>
+                    <thead><tr><th>Type</th>@if($isSuper)<th>Filiale</th>@endif<th>Couleur</th><th>Statut</th><th>Utilisation</th><th class="r-actions">Actions</th></tr></thead>
                     <tbody id="types-body"></tbody>
                 </table>
             </div>
@@ -69,26 +69,39 @@
             <div class="card__hd"><div><h2>Général &amp; branding</h2><p>{{ $brandingIsHolding ? 'Identité de la holding — appliquée par défaut à toutes les filiales qui héritent du branding.' : 'Identité de la filiale ' . $brandingFilialeName . ', affichée sur ses écrans, e-mails et pages publiques.' }}</p></div></div>
             <div class="card__body">
                 @unless ($brandingIsHolding)
-                    <label class="check" style="display:flex;align-items:center;gap:9px;margin-bottom:16px">
-                        <input type="checkbox" name="brand_inherit" value="1" id="brandInherit" {{ $brandInherits ? 'checked' : '' }} onchange="Settings.toggleBrandInherit(this.checked)">
-                        <span>Hériter du branding de la holding (ACS Groupe)</span>
-                    </label>
+                    <div class="optrow">
+                        <div>
+                            <div class="optrow__t">Utiliser le branding de la holding</div>
+                            <p class="optrow__d">Logo, nom et couleur d'ACS Groupe. Décochez pour personnaliser l'identité de {{ $brandingFilialeName }}.</p>
+                        </div>
+                        <label class="toggle">
+                            <input type="checkbox" name="brand_inherit" value="1" id="brandInherit" {{ $brandInherits ? 'checked' : '' }} onchange="Settings.toggleBrandInherit(this.checked)">
+                            <span class="toggle__track"><span class="toggle__thumb"></span></span>
+                        </label>
+                    </div>
                 @endunless
                 <div id="brandFields" @if ($brandInherits) style="display:none" @endif>
                     <div class="field">
-                        <label>Logo de l'organisation</label>
+                        <label>Logo {{ $brandingIsHolding ? "de l'organisation" : 'de la filiale' }}</label>
                         <div class="logorow">
                             <div class="logobox"><img src="{{ $branding['logo_path'] ? \Illuminate\Support\Facades\Storage::disk('public')->url($branding['logo_path']) : asset('assets/logo-acs-groupe.png') }}" alt="Logo actuel"></div>
                             <div>
                                 <input class="control" type="file" name="logo" accept="image/png,image/svg+xml,image/jpeg,image/webp">
-                                <div class="help">PNG ou SVG, fond transparent recommandé. Max 2 Mo.</div>
+                                <div class="help">PNG ou SVG, fond transparent recommandé. Max 2 Mo. Affiché sur la page d'émargement et les exports de vos événements.</div>
                                 @error('logo')<div class="err-msg" style="display:block">{{ $message }}</div>@enderror
                             </div>
                         </div>
                     </div>
                     <div class="grid2" style="margin-top:14px">
-                        <div class="field"><label for="org">Nom de l'organisation</label><input class="control" id="org" name="org_name" value="{{ old('org_name', $branding['org_name']) }}" required></div>
-                        @if ($brandingIsHolding)
+                        <div class="field"><label for="org">Nom affiché</label><input class="control" id="org" name="org_name" value="{{ old('org_name', $branding['org_name']) }}" required></div>
+                        <div class="field">
+                            <label for="accent">Couleur d'accent</label>
+                            <input class="control" id="accent" name="accent_color" value="{{ old('accent_color', $branding['accent_color']) }}" placeholder="#1E2A78" pattern="^#[0-9a-fA-F]{6}$">
+                            @error('accent_color')<div class="err-msg" style="display:block">{{ $message }}</div>@enderror
+                        </div>
+                    </div>
+                    @if ($brandingIsHolding)
+                        <div class="grid2" style="margin-top:14px">
                             <div class="field"><label for="tz">Fuseau horaire</label>
                                 <select class="control" id="tz" name="timezone">
                                     @foreach (['Africa/Abidjan' => 'Abidjan · GMT (UTC+00:00)', 'Africa/Lagos' => 'Lagos · WAT (UTC+01:00)', 'Europe/Paris' => 'Paris · CET (UTC+01:00/+02:00)'] as $v => $lbl)
@@ -102,10 +115,10 @@
                                     <option value="d/m/Y" @selected($branding['date_format'] === 'd/m/Y')>19/07/2026 (jj/mm/aaaa)</option>
                                 </select>
                             </div>
-                        @else
-                            <div class="help" style="align-self:end">Fuseau horaire et format de date sont réglés au niveau de la holding et s'appliquent à toutes les filiales.</div>
-                        @endif
-                    </div>
+                        </div>
+                    @else
+                        <div class="infonote" style="margin-top:14px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg><span>Les réglages <strong>fuseau horaire</strong> et <strong>format de date</strong> restent définis au niveau de la holding (repli automatique). Seuls logo, nom et couleur sont personnalisables par filiale.</span></div>
+                    @endif
                 </div>
             </div>
             <div class="card__body" style="border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px">

@@ -61,10 +61,11 @@ class SettingsController extends Controller
 
         return view('admin.settings.index', [
             'isSuper' => $isSuper,
-            'types' => EventType::orderBy('position')->get()
+            'types' => EventType::with('filiale')->orderBy('position')->get()
                 ->map(fn (EventType $t) => [
                     'id' => $t->id, 'name' => $t->name, 'color' => $t->color,
                     'is_active' => $t->is_active, 'usage' => $t->events()->count(),
+                    'filiale_name' => $t->filiale?->name,
                 ])->all(),
             'accounts' => $accounts,
             // Contexte brut du sélecteur topbar (null = « Toutes les filiales »).

@@ -21,6 +21,25 @@
         var parts = String(name || '').trim().split(/\s+/).filter(Boolean);
         return ((parts[0] || '')[0] || '') + ((parts[1] || '')[0] || '');
     }
+    function typeRowHtml(t, indent) {
+        var badge = '<span class="tag tag--type" style="--tc:' + esc(t.color) + ';color:var(--tc);background:color-mix(in srgb, var(--tc) 15%, transparent)">' + esc(t.name) + '</span>';
+        var st = t.is_active ? '<span class="st st--on">Actif</span>' : '<span class="st st--off">Désactivé</span>';
+        var toggleTitle = t.is_active ? 'Désactiver' : 'Activer';
+        var toggleIcon = t.is_active
+            ? '<path d="M18 6 6 18M6 6l12 12"/>'
+            : '<path d="M20 6 9 17l-5-5"/>';
+        return '<tr' + (indent ? ' class="tchild"' : '') + '>'
+            + '<td' + (indent ? ' style="padding-left:2em"' : '') + '>' + badge + '</td>'
+            + (CFG.isSuper ? '<td class="mut">' + esc(t.filiale_name || '—') + '</td>' : '')
+            + '<td><span class="mono mut">' + esc(t.color) + '</span></td>'
+            + '<td>' + st + '</td>'
+            + '<td class="mut">' + t.usage + ' événement' + (t.usage > 1 ? 's' : '') + '</td>'
+            + '<td class="r-actions">'
+            + '<button class="mini" title="Modifier" onclick="Settings.typeModal(' + t.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
+            + '<button class="mini" title="' + toggleTitle + '" onclick="Settings.toggleType(' + t.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + toggleIcon + '</svg></button>'
+            + '<button class="mini mini--danger" title="Supprimer" onclick="Settings.deleteType(' + t.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
+            + '</td></tr>';
+    }
 
     var Settings = {
         types: CFG.types.slice(),
@@ -29,6 +48,7 @@
         editingAccount: null,
         chosenColor: CFG.palette[0],
         lastPassword: '',
+        expandedTypes: {},
 
         tab: function (name) {
             ['types', 'comptes', 'general', 'data'].forEach(function (n) {
@@ -45,25 +65,46 @@
         /* ---------- Types ---------- */
         renderTypes: function () {
             var body = $('#types-body'); if (!body) return;
-            if (!this.types.length) { body.innerHTML = '<tr><td colspan="5" class="empty">Aucun type.</td></tr>'; return; }
-            body.innerHTML = this.types.map(function (t) {
-                var badge = '<span class="tag tag--type" style="--tc:' + esc(t.color) + ';color:var(--tc);background:color-mix(in srgb, var(--tc) 15%, transparent)">' + esc(t.name) + '</span>';
-                var st = t.is_active ? '<span class="st st--on">Actif</span>' : '<span class="st st--off">Désactivé</span>';
-                var toggleTitle = t.is_active ? 'Désactiver' : 'Activer';
-                var toggleIcon = t.is_active
-                    ? '<path d="M18 6 6 18M6 6l12 12"/>'
-                    : '<path d="M20 6 9 17l-5-5"/>';
-                return '<tr>'
+            var colspan = CFG.isSuper ? 6 : 5;
+            if (!this.types.length) { body.innerHTML = '<tr><td colspan="' + colspan + '" class="empty">Aucun type.</td></tr>'; return; }
+
+            // Vue holding (« Toutes les filiales ») : un même nom de type existe une
+            // fois par filiale (chacune gère son référentiel). On regroupe l'affichage
+            // par nom pour ne pas le donner à voir en double ; le détail par filiale
+            // reste accessible en dépliant la ligne (actions y restent individuelles).
+            var aggregate = CFG.isSuper && !CFG.contextFilialeId;
+            if (!aggregate) { body.innerHTML = this.types.map(function (t) { return typeRowHtml(t, false); }).join(''); return; }
+
+            var groups = {}; var order = [];
+            this.types.forEach(function (t) {
+                if (!groups[t.name]) { groups[t.name] = []; order.push(t.name); }
+                groups[t.name].push(t);
+            });
+            var expanded = this.expandedTypes;
+            body.innerHTML = order.map(function (name) {
+                var items = groups[name];
+                var first = items[0];
+                var usage = items.reduce(function (s, x) { return s + x.usage; }, 0);
+                var anyActive = items.some(function (x) { return x.is_active; });
+                var isOpen = !!expanded[name];
+                var badge = '<span class="tag tag--type" style="--tc:' + esc(first.color) + ';color:var(--tc);background:color-mix(in srgb, var(--tc) 15%, transparent)">' + esc(first.name) + '</span>';
+                var st = anyActive ? '<span class="st st--on">Actif</span>' : '<span class="st st--off">Désactivé</span>';
+                var chevron = isOpen ? '<path d="m18 15-6-6-6 6"/>' : '<path d="m6 9 6 6 6-6"/>';
+                var head = '<tr class="tgroup" style="cursor:pointer" onclick="Settings.toggleTypeGroup(' + esc(JSON.stringify(name)) + ')">'
                     + '<td>' + badge + '</td>'
-                    + '<td><span class="mono mut">' + esc(t.color) + '</span></td>'
+                    + '<td class="mut">' + items.length + ' filiale' + (items.length > 1 ? 's' : '') + '</td>'
+                    + '<td><span class="mono mut">' + esc(first.color) + '</span></td>'
                     + '<td>' + st + '</td>'
-                    + '<td class="mut">' + t.usage + ' événement' + (t.usage > 1 ? 's' : '') + '</td>'
-                    + '<td class="r-actions">'
-                    + '<button class="mini" title="Modifier" onclick="Settings.typeModal(' + t.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></button>'
-                    + '<button class="mini" title="' + toggleTitle + '" onclick="Settings.toggleType(' + t.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">' + toggleIcon + '</svg></button>'
-                    + '<button class="mini mini--danger" title="Supprimer" onclick="Settings.deleteType(' + t.id + ')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg></button>'
-                    + '</td></tr>';
+                    + '<td class="mut">' + usage + ' événement' + (usage > 1 ? 's' : '') + '</td>'
+                    + '<td class="r-actions"><button class="mini" title="' + (isOpen ? 'Réduire' : 'Détailler par filiale') + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">' + chevron + '</svg></button></td>'
+                    + '</tr>';
+                if (!isOpen) return head;
+                return head + items.map(function (t) { return typeRowHtml(t, true); }).join('');
             }).join('');
+        },
+        toggleTypeGroup: function (name) {
+            this.expandedTypes[name] = !this.expandedTypes[name];
+            this.renderTypes();
         },
         renderSwatches: function () {
             var box = $('#mt-swatches'); var chosen = this.chosenColor;
