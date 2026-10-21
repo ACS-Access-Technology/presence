@@ -1,9 +1,11 @@
 {{-- En-tête officiel d'une rencontre avec un partenaire institutionnel :
      armoiries de la Côte d'Ivoire à gauche, logo du partenaire au centre, nom à
      droite (décision Férié 2026-10-21). Styles autonomes : inclus sur des pages
-     qui ne partagent pas de feuille CSS (page publique, projection, impression). --}}
+     qui ne partagent pas de feuille CSS (page publique, projection, impression).
+     `$stacked` (page mobile des participants) : blocs empilés et centrés —
+     République, puis logo du partenaire, sans répéter son nom. --}}
 @if ($branding->isInstitutional)
-    <div class="inst-hd" role="banner">
+    <div class="inst-hd{{ ($stacked ?? false) ? ' inst-hd--stacked' : '' }}" role="banner">
         <div class="inst-hd__state">
             <img class="inst-hd__arms" src="{{ asset(\App\Support\Branding::COAT_OF_ARMS) }}" alt="Armoiries de la République de Côte d'Ivoire">
             <span class="inst-hd__rep">République de Côte d'Ivoire</span>
@@ -11,7 +13,9 @@
             <span class="inst-hd__flag" aria-hidden="true"><i></i><i></i><i></i></span>
         </div>
         <img class="inst-hd__logo" src="{{ $branding->logoUrl }}" alt="{{ $branding->orgName }}">
-        <span class="inst-hd__name">{{ $branding->orgName }}</span>
+        @unless ($stacked ?? false)
+            <span class="inst-hd__name">{{ $branding->orgName }}</span>
+        @endunless
     </div>
     <style>
         .inst-hd{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;background:#fff;color:#18201b;padding:10px 14px;border-bottom:3px solid {{ $branding->accentColorOrDefault() }}}
@@ -24,6 +28,10 @@
         .inst-hd__logo{height:46px;width:auto;max-width:34vw;object-fit:contain;justify-self:center}
         .inst-hd__name{justify-self:end;text-align:right;font-weight:700;font-size:.82rem;line-height:1.25;color:{{ $branding->accentColorOrDefault() }}}
         @media print{.inst-hd{border-bottom-width:2px}}
+        .inst-hd--stacked{grid-template-columns:1fr;justify-items:center;gap:14px;padding-block:20px 16px}
+        .inst-hd--stacked .inst-hd__state{justify-self:center}
+        .inst-hd--stacked .inst-hd__arms{height:64px}
+        .inst-hd--stacked .inst-hd__logo{height:52px;max-width:60%}
         @media (max-width:420px){.inst-hd{gap:8px;padding:8px 10px}.inst-hd__arms{height:40px}.inst-hd__rep{font-size:.52rem}.inst-hd__motto{font-size:.5rem}.inst-hd__logo{height:34px}.inst-hd__name{font-size:.72rem}}
     </style>
 @endif
