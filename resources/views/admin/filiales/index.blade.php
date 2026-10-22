@@ -57,7 +57,7 @@
     </form>
 
     <div class="scrim" id="f-scrim" hidden onclick="if(event.target===this)Filiales.close()">
-        <div class="modal" id="m-filiale" role="dialog" aria-modal="true" aria-labelledby="mf-title" hidden>
+        <div class="modal modal--create" id="m-filiale" role="dialog" aria-modal="true" aria-labelledby="mf-title" hidden>
             <div class="modal__hd">
                 <span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="10" rx="1"/></svg></span>
                 <div class="modal__ttl"><h3 id="mf-title">Nouvelle filiale</h3><p class="modal__sub">Entité rattachée à la holding ACS Groupe</p></div>

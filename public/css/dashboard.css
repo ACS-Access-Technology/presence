@@ -666,7 +666,7 @@ body.sheet-open{overflow:hidden}
 .modal{padding:0;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 12vh)}
 .modal[hidden]{display:none}
 .modal > form{display:flex;flex-direction:column;min-height:0;flex:1}
-.modal__hd{position:relative;isolation:isolate;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--accent);color:#fff;overflow:hidden}
+.modal__hd{position:relative;isolation:isolate;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--modal-tone,var(--accent));color:#fff;overflow:hidden}
 .modal__hd::before,.modal__hd::after{content:"";position:absolute;z-index:-1;border-radius:50%;border:1px solid rgba(255,255,255,.14);pointer-events:none}
 .modal__hd::before{width:220px;height:220px;right:-70px;top:-110px}
 .modal__hd::after{width:150px;height:150px;right:-35px;top:-75px}
@@ -680,3 +680,12 @@ body.sheet-open{overflow:hidden}
 .modal__hd .modal__x:focus-visible{outline:2px solid #fff;outline-offset:2px}
 .modal__body{padding:20px;overflow-y:auto;min-height:0;flex:1}
 .modal__foot{flex:0 0 auto;border-top:1px solid var(--border);background:var(--surface-2);padding:14px 20px}
+
+/* Code couleur des fenêtres selon l'action : création bleu, modification
+   vert, suppression/annulation rouge, consultation gris ardoise. */
+.modal--create{--modal-tone:#1d4ed8}
+.modal--edit{--modal-tone:#15803d}
+.modal--danger{--modal-tone:#c62828}
+.modal--read{--modal-tone:#3f4a5a}
+.modal--create .modal__foot .btn--primary,.modal--edit .modal__foot .btn--primary,.modal--read .modal__foot .btn--primary{background:var(--modal-tone);box-shadow:none}
+.modal--create .modal__foot .btn--primary:hover,.modal--edit .modal__foot .btn--primary:hover,.modal--read .modal__foot .btn--primary:hover{background:color-mix(in srgb,var(--modal-tone) 85%,#000)}

@@ -11,7 +11,7 @@
 
 <div class="scrim" id="scrim" hidden onclick="if(event.target===this)Detail.close()">
     {{-- Signature --}}
-    <div class="modal" id="m-sig" role="dialog" aria-modal="true" aria-labelledby="sig-t" hidden>
+    <div class="modal modal--read" id="m-sig" role="dialog" aria-modal="true" aria-labelledby="sig-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><div class="modal__ttl"><h3 id="sig-t">Signature</h3><p class="modal__sub">Signature manuscrite du participant</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <div class="modal__body" style="text-align:center">
             <p id="sig-who" class="mut" style="margin-bottom:10px"></p>
@@ -21,7 +21,7 @@
     </div>
 
     {{-- Infos participant --}}
-    <div class="modal" id="m-info" role="dialog" aria-modal="true" aria-labelledby="info-name" hidden>
+    <div class="modal modal--read" id="m-info" role="dialog" aria-modal="true" aria-labelledby="info-name" hidden>
         <div class="modal__hd">
             <span class="av" id="info-av" style="width:38px;height:38px;border-radius:50%;display:grid;place-items:center;color:#fff;font-weight:700;font-size:.85rem;flex:0 0 auto"></span>
             <div class="modal__ttl"><h3 id="info-name">—</h3><p class="modal__sub">Fiche du participant</p></div>
@@ -37,14 +37,14 @@
     </div>
 
     {{-- Départ --}}
-    <div class="modal" id="m-depart" role="dialog" aria-modal="true" aria-labelledby="dp-t" hidden>
+    <div class="modal modal--edit" id="m-depart" role="dialog" aria-modal="true" aria-labelledby="dp-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5M21 12H9"/></svg></span><div class="modal__ttl"><h3 id="dp-t">Marquer un départ</h3><p class="modal__sub">Enregistrer l'heure de départ du participant</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <div class="modal__body"><p>Confirmez le départ de <strong id="dp-who">—</strong>. Son heure de départ sera enregistrée maintenant. Cette action est définitive et purement informative (sans effet sur les statistiques).</p></div>
         <div class="modal__foot"><button class="btn btn--ghost" onclick="Detail.close()">Annuler</button><button class="btn btn--primary" id="dp-confirm">Confirmer le départ</button></div>
     </div>
 
     {{-- Présence manuelle --}}
-    <div class="modal modal--lg" id="m-manual" role="dialog" aria-modal="true" aria-labelledby="man-t" hidden>
+    <div class="modal modal--lg modal--create" id="m-manual" role="dialog" aria-modal="true" aria-labelledby="man-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span><div class="modal__ttl"><h3 id="man-t">Ajouter une présence manuelle</h3><p class="modal__sub">Inscrire un participant sans passer par le QR code</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form id="manual-form">
             <div class="modal__body">
@@ -79,7 +79,7 @@
     </div>
 
     {{-- Modifier (titre / type / lieu / périmètre) --}}
-    <div class="modal modal--lg" id="m-edit" style="max-width:640px" role="dialog" aria-modal="true" aria-labelledby="ed-t" hidden>
+    <div class="modal modal--lg modal--edit" id="m-edit" style="max-width:640px" role="dialog" aria-modal="true" aria-labelledby="ed-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg></span><div class="modal__ttl"><h3 id="ed-t">Modifier l'événement</h3><p class="modal__sub">Corriger les informations de l'événement</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form method="POST" action="{{ route('admin.events.update', $event) }}">
             @csrf
@@ -150,7 +150,7 @@
     </div>
 
     {{-- Changer le mode QR (uniquement avant la première présence) --}}
-    <div class="modal" id="m-qrmode" role="dialog" aria-modal="true" aria-labelledby="qr-t" hidden>
+    <div class="modal modal--edit" id="m-qrmode" role="dialog" aria-modal="true" aria-labelledby="qr-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><path d="M14 14h3v3h-3zM19 19h2v2h-2z"/></svg></span><div class="modal__ttl"><h3 id="qr-t">Changer le mode QR</h3><p class="modal__sub">Possible tant qu'aucune présence n'est enregistrée</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form method="POST" action="{{ route('admin.events.qr-mode', $event) }}">
             @csrf
@@ -167,7 +167,7 @@
     </div>
 
     {{-- Reporter l'événement --}}
-    <div class="modal" id="m-reschedule" role="dialog" aria-modal="true" aria-labelledby="rs-t" hidden>
+    <div class="modal modal--edit" id="m-reschedule" role="dialog" aria-modal="true" aria-labelledby="rs-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span><div class="modal__ttl"><h3 id="rs-t">Reporter l'événement</h3><p class="modal__sub">Changer la date et les horaires</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form method="POST" action="{{ route('admin.events.reschedule', $event) }}">
             @csrf
@@ -187,7 +187,7 @@
 
     {{-- Transférer vers une filiale (SuperAdmin uniquement, T-ME-14) --}}
     @if (! is_null($transferFiliales))
-    <div class="modal modal--lg" id="m-transfer" role="dialog" aria-modal="true" aria-labelledby="tr-t" hidden>
+    <div class="modal modal--lg modal--edit" id="m-transfer" role="dialog" aria-modal="true" aria-labelledby="tr-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg></span><div class="modal__ttl"><h3 id="tr-t">Transférer vers une filiale</h3><p class="modal__sub">Déplacer l'événement vers une autre filiale</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form method="POST" action="{{ route('admin.events.transfer', $event) }}">
             @csrf
@@ -241,7 +241,7 @@
     @endif
 
     {{-- Annuler l'événement --}}
-    <div class="modal" id="m-cancel" role="dialog" aria-modal="true" aria-labelledby="cn-t" hidden>
+    <div class="modal modal--danger" id="m-cancel" role="dialog" aria-modal="true" aria-labelledby="cn-t" hidden>
         <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="m15 9-6 6M9 9l6 6"/></svg></span><div class="modal__ttl"><h3 id="cn-t">Annuler l'événement</h3><p class="modal__sub">Les participants ne pourront plus émarger</p></div><button class="modal__x" onclick="Detail.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form method="POST" action="{{ route('admin.events.cancel', $event) }}">
             @csrf

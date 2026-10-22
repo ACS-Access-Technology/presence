@@ -30,7 +30,7 @@
     {{-- Fiche partenaire (création / modification), en modale comme le reste de la
          plateforme. Ouverte d'office si la validation a échoué (saisie conservée). --}}
     <div class="scrim" id="pt-form" @unless ($errors->any()) hidden @endunless>
-        <div class="modal pt-modal" role="dialog" aria-modal="true" aria-labelledby="pt-form-title">
+        <div class="modal pt-modal {{ old('_partner_id') ? 'modal--edit' : 'modal--create' }}" id="pt-modal" role="dialog" aria-modal="true" aria-labelledby="pt-form-title">
             <div class="modal__hd">
                 <span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h.01M15 9h.01M9 13h.01M15 13h.01M9 17h6"/></svg></span>
                 <div class="modal__ttl">

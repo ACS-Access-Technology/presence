@@ -4,6 +4,12 @@
    ============================================================ */
 (function () {
     'use strict';
+    /* Code couleur des fenêtres : création bleu, modification vert. */
+    function setTone(el, tone) {
+        if (!el) { return; }
+        el.classList.remove('modal--create', 'modal--edit', 'modal--danger', 'modal--read');
+        el.classList.add('modal--' + tone);
+    }
     var CFG = window.SETTINGS || { types: [], accounts: [], urls: {}, palette: [] };
     var $ = function (s) { return document.querySelector(s); };
     function esc(v) {
@@ -131,6 +137,7 @@
             var t = id ? this.types.filter(function (x) { return x.id === id; })[0] : null;
             this.editingType = t;
             var ctxFiliale = !t && CFG.filiales && CFG.filiales.find(function (f) { return f.id === CFG.contextFilialeId; });
+            setTone($('#m-type'), t ? 'edit' : 'create');
             $('#mt-title').textContent = t ? 'Modifier le type' : (ctxFiliale ? 'Ajouter un type — ' + ctxFiliale.name : 'Ajouter un type');
             $('#mt-name').value = t ? t.name : '';
             $('#mt-err').style.display = 'none';
@@ -240,6 +247,7 @@
             var a = id ? this.accounts.filter(function (x) { return x.id === id; })[0] : null;
             this.editingAccount = a;
             var ctxFiliale = !a && CFG.filiales.find(function (f) { return f.id === CFG.contextFilialeId; });
+            setTone($('#m-account'), a ? 'edit' : 'create');
             $('#ma-title').textContent = a ? 'Modifier le compte' : (ctxFiliale ? 'Inviter un compte — ' + ctxFiliale.name : 'Inviter un compte');
             $('#ma-name').value = a ? a.name : '';
             $('#ma-email').value = a ? a.email : '';
