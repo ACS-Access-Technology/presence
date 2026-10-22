@@ -1,0 +1,49 @@
+# Commandes ponctuelles en production, déclenchées à la main depuis l'onglet
+# Actions. Liste FERMÉE (choix) : aucune commande libre ne peut être injectée.
+# Ajouter une commande = l'ajouter aux options ET au `case` ci-dessous.
+name: Commande prod (ponctuelle)
+
+on:
+  workflow_dispatch:
+    inputs:
+      commande:
+        description: Commande à exécuter en production
+        required: true
+        type: choice
+        options:
+          - seed-recrutement-fiscaliste
+
+permissions:
+  contents: read
+
+concurrency:
+  group: prod-deploy
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exécuter sur le serveur
+        uses: appleboy/ssh-action@029f5b4aeeeb58fdfe1410a5d17f967dacf36262  # v1.0.3
+        env:
+          COMMANDE: ${{ inputs.commande }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          port: ${{ secrets.SSH_PORT }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          timeout: 60s
+          envs: COMMANDE
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            case "$COMMANDE" in
+              seed-recrutement-fiscaliste)
+                /opt/alt/php83/usr/bin/php artisan db:seed --class=RecruitmentFiscalisteSeeder --force
+                ;;
+              *)
+                echo "Commande non autorisée : $COMMANDE"; exit 1
+                ;;
+            esac
+            echo "✓ Commande terminée : $COMMANDE"
