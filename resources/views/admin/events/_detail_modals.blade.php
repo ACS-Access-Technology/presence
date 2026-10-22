@@ -113,6 +113,15 @@
                     </span>
                 </label>
 
+                <input type="hidden" name="require_geolocation" value="0">
+                <label style="display:flex;gap:10px;align-items:flex-start;margin:4px 0 10px;cursor:pointer">
+                    <input type="checkbox" name="require_geolocation" value="1" @checked(old('require_geolocation', $event->require_geolocation)) style="width:20px;height:20px;accent-color:var(--accent);margin-top:1px">
+                    <span>
+                        <strong>Localisation obligatoire</strong>
+                        <span class="help" style="display:block;margin-top:2px">Décochée : la position est demandée sans bloquer, et le périmètre n'est pas vérifié.</span>
+                    </span>
+                </label>
+
                 <div class="field" style="margin-top:6px">
                     @if($event->qr_mode === App\Enums\QrMode::Statique)
                         <label>Périmètre anti-fraude <span class="opt"><strong>obligatoire en QR statique</strong></span></label>

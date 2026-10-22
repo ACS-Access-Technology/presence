@@ -120,7 +120,7 @@ class EventController extends Controller
                 : collect(),
             // Rencontres partenaires : `?partner=ID` (bouton « Nouvelle rencontre »)
             // présélectionne le partenaire ; la liste est cloisonnée par le scope.
-            'partners' => Partner::orderBy('name')->get(['id', 'filiale_id', 'name', 'contact_name', 'contact_email']),
+            'partners' => Partner::orderBy('name')->get(['id', 'filiale_id', 'name', 'contact_name', 'contact_email', 'require_geolocation']),
             'selectedPartnerId' => $request->integer('partner') ?: null,
         ]);
     }
@@ -184,6 +184,7 @@ class EventController extends Controller
                     'starts_at' => Carbon::parse($seance['date'].' '.$seance['start']),
                     'ends_at' => Carbon::parse($seance['date'].' '.$seance['end']),
                     'grace_check_in_enabled' => $data['grace_check_in_enabled'] ?? false,
+                    'require_geolocation' => $request->boolean('require_geolocation', true),
                     'location' => $data['location'] ?? null,
                     'geofence_latitude' => $data['geofence_latitude'] ?? null,
                     'geofence_longitude' => $data['geofence_longitude'] ?? null,

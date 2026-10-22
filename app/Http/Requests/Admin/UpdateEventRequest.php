@@ -30,7 +30,9 @@ class UpdateEventRequest extends FormRequest
         // 1re présence) : il n'est donc pas soumis. On lit le mode réel de
         // l'événement en cours pour décider si le périmètre devient obligatoire.
         $event = $this->route('event');
-        $isStatique = $event instanceof Event && $event->qr_mode === QrMode::Statique;
+        // Périmètre exigé en QR statique, sauf localisation facultative.
+        $isStatique = $event instanceof Event && $event->qr_mode === QrMode::Statique
+            && $this->boolean('require_geolocation', $event->require_geolocation);
 
         return [
             'title' => ['required', 'string', 'max:150'],
@@ -59,6 +61,9 @@ class UpdateEventRequest extends FormRequest
 
             // Délai de grâce d'émargement post-clôture (voir Event::checkInClosesAt()).
             'grace_check_in_enabled' => ['sometimes', 'boolean'],
+
+            // Localisation obligatoire (défaut) ou facultative pour cette réunion.
+            'require_geolocation' => ['sometimes', 'boolean'],
 
             // Périmètre anti-fraude : les trois champs vont ensemble (`required_with`)
             // et deviennent OBLIGATOIRES quand l'événement est en mode QR statique

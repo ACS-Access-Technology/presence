@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon $starts_at
  * @property Carbon $ends_at
  * @property bool $grace_check_in_enabled
+ * @property bool $require_geolocation
  * @property ?string $location
  * @property ?float $geofence_latitude
  * @property ?float $geofence_longitude
@@ -44,7 +45,7 @@ class Event extends Model
     /** @var list<string> */
     protected $fillable = [
         'filiale_id',
-        'title', 'event_type_id', 'partner_id', 'partner_recipient_name', 'partner_recipient_email',
+        'title', 'event_type_id', 'require_geolocation', 'partner_id', 'partner_recipient_name', 'partner_recipient_email',
         'starts_at', 'ends_at', 'grace_check_in_enabled', 'location',
         'geofence_latitude', 'geofence_longitude', 'geofence_radius_m',
         'qr_mode', 'qr_secret', 'public_slug',
@@ -89,6 +90,7 @@ class Event extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'grace_check_in_enabled' => 'boolean',
+            'require_geolocation' => 'boolean',
             'closed_at' => 'datetime',
             'report_email_queued_at' => 'datetime',
             'partner_sheet_sent_at' => 'datetime',
@@ -278,18 +280,15 @@ class Event extends Model
 
     /** La position fournie est-elle dans le rayon toléré ? Vrai si aucun périmètre configuré. */
     /**
-     * Position du participant exigée à l'émargement ? Oui par défaut
-     * (comportement historique) ; un partenaire peut la déverrouiller pour ses
-     * rencontres — la position devient alors facultative et le périmètre
-     * anti-fraude n'est plus appliqué (choix assumé de l'organisateur).
+     * Position du participant exigée à l'émargement ? Réglée par réunion
+     * (défaut : oui). Facultative : la position est demandée sans bloquer et le
+     * périmètre anti-fraude n'est plus appliqué (choix assumé de l'organisateur).
+     * Pour une rencontre partenaire, la valeur proposée à la création vient du
+     * partenaire, mais c'est celle de la réunion qui fait foi.
      */
     public function requiresGeolocation(): bool
     {
-        if ($this->partner_id === null) {
-            return true;
-        }
-
-        return $this->partner?->require_geolocation ?? true;
+        return $this->require_geolocation ?? true;
     }
 
     public function isWithinGeofence(float $latitude, float $longitude): bool
