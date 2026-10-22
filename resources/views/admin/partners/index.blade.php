@@ -99,6 +99,15 @@
                             <div class="err-msg">{{ $errors->first('logo') }}</div>
                         </div>
 
+                        <input type="hidden" name="require_geolocation" value="0">
+                        <label class="pt-check" for="pt-geo">
+                            <input type="checkbox" id="pt-geo" name="require_geolocation" value="1" @checked(old('require_geolocation', '1') === '1')>
+                            <span>
+                                <strong>Localisation obligatoire</strong>
+                                <span class="pt-check__help">Cochée : chaque participant doit partager sa position pour émarger (protection anti-fraude). Décochée : la position est demandée mais facultative, et le périmètre de la réunion n'est pas vérifié.</span>
+                            </span>
+                        </label>
+
                         <div class="field {{ $errors->has('background') ? 'invalid' : '' }}">
                             <span class="pt-label" id="pt-bg-label">Image de fond de scène <span class="opt">(facultatif)</span></span>
                             <label class="pt-drop pt-drop--bg" id="pt-bg-drop" for="pt-bg">
@@ -217,6 +226,7 @@
                             <span class="pt-name">
                                 <img src="{{ asset('storage/'.$partner->logo_path) }}" alt="">
                                 {{ $partner->name }}
+                                @unless ($partner->require_geolocation)<span class="tag tag--done" title="Position facultative à l'émargement">Sans localisation</span>@endunless
                                 @if ($partner->is_institutional)<span class="tag tag--type" style="--tc:#009e60;color:var(--tc);background:color-mix(in srgb, var(--tc) 14%, transparent)">Institutionnel</span>@endif
                             </span>
                         </td>
@@ -235,6 +245,7 @@
                                         'primary_color' => $partner->primary_color,
                                         'secondary_color' => $partner->secondary_color,
                                         'is_institutional' => $partner->is_institutional,
+                                        'require_geolocation' => $partner->require_geolocation,
                                         'background_url' => $partner->background_path ? asset('storage/'.$partner->background_path) : null,
                                         'contact_name' => $partner->contact_name,
                                         'contact_email' => $partner->contact_email,

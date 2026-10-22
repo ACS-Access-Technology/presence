@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\Public;
 
 use App\Http\Requests\Concerns\ValidatesSignature;
+use App\Models\Event;
 use Illuminate\Foundation\Http\FormRequest;
 
 /**
@@ -25,6 +26,13 @@ class StoreAttendanceRequest extends FormRequest
         return true;
     }
 
+    private function geolocationRequired(): bool
+    {
+        $event = $this->route('event');
+
+        return ! $event instanceof Event || $event->requiresGeolocation();
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -40,9 +48,10 @@ class StoreAttendanceRequest extends FormRequest
             'service' => ['nullable', 'string', 'max:191'],
             'position' => ['required', 'string', 'max:191'],
 
-            // Géolocalisation obligatoire (position réelle du navigateur).
-            'latitude' => ['required', 'numeric', 'between:-90,90'],
-            'longitude' => ['required', 'numeric', 'between:-180,180'],
+            // Géolocalisation obligatoire (position réelle du navigateur), sauf
+            // rencontre d'un partenaire qui l'a déverrouillée (facultative).
+            'latitude' => [$this->geolocationRequired() ? 'required' : 'nullable', 'numeric', 'between:-90,90'],
+            'longitude' => [$this->geolocationRequired() ? 'required' : 'nullable', 'numeric', 'between:-180,180'],
             'accuracy' => ['nullable', 'numeric', 'min:0'],
 
             // Signature manuscrite obligatoire : data URI PNG, taille bornée.

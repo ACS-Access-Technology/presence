@@ -13,6 +13,7 @@ use App\Models\Filiale;
 use App\Models\Partner;
 use App\Models\User;
 use App\Services\AttendanceSheetPdf;
+use App\Services\QrTokenService;
 use App\Support\Branding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -345,5 +346,41 @@ class PartnerMeetingTest extends TestCase
             'name' => 'Port autonome', 'primary_color' => '#0b5e3c', 'remove_background' => '1',
         ])->assertSessionHasNoErrors();
         $this->assertNull($partner->fresh()->background_path);
+    }
+
+    // ---------- Localisation verrouillée / déverrouillée ----------
+
+    /** @return array<string, mixed> */
+    private function attendancePayload(Event $event, array $overrides = []): array
+    {
+        return array_merge([
+            'email' => 'participant@exemple.ci', 'last_name' => 'Koné', 'first_name' => 'Awa',
+            'phone' => '+225 07 00 00 00 00', 'company' => 'DGF', 'direction' => 'Budget', 'position' => 'Analyste',
+            'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            'ticket' => app(QrTokenService::class)->issueScanTicket($event),
+            'consent' => '1',
+        ], $overrides);
+    }
+
+    public function test_sans_localisation_l_emargement_passe_quand_le_partenaire_l_a_deverrouillee(): void
+    {
+        Storage::fake('local');
+        $event = $this->meeting($this->partner(['require_geolocation' => false]), mode: QrMode::Statique);
+        $event->forceFill(['geofence_latitude' => 5.35, 'geofence_longitude' => -4.01, 'geofence_radius_m' => 50])->save();
+
+        $this->postJson(route('public.attendance.store', ['event' => $event->public_slug]), $this->attendancePayload($event))
+            ->assertSuccessful();
+
+        $this->assertSame(1, $event->attendances()->count());
+    }
+
+    public function test_la_localisation_reste_obligatoire_par_defaut(): void
+    {
+        Storage::fake('local');
+        $event = $this->meeting($this->partner(), mode: QrMode::Statique);
+
+        $this->postJson(route('public.attendance.store', ['event' => $event->public_slug]), $this->attendancePayload($event))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('latitude');
     }
 }

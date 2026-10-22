@@ -283,6 +283,7 @@
         $('pt-contact-name').value = partner ? (partner.contact_name || '') : '';
         $('pt-contact-email').value = partner ? (partner.contact_email || '') : '';
         instBox.checked = !!(partner && partner.is_institutional);
+        $('pt-geo').checked = !partner || partner.require_geolocation !== false;
         bgInput.value = '';
         $('pt-bg-remove').checked = false;
         $('pt-bg-remove-wrap').hidden = !(partner && partner.background_url);

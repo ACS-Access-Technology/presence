@@ -42,6 +42,23 @@
     /* ------------------------- Géolocalisation ------------------------- */
     var Geo = {
         request: function () {
+            // Localisation déverrouillée (partenaire) : jamais bloquante. On tente
+            // discrètement de la joindre, sans écran d'erreur si refusée.
+            if (CFG.requireGeo === false) {
+                State.geo = 'ok';
+                $('#geo').hidden = true;
+                if (window.isSecureContext && 'geolocation' in navigator) {
+                    navigator.geolocation.getCurrentPosition(
+                        function (pos) {
+                            State.coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracy: pos.coords.accuracy };
+                        },
+                        function () { State.coords = null; },
+                        { enableHighAccuracy: false, timeout: 8000, maximumAge: 60000 }
+                    );
+                }
+                Flow.validate();
+                return;
+            }
             State.geo = 'pending';
             var box = $('#geo'), t = $('#geoT'), d = $('#geoD'), ic = $('#geoIc');
             box.className = 'geo geo--pending';

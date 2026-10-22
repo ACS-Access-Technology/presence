@@ -191,9 +191,11 @@ class PublicAttendanceController extends Controller
         // Périmètre anti-fraude (facultatif, configuré par l'organisateur) : vérifié
         // SERVEUR à partir de la position transmise (jamais confiance au client seul,
         // mais sans périmètre configuré, isWithinGeofence() est toujours vraie).
-        $latitude = (float) $request->float('latitude');
-        $longitude = (float) $request->float('longitude');
-        if (! $event->isWithinGeofence($latitude, $longitude)) {
+        // Position facultative (partenaire l'ayant déverrouillée) : conservée si
+        // fournie, périmètre non appliqué.
+        $latitude = $request->filled('latitude') ? (float) $request->float('latitude') : null;
+        $longitude = $request->filled('longitude') ? (float) $request->float('longitude') : null;
+        if ($event->requiresGeolocation() && ! $event->isWithinGeofence((float) $latitude, (float) $longitude)) {
             return response()->json([
                 'message' => "Vous semblez trop loin du lieu de l'événement pour émarger. Rapprochez-vous et réessayez.",
             ], 403);

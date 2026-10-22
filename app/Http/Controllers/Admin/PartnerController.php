@@ -49,6 +49,7 @@ final class PartnerController extends Controller
             'primary_color' => strtolower($data['primary_color']),
             'secondary_color' => isset($data['secondary_color']) ? strtolower($data['secondary_color']) : null,
             'is_institutional' => $request->boolean('is_institutional'),
+            'require_geolocation' => $request->boolean('require_geolocation', true),
             'contact_name' => $data['contact_name'] ?? null,
             'contact_email' => $data['contact_email'] ?? null,
         ]);
@@ -62,6 +63,7 @@ final class PartnerController extends Controller
         $attributes = [
             'name' => $data['name'],
             'is_institutional' => $request->boolean('is_institutional'),
+            'require_geolocation' => $request->boolean('require_geolocation', true),
             'primary_color' => strtolower($data['primary_color']),
             'secondary_color' => isset($data['secondary_color']) ? strtolower($data['secondary_color']) : null,
             'contact_name' => $data['contact_name'] ?? null,

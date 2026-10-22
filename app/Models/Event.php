@@ -277,6 +277,21 @@ class Event extends Model
     }
 
     /** La position fournie est-elle dans le rayon toléré ? Vrai si aucun périmètre configuré. */
+    /**
+     * Position du participant exigée à l'émargement ? Oui par défaut
+     * (comportement historique) ; un partenaire peut la déverrouiller pour ses
+     * rencontres — la position devient alors facultative et le périmètre
+     * anti-fraude n'est plus appliqué (choix assumé de l'organisateur).
+     */
+    public function requiresGeolocation(): bool
+    {
+        if ($this->partner_id === null) {
+            return true;
+        }
+
+        return $this->partner?->require_geolocation ?? true;
+    }
+
     public function isWithinGeofence(float $latitude, float $longitude): bool
     {
         if (! $this->hasGeofence()) {
