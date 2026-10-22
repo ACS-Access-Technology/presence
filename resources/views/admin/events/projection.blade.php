@@ -17,7 +17,7 @@
         body{min-height:100vh;display:grid;place-items:center;padding:24px}
         /* Fond flouté : personnes de la photo non reconnaissables (droit à l'image) */
         body.has-backdrop{background:var(--bg);isolation:isolate}
-        body.has-backdrop::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--backdrop) center/cover no-repeat;filter:blur(9px) saturate(95%);transform:scale(1.12)}
+        body.has-backdrop::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--backdrop) center/cover no-repeat;filter:blur(6px) saturate(95%);transform:scale(1.12)}
         body.has-backdrop::after{content:"";position:fixed;inset:0;z-index:-1;background:rgba(13,15,21,.18)}
         body.theme-registre h1{font-family:"Iowan Old Style","Charter","Georgia","Noto Serif",serif;font-weight:700;letter-spacing:0}
 /* Institutionnel : angles droits obligatoires sur tous les éléments */
