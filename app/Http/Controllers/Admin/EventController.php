@@ -65,7 +65,13 @@ class EventController extends Controller
 
         return view('admin.events.show', [
             'event' => $event,
-            'types' => EventType::where('is_active', true)->orWhere('id', $event->event_type_id)->orderBy('position')->get(),
+            // Types de LA filiale de l'événement uniquement : en contexte SuperAdmin
+            // « Toutes les filiales » le global scope est inactif, et la liste
+            // empilait les types homonymes de chaque filiale (Atelier ×5…).
+            'types' => EventType::withoutGlobalScope(FilialeScope::class)
+                ->where('filiale_id', $event->filiale_id)
+                ->where(fn ($q) => $q->where('is_active', true)->orWhere('id', $event->event_type_id))
+                ->orderBy('position')->get(),
             'lastReschedule' => $lastReschedule,
             'siblingSeances' => $siblingSeances,
             // Transfert vers une filiale (SuperAdmin uniquement, T-ME-14) : liste
