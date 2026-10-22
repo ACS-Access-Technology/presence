@@ -112,6 +112,15 @@
                             <div class="help">Indicatif pour les participants.</div>
                         </div>
 
+                        <input type="hidden" name="require_geolocation" value="0">
+                        <label class="check-row" style="display:flex;gap:10px;align-items:flex-start;margin:6px 0 10px;cursor:pointer">
+                            <input type="checkbox" id="require-geo" name="require_geolocation" value="1" @checked(old('require_geolocation', '1') === '1') style="width:20px;height:20px;accent-color:var(--accent);margin-top:1px">
+                            <span>
+                                <strong>Localisation obligatoire</strong>
+                                <span class="help" style="display:block;margin-top:2px">Décochée : la position est demandée sans bloquer, et le périmètre ci-dessous n'est pas vérifié. Pour une rencontre partenaire, la valeur proposée vient de sa fiche.</span>
+                            </span>
+                        </label>
+
                         <div class="field" style="margin-top:6px">
                             <label>Périmètre anti-fraude <span class="opt">(facultatif en QR tournant · <strong>obligatoire en QR statique</strong>)</span></label>
                             <div class="help">Si renseigné, l'émargement est refusé au-delà du rayon indiqué autour de ce point. En mode QR statique il est <strong>exigé</strong> (le QR fixe étant photographiable, la géolocalisation est la seule barrière contre un émargement à distance). En QR tournant, laissez vide pour ne rien imposer.</div>
@@ -155,7 +164,7 @@
                                 <select class="control" id="partner-id" name="partner_id">
                                     <option value="">Aucun — réunion ACS</option>
                                     @foreach ($partners as $p)
-                                        <option value="{{ $p->id }}" data-filiale-id="{{ $p->filiale_id }}" data-contact-name="{{ $p->contact_name }}" data-contact-email="{{ $p->contact_email }}" @selected((string) $chosenPartner === (string) $p->id)>{{ $p->name }}</option>
+                                        <option value="{{ $p->id }}" data-filiale-id="{{ $p->filiale_id }}" data-contact-name="{{ $p->contact_name }}" data-contact-email="{{ $p->contact_email }}" data-require-geo="{{ $p->require_geolocation ? '1' : '0' }}" @selected((string) $chosenPartner === (string) $p->id)>{{ $p->name }}</option>
                                     @endforeach
                                 </select>
                                 <div class="err-msg">{{ $errors->first('partner_id') }}</div>
@@ -313,6 +322,11 @@
                 if (prefill && select.value !== '') {
                     name.value = opt.dataset.contactName || '';
                     email.value = opt.dataset.contactEmail || '';
+                    var geo = document.getElementById('require-geo');
+                    if (geo) { geo.checked = opt.dataset.requireGeo !== '0'; }
+                } else if (prefill) {
+                    var geoDefault = document.getElementById('require-geo');
+                    if (geoDefault) { geoDefault.checked = true; }
                 }
             }
             select.addEventListener('change', function () { sync(true); });

@@ -75,6 +75,7 @@ class PartnerMeetingTest extends TestCase
             'partner_id' => $partner->id,
             'partner_recipient_name' => 'Awa Koné',
             'partner_recipient_email' => 'awa.kone@dgf.gouv.ci',
+            'require_geolocation' => $partner->require_geolocation ?? true,
             'starts_at' => $ended ? Carbon::now()->subHours(3) : Carbon::now()->subHour(),
             'ends_at' => $ended ? Carbon::now()->subHours(2) : Carbon::now()->addHour(),
             'qr_mode' => $mode->value,
@@ -419,5 +420,35 @@ class PartnerMeetingTest extends TestCase
         $rows = (new \ReflectionMethod($sheet, 'withSignatureDataUris'))->invoke($sheet, app(EventPresenceService::class)->rows($event));
         $this->assertStringStartsWith('data:image/png;base64,', (string) $rows[0]['signature_data_uri']);
         $this->assertStringStartsWith('%PDF', $sheet->renderAll($event));
+    }
+
+    public function test_la_localisation_se_regle_par_reunion_a_la_creation(): void
+    {
+        $base = [
+            'title' => 'Atelier', 'event_type_id' => $this->type->id,
+            'date' => now()->addDay()->toDateString(), 'start' => '09:00', 'end' => '11:00',
+            'qr_mode' => 'statique',
+        ];
+
+        // Facultative : le périmètre n'est plus exigé en QR statique.
+        $this->actingAs($this->organisateur)->post(route('admin.events.store'), array_merge($base, ['title' => 'Sans géoloc', 'require_geolocation' => '0']))
+            ->assertSessionHasNoErrors();
+        $this->assertFalse(Event::where('title', 'Sans géoloc')->sole()->requiresGeolocation());
+
+        // Obligatoire (défaut) : périmètre toujours exigé en QR statique.
+        $this->actingAs($this->organisateur)->post(route('admin.events.store'), array_merge($base, ['title' => 'Avec géoloc']))
+            ->assertSessionHasErrors('geofence_latitude');
+    }
+
+    public function test_la_localisation_se_modifie_sur_une_reunion_existante(): void
+    {
+        $event = $this->meeting($this->partner(), mode: QrMode::Tournant);
+        $this->assertTrue($event->requiresGeolocation());
+
+        $this->actingAs($this->organisateur)->patch(route('admin.events.update', $event), [
+            'title' => $event->title, 'event_type_id' => $this->type->id, 'require_geolocation' => '0',
+        ])->assertSessionHasNoErrors();
+
+        $this->assertFalse($event->fresh()->requiresGeolocation());
     }
 }

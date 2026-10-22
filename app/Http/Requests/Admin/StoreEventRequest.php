@@ -11,6 +11,7 @@ use App\Models\Partner;
 use App\Models\Scopes\FilialeScope;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 
 class StoreEventRequest extends FormRequest
@@ -46,9 +47,11 @@ class StoreEventRequest extends FormRequest
             // (`required_with`) et deviennent OBLIGATOIRES en mode QR statique
             // (`required_if`) : sans token tournant, la géoloc est la seule barrière
             // qui empêche un émargement à distance depuis une photo du QR fixe.
-            'geofence_latitude' => ['nullable', 'numeric', 'between:-90,90', 'required_if:qr_mode,statique', 'required_with:geofence_longitude,geofence_radius_m'],
-            'geofence_longitude' => ['nullable', 'numeric', 'between:-180,180', 'required_if:qr_mode,statique', 'required_with:geofence_latitude,geofence_radius_m'],
-            'geofence_radius_m' => ['nullable', 'integer', 'min:10', 'max:5000', 'required_if:qr_mode,statique', 'required_with:geofence_latitude,geofence_longitude'],
+            // Localisation obligatoire (défaut) ou facultative pour cette réunion.
+            'require_geolocation' => ['sometimes', 'boolean'],
+            'geofence_latitude' => ['nullable', 'numeric', 'between:-90,90', Rule::requiredIf($this->geofenceRequired()), 'required_with:geofence_longitude,geofence_radius_m'],
+            'geofence_longitude' => ['nullable', 'numeric', 'between:-180,180', Rule::requiredIf($this->geofenceRequired()), 'required_with:geofence_latitude,geofence_radius_m'],
+            'geofence_radius_m' => ['nullable', 'integer', 'min:10', 'max:5000', Rule::requiredIf($this->geofenceRequired()), 'required_with:geofence_latitude,geofence_longitude'],
 
             'qr_mode' => ['required', new Enum(QrMode::class)],
             // Rencontre partenaire : le destinataire de la feuille d'émargement est
@@ -125,6 +128,15 @@ class StoreEventRequest extends FormRequest
      * réussie (le contrôleur ne s'exécute que dans ce cas) ; utilisée pour
      * renseigner explicitement `filiale_id` sur chaque séance créée.
      */
+    /**
+     * Périmètre exigé en QR statique (photo du QR rejouable à distance), sauf
+     * réunion à localisation facultative : sans position, il ne servirait à rien.
+     */
+    private function geofenceRequired(): bool
+    {
+        return $this->input('qr_mode') === 'statique' && $this->boolean('require_geolocation', true);
+    }
+
     public function resolvedFilialeId(): ?int
     {
         return $this->targetFilialeId();
@@ -151,9 +163,9 @@ class StoreEventRequest extends FormRequest
             'end.after' => 'La fin doit être après le début.',
             'partner_recipient_email.required_with' => "Indiquez l'email de la personne qui recevra la feuille d'émargement.",
             'partner_recipient_email.email' => 'Adresse email invalide.',
-            'geofence_latitude.required_if' => 'En mode QR statique, le périmètre anti-fraude est obligatoire (le QR fixe est photographiable) : renseignez la latitude.',
-            'geofence_longitude.required_if' => 'En mode QR statique, le périmètre anti-fraude est obligatoire : renseignez la longitude.',
-            'geofence_radius_m.required_if' => 'En mode QR statique, le périmètre anti-fraude est obligatoire : renseignez le rayon (en mètres).',
+            'geofence_latitude.required' => 'En mode QR statique, le périmètre anti-fraude est obligatoire (le QR fixe est photographiable) : renseignez la latitude.',
+            'geofence_longitude.required' => 'En mode QR statique, le périmètre anti-fraude est obligatoire : renseignez la longitude.',
+            'geofence_radius_m.required' => 'En mode QR statique, le périmètre anti-fraude est obligatoire : renseignez le rayon (en mètres).',
         ];
     }
 }
