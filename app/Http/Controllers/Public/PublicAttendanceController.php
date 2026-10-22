@@ -236,7 +236,14 @@ class PublicAttendanceController extends Controller
         // apparu entre le pré-contrôle ci-dessus (non verrouillé) et l'insertion, il
         // clôture automatiquement la présence précédente (une seule présence active à
         // la fois). Le 409 ci-dessus couvre le cas nominal (demande de confirmation).
-        $attendance = $this->attendances->register($event, $input);
+        try {
+            $attendance = $this->attendances->register($event, $input);
+        } catch (\Throwable $e) {
+            // Échec d'enregistrement : pas de fichier signature orphelin.
+            Storage::disk('local')->delete($signaturePath);
+
+            throw $e;
+        }
 
         // Soumission répétée (idempotence) : la présence existait déjà → on retire
         // le fichier signature fraîchement écrit pour ne pas laisser d'orphelin.
