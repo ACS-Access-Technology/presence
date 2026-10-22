@@ -261,8 +261,11 @@
 
         open: function (id) {
             $('#scrim').hidden = false;
-            ['m-sig', 'm-depart', 'm-manual', 'm-edit', 'm-reschedule', 'm-cancel', 'm-info'].forEach(function (m) {
-                var el = $('#' + m); if (el) el.hidden = m !== id;
+            // Toutes les modales du calque, sans liste figée : une modale ajoutée
+            // (mode QR, transfert…) et oubliée ici laissait le fond flouté sans
+            // fenêtre au-dessus.
+            Array.prototype.forEach.call(document.querySelectorAll('#scrim > .modal'), function (el) {
+                el.hidden = el.id !== id;
             });
             document.body.style.overflow = 'hidden';
         },
