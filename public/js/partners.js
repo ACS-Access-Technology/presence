@@ -273,6 +273,9 @@
     function open(partner) {
         form.hidden = false;
         $('pt-form-title').textContent = partner ? 'Modifier le partenaire' : 'Nouveau partenaire';
+        var modalEl = $('pt-modal');
+        modalEl.classList.remove('modal--create', 'modal--edit');
+        modalEl.classList.add(partner ? 'modal--edit' : 'modal--create');
         $('pt-logo-req').hidden = !!partner;
         formEl.action = partner ? partner.update_url : formEl.dataset.storeUrl;
         $('pt-id').value = partner ? partner.id : '';

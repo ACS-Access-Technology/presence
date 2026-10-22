@@ -5,6 +5,12 @@
    ============================================================ */
 (function () {
     'use strict';
+    /* Code couleur des fenêtres : création bleu, modification vert. */
+    function setTone(el, tone) {
+        if (!el) { return; }
+        el.classList.remove('modal--create', 'modal--edit', 'modal--danger', 'modal--read');
+        el.classList.add('modal--' + tone);
+    }
     var CFG = window.FILIALES || { filiales: [], urls: {} };
     var $ = function (s) { return document.querySelector(s); };
     function esc(v) {
@@ -71,6 +77,7 @@
         openCreate: function () {
             this.editingId = null;
             $('#mf-title').textContent = 'Nouvelle filiale';
+            setTone($('#m-filiale'), 'create');
             $('#f-name').value = '';
             $('#f-name-err').textContent = '';
             this.open();
@@ -80,6 +87,7 @@
             if (!f) return;
             this.editingId = id;
             $('#mf-title').textContent = 'Renommer la filiale';
+            setTone($('#m-filiale'), 'edit');
             $('#f-name').value = f.name;
             $('#f-name-err').textContent = '';
             this.open();
