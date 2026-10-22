@@ -72,3 +72,4 @@
 .pt-drop__thumb--wide{width:120px;height:68px;object-fit:cover;padding:0}
 .pt-remove{display:flex;gap:8px;align-items:center;font-size:.82rem;color:var(--muted);margin-top:8px;cursor:pointer}
 .pt-remove[hidden]{display:none}
+.pt-sheet__state[hidden]{display:none}

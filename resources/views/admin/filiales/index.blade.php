@@ -58,15 +58,17 @@
 
     <div class="scrim" id="f-scrim" hidden onclick="if(event.target===this)Filiales.close()">
         <div class="modal" id="m-filiale" role="dialog" aria-modal="true" aria-labelledby="mf-title" hidden>
-            <div class="modal__head">
-                <div class="modal__ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="10" rx="1"/></svg></div>
+            <div class="modal__hd">
+                <span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="7" height="16" rx="1"/><rect x="14" y="4" width="7" height="10" rx="1"/></svg></span>
+                <div class="modal__ttl"><h3 id="mf-title">Nouvelle filiale</h3><p class="modal__sub">Entité rattachée à la holding ACS Groupe</p></div>
                 <button class="modal__x" type="button" aria-label="Fermer" onclick="Filiales.close()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
             </div>
-            <h2 id="mf-title">Nouvelle filiale</h2>
-            <div class="field" style="margin-top:14px">
+            <div class="modal__body">
+            <div class="field">
                 <label for="f-name">Nom</label>
                 <input class="control" id="f-name" placeholder="ACS Immobilier">
                 <div class="err-msg" id="f-name-err"></div>
+            </div>
             </div>
             <div class="modal__foot">
                 <button class="btn btn--ghost" type="button" onclick="Filiales.close()">Annuler</button>

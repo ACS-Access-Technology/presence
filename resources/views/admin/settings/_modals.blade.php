@@ -1,7 +1,7 @@
 <div class="scrim" id="s-scrim" hidden onclick="if(event.target===this)Settings.close()">
     {{-- Ajouter / modifier un type --}}
     <div class="modal" id="m-type" role="dialog" aria-modal="true" aria-labelledby="mt-title" hidden>
-        <div class="modal__hd"><h3 id="mt-title">Ajouter un type</h3><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20.6 13.4 13.4 20.6a2 2 0 0 1-2.8 0L3 13V3h10l7.6 7.6a2 2 0 0 1 0 2.8Z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span><div class="modal__ttl"><h3 id="mt-title">Ajouter un type</h3><p class="modal__sub">Catégorie proposée à la création d'un événement</p></div><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form onsubmit="return Settings.saveType(event)">
             <div class="modal__body">
                 <div class="field"><label for="mt-name">Nom du type <span class="req">*</span></label><input class="control" id="mt-name" placeholder="Ex. Séminaire" autocomplete="off"><div class="err-msg" id="mt-err"></div></div>
@@ -28,7 +28,7 @@
 
     {{-- Inviter / modifier un compte --}}
     <div class="modal" id="m-account" role="dialog" aria-modal="true" aria-labelledby="ma-title" hidden>
-        <div class="modal__hd"><h3 id="ma-title">Inviter un compte</h3><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/></svg></span><div class="modal__ttl"><h3 id="ma-title">Inviter un compte</h3><p class="modal__sub">Donner accès à la plateforme</p></div><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <form onsubmit="return Settings.saveAccount(event)">
             <div class="modal__body">
                 <div class="grid2">
@@ -65,7 +65,7 @@
 
     {{-- Réassigner un compte à une autre filiale (SuperAdmin) --}}
     <div class="modal" id="m-reassign" role="dialog" aria-modal="true" aria-labelledby="mr-title" hidden>
-        <div class="modal__hd"><h3 id="mr-title">Réassigner le compte</h3><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M17 3l4 4-4 4"/><path d="M3 7h18"/><path d="M7 21l-4-4 4-4"/><path d="M21 17H3"/></svg></span><div class="modal__ttl"><h3 id="mr-title">Réassigner le compte</h3><p class="modal__sub">Changer la filiale de rattachement du compte</p></div><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <div class="modal__body">
             <p class="mut" id="mr-who" style="margin-bottom:12px"></p>
             <div class="field"><label for="mr-filiale">Nouvelle filiale <span class="req">*</span></label>
@@ -83,7 +83,7 @@
 
     {{-- Mot de passe temporaire --}}
     <div class="modal" id="m-password" role="dialog" aria-modal="true" aria-labelledby="mp-title" hidden>
-        <div class="modal__hd"><h3 id="mp-title">Mot de passe temporaire</h3><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+        <div class="modal__hd"><span class="modal__ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="7.5" cy="15.5" r="4.5"/><path d="m10.7 12.3 9.8-9.8M17 6l3 3M14 9l2 2"/></svg></span><div class="modal__ttl"><h3 id="mp-title">Mot de passe temporaire</h3><p class="modal__sub">À transmettre une seule fois à la personne concernée</p></div><button class="modal__x" onclick="Settings.close()" aria-label="Fermer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
         <div class="modal__body">
             <p>Transmettez ce mot de passe au membre par un canal sûr. Il ne sera plus affiché ensuite.</p>
             <div class="pw-reveal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><code id="mp-value">—</code></div>
