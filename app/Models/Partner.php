@@ -28,6 +28,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string $primary_color
  * @property ?string $secondary_color
  * @property bool $is_institutional
+ * @property bool $require_geolocation
  * @property ?string $contact_name
  * @property ?string $contact_email
  */
@@ -38,14 +39,14 @@ class Partner extends Model
 
     /** @var list<string> */
     protected $fillable = [
-        'filiale_id', 'name', 'logo_path', 'background_path', 'primary_color', 'secondary_color', 'is_institutional',
+        'filiale_id', 'name', 'logo_path', 'background_path', 'primary_color', 'secondary_color', 'is_institutional', 'require_geolocation',
         'contact_name', 'contact_email',
     ];
 
     /** @return array<string, string> */
     protected function casts(): array
     {
-        return ['is_institutional' => 'boolean'];
+        return ['is_institutional' => 'boolean', 'require_geolocation' => 'boolean'];
     }
 
     protected static function booted(): void

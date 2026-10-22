@@ -13,6 +13,8 @@ use App\Models\Filiale;
 use App\Models\Partner;
 use App\Models\User;
 use App\Services\AttendanceSheetPdf;
+use App\Services\EventPresenceService;
+use App\Services\QrTokenService;
 use App\Support\Branding;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -21,6 +23,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Tests\TestCase;
 
 /**
@@ -345,5 +348,76 @@ class PartnerMeetingTest extends TestCase
             'name' => 'Port autonome', 'primary_color' => '#0b5e3c', 'remove_background' => '1',
         ])->assertSessionHasNoErrors();
         $this->assertNull($partner->fresh()->background_path);
+    }
+
+    // ---------- Localisation verrouillée / déverrouillée ----------
+
+    /** @return array<string, mixed> */
+    private function attendancePayload(Event $event, array $overrides = []): array
+    {
+        return array_merge([
+            'email' => 'participant@exemple.ci', 'last_name' => 'Koné', 'first_name' => 'Awa',
+            'phone' => '+225 07 00 00 00 00', 'company' => 'DGF', 'direction' => 'Budget', 'position' => 'Analyste',
+            'signature' => 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+            'ticket' => app(QrTokenService::class)->issueScanTicket($event),
+            'consent' => '1',
+        ], $overrides);
+    }
+
+    public function test_sans_localisation_l_emargement_passe_quand_le_partenaire_l_a_deverrouillee(): void
+    {
+        Storage::fake('local');
+        $event = $this->meeting($this->partner(['require_geolocation' => false]), mode: QrMode::Statique);
+        $event->forceFill(['geofence_latitude' => 5.35, 'geofence_longitude' => -4.01, 'geofence_radius_m' => 50])->save();
+
+        $this->postJson(route('public.attendance.store', ['event' => $event->public_slug]), $this->attendancePayload($event))
+            ->assertSuccessful();
+
+        $this->assertSame(1, $event->attendances()->count());
+    }
+
+    public function test_la_localisation_reste_obligatoire_par_defaut(): void
+    {
+        Storage::fake('local');
+        $event = $this->meeting($this->partner(), mode: QrMode::Statique);
+
+        $this->postJson(route('public.attendance.store', ['event' => $event->public_slug]), $this->attendancePayload($event))
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('latitude');
+    }
+
+    /** @return array<string, array{bool, array<string, mixed>}> */
+    public static function casLocalisation(): array
+    {
+        return [
+            'localisation verrouillée, position fournie' => [true, ['latitude' => 5.35, 'longitude' => -4.01, 'accuracy' => 10]],
+            'localisation déverrouillée, sans position' => [false, []],
+        ];
+    }
+
+    #[DataProvider('casLocalisation')]
+    public function test_la_signature_est_toujours_enregistree_et_exportee(bool $geoObligatoire, array $position): void
+    {
+        Storage::fake('local');
+        $event = $this->meeting($this->partner(['require_geolocation' => $geoObligatoire]), mode: QrMode::Statique);
+
+        $this->postJson(route('public.attendance.store', ['event' => $event->public_slug]), $this->attendancePayload($event, $position))
+            ->assertSuccessful();
+
+        // 1. Fichier de signature enregistré
+        $attendance = $event->attendances()->sole();
+        $this->assertNotNull($attendance->signature_path);
+        Storage::disk('local')->assertExists($attendance->signature_path);
+
+        // 2. Lisible depuis la fiche de la réunion (admin)
+        $this->actingAs($this->organisateur)
+            ->get(route('admin.events.attendances.signature', ['event' => $event, 'attendance' => $attendance]))
+            ->assertOk();
+
+        // 3. Présente dans la feuille d'émargement PDF (image encodée dans le rendu)
+        $sheet = app(AttendanceSheetPdf::class);
+        $rows = (new \ReflectionMethod($sheet, 'withSignatureDataUris'))->invoke($sheet, app(EventPresenceService::class)->rows($event));
+        $this->assertStringStartsWith('data:image/png;base64,', (string) $rows[0]['signature_data_uri']);
+        $this->assertStringStartsWith('%PDF', $sheet->renderAll($event));
     }
 }

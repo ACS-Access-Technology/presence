@@ -36,6 +36,7 @@ class SavePartnerRequest extends FormRequest
             'primary_color' => ['required', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'secondary_color' => ['nullable', 'string', 'regex:/^#[0-9a-fA-F]{6}$/'],
             'is_institutional' => ['sometimes', 'boolean'],
+            'require_geolocation' => ['sometimes', 'boolean'],
             // Fond de scène : raster uniquement (même raison que le logo), plus
             // lourd qu'un logo puisqu'il couvre l'écran.
             'background' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:5120'],

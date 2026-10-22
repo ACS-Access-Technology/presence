@@ -222,6 +222,7 @@
             store: @json(route('public.attendance.store', ['event' => $event->public_slug])),
         },
         eventTitle: @json($event->title),
+        requireGeo: @json($event->requiresGeolocation()),
     };
 </script>
 <script src="{{ versioned_asset('js/participant.js') }}"></script>
