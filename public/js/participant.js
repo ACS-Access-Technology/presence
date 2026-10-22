@@ -139,7 +139,11 @@
 
     /* ------------------------- Signature (canvas) ------------------------- */
     var Sig = {
-        canvas: null, ctx: null, drawing: false, hasInk: false, last: null, lastMid: null,
+        canvas: null, ctx: null, drawing: false, hasInk: false, last: null, lastMid: null, pending: null,
+        // Encre TOUJOURS foncée sur papier blanc, quel que soit le thème : la
+        // signature finit sur une feuille PDF blanche. En mode sombre, l'ancienne
+        // encre (--text, quasi blanche) donnait une signature invisible à l'export.
+        INK: '#12141a',
         init: function () {
             this.canvas = $('#sigpad'); this.ctx = this.canvas.getContext('2d');
             this.resize();
@@ -159,20 +163,29 @@
         // disparaissait silencieusement : `hasInk` restait vrai, le bouton
         // Valider restait actif, et un PNG blanc partait au serveur.
         resize: function () {
-            var hadInk = this.hasInk;
-            var saved = hadInk ? this.canvas.toDataURL('image/png') : null;
-
             var r = this.canvas.getBoundingClientRect();
+            // Zone masquée (0×0) : redimensionner viderait le canevas pour rien.
+            if (r.width < 1 || r.height < 1) { return; }
             var dpr = window.devicePixelRatio || 1;
-            this.canvas.width = r.width * dpr; this.canvas.height = r.height * dpr;
-            this.ctx.scale(dpr, dpr);
+            var w = Math.round(r.width * dpr), h = Math.round(r.height * dpr);
+            // Taille inchangée (clavier, barre d'adresse mobile) : ne rien toucher,
+            // la signature reste intacte — c'était la cause de la plupart des
+            // effacements/restaurations.
+            if (this.canvas.width === w && this.canvas.height === h) { return; }
+
+            var saved = this.hasInk ? (this.pending || this.canvas.toDataURL('image/png')) : null;
+            this.canvas.width = w; this.canvas.height = h;
+            this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
             this.ctx.lineWidth = 2.5; this.ctx.lineCap = 'round'; this.ctx.lineJoin = 'round';
-            this.ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--text').trim() || '#12141a';
+            this.ctx.strokeStyle = this.INK; this.ctx.fillStyle = this.INK;
 
             if (saved) {
-                var ctx = this.ctx, w = r.width, h = r.height;
-                var img = new Image();
-                img.onload = function () { ctx.drawImage(img, 0, 0, w, h); };
+                // Restauration asynchrone : tant qu'elle n'est pas faite, dataUrl()
+                // renvoie la copie sauvegardée (jamais un canevas vide).
+                var self = this, cw = r.width, ch = r.height, img = new Image();
+                this.pending = saved;
+                img.onload = function () { self.ctx.drawImage(img, 0, 0, cw, ch); self.pending = null; };
+                img.onerror = function () { self.pending = null; };
                 img.src = saved;
             }
         },
@@ -213,17 +226,20 @@
             if (this.drawing && !this.hasInk && this.last) {
                 this.ctx.beginPath();
                 this.ctx.arc(this.last.x, this.last.y, this.ctx.lineWidth / 2, 0, Math.PI * 2);
-                this.ctx.fillStyle = this.ctx.strokeStyle;
+                this.ctx.fillStyle = this.INK;
                 this.ctx.fill();
                 this.hasInk = true; $('#sigPh').style.opacity = '0'; Flow.validate();
             }
             this.drawing = false;
         },
         clear: function () {
+            this.pending = null;
+            this.ctx.save(); this.ctx.setTransform(1, 0, 0, 1, 0, 0);
             this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+            this.ctx.restore();
             this.hasInk = false; $('#sigPh').style.opacity = '1'; Flow.validate();
         },
-        dataUrl: function () { return this.canvas.toDataURL('image/png'); }
+        dataUrl: function () { return this.pending || this.canvas.toDataURL('image/png'); }
     };
 
     /* ------------------------- Flow / validation ------------------------- */

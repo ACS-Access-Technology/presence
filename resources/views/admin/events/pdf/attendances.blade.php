@@ -54,9 +54,8 @@
     </table>
     <h1>{{ $event->title }}</h1>
     <p class="meta">
-        {{ $event->starts_at->translatedFormat('j F Y') }} · {{ $event->starts_at->format('H:i') }} – {{ $event->ends_at->format('H:i') }}
+        {{ $event->starts_at->translatedFormat('j F Y') }}
         @if($event->location) · {{ $event->location }} @endif
-        · Exporté le {{ now()->translatedFormat('j F Y à H:i') }}
     </p>
     <table>
         <thead>
