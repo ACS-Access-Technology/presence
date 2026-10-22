@@ -229,3 +229,11 @@ body.theme-registre .phone:has(.inst-hd--stacked) .screen{padding-left:28px}
 body.theme-registre.has-backdrop{padding:16px 10px 40px;background:var(--bg) var(--backdrop) center/cover no-repeat fixed}
 body.theme-registre.has-backdrop .phone{min-height:auto;border-radius:4px}
 @media (min-width:640px){body.theme-registre.has-backdrop{padding:32px 16px 64px}}
+
+/* Institutionnel : angles droits obligatoires partout (feuille, champs,
+   boutons, bandeaux, signature, badges, fenêtres). */
+body.theme-registre .phone,
+body.theme-registre .phone *,
+body.theme-registre .modal,
+body.theme-registre .modal *{border-radius:0 !important}
+body.theme-registre .geo__ic,body.theme-registre .avatar,body.theme-registre .spin{border-radius:50% !important}

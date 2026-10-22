@@ -17,6 +17,9 @@
         body{min-height:100vh;display:grid;place-items:center;padding:24px}
         body.has-backdrop{background:var(--bg) var(--backdrop) center/cover no-repeat fixed}
         body.theme-registre h1{font-family:"Iowan Old Style","Charter","Georgia","Noto Serif",serif;font-weight:700;letter-spacing:0}
+/* Institutionnel : angles droits obligatoires sur tous les éléments */
+        body.theme-registre .sheet,body.theme-registre .proj,body.theme-registre .qr-frame,body.theme-registre .qrbox,
+        body.theme-registre .cta,body.theme-registre .btn,body.theme-registre .inst-hd,body.theme-registre .inst-hd__flag{border-radius:0}
         body.has-backdrop .proj{background:color-mix(in srgb,var(--surface) 92%,transparent);border-radius:24px;padding:28px 32px;box-shadow:var(--sh-3)}
         .proj{text-align:center;max-width:520px}
         .proj__logo{height:44px;width:auto;margin:0 auto 16px;display:block;object-fit:contain}
