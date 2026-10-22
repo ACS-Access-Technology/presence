@@ -237,3 +237,11 @@ body.theme-registre .phone *,
 body.theme-registre .modal,
 body.theme-registre .modal *{border-radius:0 !important}
 body.theme-registre .geo__ic,body.theme-registre .avatar,body.theme-registre .spin{border-radius:50% !important}
+
+/* Fond de scène flouté : les personnes éventuellement présentes sur la photo
+   ne doivent pas être reconnaissables (droit à l'image). Le flou est porté par
+   un calque fixe derrière la page, légèrement agrandi pour masquer les bords
+   transparents produits par le filtre. */
+body.has-backdrop,body.theme-registre.has-backdrop{background:var(--bg);isolation:isolate}
+body.has-backdrop::before{content:"";position:fixed;inset:0;z-index:-1;background:var(--backdrop) center/cover no-repeat;filter:blur(9px) saturate(95%);transform:scale(1.12);pointer-events:none}
+body.has-backdrop::after{content:"";position:fixed;inset:0;z-index:-1;background:rgba(13,15,21,.18);pointer-events:none}

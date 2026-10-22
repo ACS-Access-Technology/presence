@@ -22,7 +22,8 @@
         .bg{
             position:fixed;inset:-20px;z-index:0;
             background:url('{{ $branding->backgroundUrl ?? asset('images/qr-print-bg.jpg') }}') center/cover no-repeat;
-            filter:blur(6px) saturate(92%);
+            /* Assez flou pour que les personnes de la photo ne soient pas reconnaissables */
+            filter:blur(9px) saturate(92%);
             transform:scale(1.12);
         }
         .bg::after{
