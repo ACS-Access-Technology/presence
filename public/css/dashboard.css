@@ -658,3 +658,25 @@ body.sheet-open{overflow:hidden}
 .filctx-opt__r{display:inline-flex;align-items:center;gap:6px;font-size:.78rem;font-weight:600;color:var(--faint)}
 .filctx-opt.is-selected .filctx-opt__r{color:var(--accent)}
 @media(max-width:640px){.filctx .lbl{display:none}}
+
+/* ============================================================
+   Fenêtres (modales) — en-tête plein à la couleur de la plateforme, icône,
+   sous-titre, croix ronde ; corps défilant ; pied de fenêtre séparé.
+   ============================================================ */
+.modal{padding:0;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 12vh)}
+.modal[hidden]{display:none}
+.modal > form{display:flex;flex-direction:column;min-height:0;flex:1}
+.modal__hd{position:relative;isolation:isolate;flex:0 0 auto;display:flex;align-items:center;gap:14px;padding:18px 20px;background:var(--accent);color:#fff;overflow:hidden}
+.modal__hd::before,.modal__hd::after{content:"";position:absolute;z-index:-1;border-radius:50%;border:1px solid rgba(255,255,255,.14);pointer-events:none}
+.modal__hd::before{width:220px;height:220px;right:-70px;top:-110px}
+.modal__hd::after{width:150px;height:150px;right:-35px;top:-75px}
+.modal .modal__hd h3{color:#fff;font-size:1.08rem;font-weight:750;margin:0;line-height:1.25}
+.modal__ttl{min-width:0;flex:1}
+.modal .modal__hd .modal__sub{margin:2px 0 0;font-size:.8rem;line-height:1.35;color:rgba(255,255,255,.78)}
+.modal__hd .modal__ic{flex:0 0 40px;width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:rgba(255,255,255,.16);color:#fff}
+.modal__hd .modal__ic svg{width:20px;height:20px}
+.modal__hd .modal__x{margin-left:auto;flex:0 0 auto;width:38px;height:38px;min-width:38px;min-height:38px;padding:0;border-radius:50%;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.1);color:#fff}
+.modal__hd .modal__x:hover{background:rgba(255,255,255,.22);color:#fff}
+.modal__hd .modal__x:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.modal__body{padding:20px;overflow-y:auto;min-height:0;flex:1}
+.modal__foot{flex:0 0 auto;border-top:1px solid var(--border);background:var(--surface-2);padding:14px 20px}
